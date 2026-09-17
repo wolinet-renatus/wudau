@@ -66,6 +66,12 @@ export default function Registration() {
     }
   };
 
+  const handleKeyPress = (event: any) => {
+    if (event.key === "Enter") {
+      handleSubmit();
+    }
+  };
+
   return (
     <>
       <div className="login-page-content">
@@ -84,7 +90,7 @@ export default function Registration() {
                   <h6 className="custom-wudau-color">{projectName}</h6>
                 </div>
                 <div className="login-left-form login-right-form">
-                  <span>Welcome back !!!</span>
+                  <span>Create your account</span>
                   <h5>Sign Up</h5>
                   <Input
                     label={`Email`}
@@ -106,6 +112,7 @@ export default function Registration() {
                         });
                       }
                     }}
+                    onKeyPress={handleKeyPress}
                   />
                   <Input
                     label={`Password`}
@@ -128,6 +135,7 @@ export default function Registration() {
                         });
                       }
                     }}
+                    onKeyPress={handleKeyPress}
                   />
                   <Input
                     label={`Confirm Password`}
@@ -150,9 +158,8 @@ export default function Registration() {
                         });
                       }
                     }}
+                    onKeyPress={handleKeyPress}
                   />
-                  
-                  
 
                   <div
                     className="d-flex justify-content-center w-100"
@@ -162,8 +169,31 @@ export default function Registration() {
                       btnName={"SIGN UP"}
                       newClass={"login-btn ms-2 login"}
                       onClick={handleSubmit}
-                      style={{ backgroundColor: "#FE0952" }}
+                      style={{
+                        background: "linear-gradient(135deg, #FF4B1F 0%, #FF9F00 100%)",
+                        border: "none",
+                        color: "#fff",
+                        fontWeight: 700,
+                        boxShadow: "0 4px 15px rgba(255, 75, 31, 0.35)",
+                      }}
                     />
+                  </div>
+                  <div className="w-100 text-center mt-3" style={{ width: "400px" }}>
+                    <span style={{ fontSize: "14px", color: "#6c757d" }}>
+                      Already have an account?{" "}
+                    </span>
+                    <span
+                      onClick={() => router.push("/login")}
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        color: "#FF4B1F",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      Sign In
+                    </span>
                   </div>
                 </div>
               </div>

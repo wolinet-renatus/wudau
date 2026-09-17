@@ -144,8 +144,31 @@ export default function Login() {
                       btnName={"LOGIN"}
                       newClass={"login-btn ms-2 login"}
                       onClick={handleSubmit}
-                      style={{ backgroundColor: "#FE0952" }}
+                      style={{
+                        background: "linear-gradient(135deg, #FF4B1F 0%, #FF9F00 100%)",
+                        border: "none",
+                        color: "#fff",
+                        fontWeight: 700,
+                        boxShadow: "0 4px 15px rgba(255, 75, 31, 0.35)",
+                      }}
                     />
+                  </div>
+                  <div className="w-100 text-center mt-3" style={{ width: "400px" }}>
+                    <span style={{ fontSize: "14px", color: "#6c757d" }}>
+                      Don&apos;t have an account?{" "}
+                    </span>
+                    <span
+                      onClick={() => router.push("/Registration")}
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        color: "#FF4B1F",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      Sign Up
+                    </span>
                   </div>
                 </div>
               </div>

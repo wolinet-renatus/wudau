@@ -1325,35 +1325,50 @@ export default function Home({
                 Sign in to your WUDAU account to post content, message other artists, and manage your dashboard.
               </p>
 
-              <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+              <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
                 <Link
                   href="/login"
                   style={{
-                    padding: "10px 24px",
+                    padding: "10px 22px",
                     borderRadius: "24px",
-                    backgroundColor: "#FF4B1F",
+                    backgroundColor: "#374151",
                     color: "#ffffff",
                     textDecoration: "none",
                     fontWeight: "700",
                     fontSize: "14px",
                   }}
                 >
-                  Sign In Now
+                  Sign In
+                </Link>
+                <Link
+                  href="/Registration"
+                  style={{
+                    padding: "10px 22px",
+                    borderRadius: "24px",
+                    background: "linear-gradient(135deg, #FF4B1F 0%, #FF9F00 100%)",
+                    color: "#ffffff",
+                    textDecoration: "none",
+                    fontWeight: "700",
+                    fontSize: "14px",
+                    boxShadow: "0 4px 14px rgba(255, 75, 31, 0.4)",
+                  }}
+                >
+                  Create Account
                 </Link>
                 <button
                   onClick={() => setShowAuthModal(false)}
                   style={{
-                    padding: "10px 20px",
+                    padding: "10px 18px",
                     borderRadius: "24px",
                     backgroundColor: "#F3F4F6",
-                    color: "#374151",
+                    color: "#4B5563",
                     border: "none",
                     fontWeight: "600",
                     fontSize: "14px",
                     cursor: "pointer",
                   }}
                 >
-                  Continue Browsing
+                  Browse
                 </button>
               </div>
             </div>

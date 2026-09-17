@@ -70,3 +70,4 @@ app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
 *.tar.gz
 *.zip
 *.log
+image.png
