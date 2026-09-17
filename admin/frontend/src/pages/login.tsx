@@ -24,7 +24,16 @@ export default function Login() {
   const { isAuth, admin } = useSelector((state: RootState) => state.admin);
   const router = useRouter();
 
-  useEffect(() => {}, [isAuth, admin]);
+  useEffect(() => {
+    if (isAuth) {
+      const role = typeof window !== "undefined" ? sessionStorage.getItem("role") : "user";
+      if (role === "admin") {
+        router.push("/dashboard");
+      } else {
+        router.push("/");
+      }
+    }
+  }, [isAuth, router]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

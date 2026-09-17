@@ -15,8 +15,33 @@ const AuthCheck = (props: any) => {
   }
   useEffect(() => {
     const publicPaths = ["/", "/login", "/Registration", "/forgotPassword"];
+    const role = typeof window !== "undefined" ? sessionStorage.getItem("role") : null;
+    
     if ((!isAuth || isAuth !== "true") && !publicPaths.includes(router.pathname)) {
       router.push("/login");
+      return;
+    }
+
+    const adminOnlyPaths = [
+      "/dashboard",
+      "/userTable",
+      "/videoTable",
+      "/postTable",
+      "/coinPlan",
+      "/settingPage",
+      "/withdrawRequest",
+      "/banner",
+      "/giftPage",
+      "/hashTagTable",
+      "/songTable",
+      "/verificationRequestTable",
+      "/reportType",
+      "/liveVideo",
+      "/owner",
+    ];
+
+    if (isAuth === "true" && role === "user" && adminOnlyPaths.includes(router.pathname)) {
+      router.push("/");
     }
   }, [isAuth, router.pathname]);
 

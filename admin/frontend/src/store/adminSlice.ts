@@ -101,12 +101,31 @@ const adminSlice = createSlice({
       (state: any, action: PayloadAction<any>) => {
         state.isLoading = false;
         if (action.payload && action.payload?.status !== false) {
-          setToast("success", "Admin sign up Successfully");
+          const token = action.payload.data;
+          if (token) {
+            try {
+              const decodedToken: any = jwtDecode(token);
+              const role = action.payload?.role || decodedToken?.role || "user";
+              state.isAuth = true;
+              state.admin = decodedToken;
+              localStorage.setItem("token", token);
+              sessionStorage.setItem("token", token);
+              sessionStorage.setItem("isAuth", JSON.stringify(true));
+              sessionStorage.setItem("role", role);
+              if (action.payload?.user) {
+                localStorage.setItem("user", JSON.stringify(action.payload.user));
+                sessionStorage.setItem("user", JSON.stringify(action.payload.user));
+              }
+            } catch (err) {
+              console.warn("Token decode warning:", err);
+            }
+          }
+          setToast("success", "Account created successfully! Welcome to WUDAU.");
           setTimeout(() => {
             window.location.href = "/";
-          }, 2000);
+          }, 1200);
         } else {
-          setToast("error", action.payload?.message);
+          setToast("error", action.payload?.message || "Sign up failed");
         }
       }
     );
@@ -114,7 +133,7 @@ const adminSlice = createSlice({
       signUpAdmin.rejected,
       (state: any, action: PayloadAction<any>) => {
         state.isLoading = false;
-        setToast("error", action.payload?.message);
+        setToast("error", action.payload?.message || "Sign up request error");
       }
     );
 
@@ -128,20 +147,30 @@ const adminSlice = createSlice({
         if (action.payload && action.payload?.status !== false) {
           const token = action.payload.data;
           const decodedToken: any = jwtDecode(token);
+          const role = action.payload?.role || decodedToken?.role || "user";
           state.isAuth = true;
-
           state.admin = decodedToken;
-          axios.defaults.headers.common["Authorization"] = action.payload.data;
+          axios.defaults.headers.common["Authorization"] = token;
           SetDevKey(secretKey);
           localStorage.setItem("token", token);
+          sessionStorage.setItem("token", token);
           sessionStorage.setItem("isAuth", JSON.stringify(true));
+          sessionStorage.setItem("role", role);
           sessionStorage.setItem("admin_", JSON.stringify(decodedToken));
-          setToast("success", "Login Successfully");
+          if (action.payload?.user) {
+            localStorage.setItem("user", JSON.stringify(action.payload.user));
+            sessionStorage.setItem("user", JSON.stringify(action.payload.user));
+          }
+          setToast("success", role === "admin" ? "Logged in as Administrator" : "Welcome back to WUDAU!");
           setTimeout(() => {
-            window.location.href = "/dashboard";
-          }, 2000);
+            if (role === "admin") {
+              window.location.href = "/dashboard";
+            } else {
+              window.location.href = "/";
+            }
+          }, 1200);
         } else {
-          setToast("error", action.payload?.message);
+          setToast("error", action.payload?.message || "Login failed");
         }
       }
     );
@@ -149,7 +178,7 @@ const adminSlice = createSlice({
       login.rejected,
       (state: any, action: PayloadAction<any>) => {
         state.isLoading = false;
-        setToast("error", action.payload?.message);
+        setToast("error", action.payload?.message || "Login request error");
       }
     );
 

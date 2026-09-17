@@ -26,43 +26,43 @@ export default function Registration() {
 
   useEffect(() => {}, [isAuth, admin]);
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  //const [code, setCode] = useState("");
 
   const [error, setError] = useState({
+    name: "",
     email: "",
     password: "",
-    //code: "",
     newPassword: "",
   });
 
   const handleSubmit = () => {
     if (
+      !name ||
       !email ||
       !password ||
-      //!code ||
       !newPassword ||
       newPassword !== password
     ) {
       let error: any = {};
+      if (!name) error.name = "Full Name is required !";
       if (!email) error.email = "Email Is Required !";
-      if (!password) error.password = "password is required !";
-      //if (!code) error.code = "Purchase code is required !";
+      if (!password) error.password = "Password is required !";
       if (!newPassword) error.newPassword = "Confirm password is required !";
       if (newPassword !== password)
-        error.newPassword = "Doesn't match password to confirm password !";
+        error.newPassword = "Passwords do not match !";
       return setError({ ...error });
     } else {
-      let payload : any = {
+      let payload: any = {
+        name,
         email,
         newPassword,
         password,
-        //code,
       };
 
-         dispatch(signUpAdmin(payload));
+      dispatch(signUpAdmin(payload));
     }
   };
 
@@ -92,6 +92,28 @@ export default function Registration() {
                 <div className="login-left-form login-right-form">
                   <span>Create your account</span>
                   <h5>Sign Up</h5>
+                  <Input
+                    label={`Full Name`}
+                    id={`loginName`}
+                    type={`text`}
+                    value={name}
+                    errorMessage={error.name && error.name}
+                    onChange={(e: any) => {
+                      setName(e.target.value);
+                      if (!e.target.value) {
+                        return setError({
+                          ...error,
+                          name: `Full Name Is Required`,
+                        });
+                      } else {
+                        return setError({
+                          ...error,
+                          name: "",
+                        });
+                      }
+                    }}
+                    onKeyPress={handleKeyPress}
+                  />
                   <Input
                     label={`Email`}
                     id={`loginEmail`}

@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema(
 
     uniqueId: { type: String, unique: true, default: "" },
     email: { type: String, default: "ShortieUser123@gmail.com" },
+    password: { type: String, default: "" },
     mobileNumber: { type: String, default: "" },
     loginType: { type: Number, enum: LOGIN_TYPE }, //1.mobileNumber 2.google 3.quick(identity)
     identity: { type: String, default: "" },

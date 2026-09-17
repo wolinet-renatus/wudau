@@ -16,273 +16,200 @@ const cryptr = new Cryptr("myTotallySecretKey");
 //deletefile
 const { deleteFile } = require("../../util/deletefile");
 
-//import model
+//import models
 const Login = require("../../models/login.model");
+const User = require("../../models/user.model");
 
-function _0x5a59() {
-  const _0x327eb6 = ["1634408hYJRIm", "5osPkxj", "3ycgCtU", "2667906MykdLR", "jago-malda", "16LPUZpE", "780903OJPGef", "2897876mZpRuk", "2866974jyZYyO", "37370zqGkle", "66857iZXmoC", "5830JlADGH"];
-  _0x5a59 = function () {
-    return _0x327eb6;
-  };
-  return _0x5a59();
-}
-const _0xc7bf5c = _0x2619;
-function _0x2619(_0x3c3df0, _0x53407d) {
-  const _0x3c2cf4 = _0x5a59();
-  return (
-    (_0x2619 = function (_0x513d1b, _0x21318b) {
-      _0x513d1b = _0x513d1b - (-0x2 * 0xc2e + -0xff + 0x1ab9);
-      let _0x2a24b3 = _0x3c2cf4[_0x513d1b];
-      return _0x2a24b3;
-    }),
-    _0x2619(_0x3c3df0, _0x53407d)
-  );
-}
-(function (_0x11740f, _0x3910a7) {
-  const _0x492b2c = _0x2619,
-    _0x1a9af7 = _0x11740f();
-  while (!![]) {
-    try {
-      const _0x138dba =
-        -parseInt(_0x492b2c(0x166)) / (0x31d + 0x120b * 0x2 + 0xad * -0x3a) +
-        (parseInt(_0x492b2c(0x160)) / (-0x1 * 0x12f1 + 0x529 + 0xdca)) * (-parseInt(_0x492b2c(0x162)) / (0x13db + 0xf7d + -0x14f * 0x1b)) +
-        (-parseInt(_0x492b2c(0x167)) / (0x1 * 0x331 + -0x3a * -0x1f + -0xa33)) * (parseInt(_0x492b2c(0x161)) / (-0x4 * -0x426 + 0x57 * -0x13 + -0xa1e)) +
-        parseInt(_0x492b2c(0x168)) / (0x5d9 + 0x611 * -0x3 + 0xc60) +
-        (-parseInt(_0x492b2c(0x15e)) / (0x89c * 0x2 + -0x1489 * 0x1 + 0x2 * 0x1ac)) * (parseInt(_0x492b2c(0x165)) / (0x1858 + -0x1649 + -0x207)) +
-        parseInt(_0x492b2c(0x163)) / (0x399 * -0x1 + 0x2b * -0x82 + 0x1 * 0x1978) +
-        (-parseInt(_0x492b2c(0x169)) / (0x25cb + 0x1b31 + -0x40f2)) * (-parseInt(_0x492b2c(0x15f)) / (-0x4d + -0xc11 * 0x1 + 0xc69));
-      if (_0x138dba === _0x3910a7) break;
-      else _0x1a9af7["push"](_0x1a9af7["shift"]());
-    } catch (_0x53a49b) {
-      _0x1a9af7["push"](_0x1a9af7["shift"]());
-    }
-  }
-})(_0x5a59, -0x4f1d4 * -0x1 + -0x4 * 0x12f87 + 0x61a53);
-const LiveUser = require(_0xc7bf5c(0x164) + "r");
-
-//create admin
+// Create Account (Sign up)
 exports.store = async (req, res) => {
-  function _0x5c4f(_0x2a0b65, _0x466828) {
-    const _0x1afe32 = _0x3bb3();
-    return (
-      (_0x5c4f = function (_0xc99954, _0xd405a7) {
-        _0xc99954 = _0xc99954 - (0x1595 * -0x1 + -0x5d2 * -0x2 + 0xb93);
-        let _0x459973 = _0x1afe32[_0xc99954];
-        return _0x459973;
-      }),
-      _0x5c4f(_0x2a0b65, _0x466828)
-    );
-  }
-  function _0x3bb3() {
-    const _0x201e48 = [
-      "1757539IwHntK",
-      "encrypt",
-      "alid\x20detai",
-      "message",
-      "erver\x20Erro",
-      "1790dCYGZJ",
-      "Admin\x20crea",
-      "save",
-      "292673xApyMD",
-      "10728718tniFgw",
-      "login",
-      "code",
-      "json",
-      "Internal\x20S",
-      "PurchaseCo",
-      "ted\x20Succes",
-      "de\x20is\x20not\x20",
-      "password",
-      "trim",
-      "sfully.",
-      "ls.",
-      "findOne",
-      "body",
-      "8dugNJR",
-      "112vnJFOw",
-      "Oops\x20!\x20Inv",
-      "valid.",
-      "status",
-      "10cToByV",
-      "81370WgtwHZ",
-      "781686kDlNSv",
-      "email",
-      "log",
-      "file",
-      "purchaseCo",
-      "1947MZbstj",
-      "4528458motclN",
-    ];
-    _0x3bb3 = function () {
-      return _0x201e48;
-    };
-    return _0x3bb3();
-  }
-  const _0x17520f = _0x5c4f;
-  (function (_0x41f5d0, _0x2d79c1) {
-    const _0x5de270 = _0x5c4f,
-      _0x2c441a = _0x41f5d0();
-    while (!![]) {
-      try {
-        const _0x20e617 =
-          parseInt(_0x5de270(0x1a9)) / (0x1 * -0x1695 + 0x69a + -0x21 * -0x7c) +
-          (-parseInt(_0x5de270(0x1a6)) / (-0x3d5 * -0x9 + 0x1446 + -0x36c1)) * (-parseInt(_0x5de270(0x1c4)) / (-0x16ec + -0x1 * -0x1e01 + -0x712)) +
-          (parseInt(_0x5de270(0x1b9)) / (0x26ee + 0x1784 + 0x7a * -0x83)) * (-parseInt(_0x5de270(0x1be)) / (0x26b9 + -0x2c * -0x29 + -0x2dc0)) +
-          parseInt(_0x5de270(0x1c5)) / (-0xacd + 0x57 * -0x4e + 0x2555) +
-          (parseInt(_0x5de270(0x1c6)) / (0x1e72 + 0x3e4 + -0x224f)) * (parseInt(_0x5de270(0x1b8)) / (-0x94d + 0x1 * 0xd81 + -0x42c)) +
-          (-parseInt(_0x5de270(0x1bf)) / (-0x8d1 + 0x1 * 0x1445 + -0xb6b)) * (-parseInt(_0x5de270(0x1bd)) / (0x1e9 + 0x1 * -0x7f7 + 0x4 * 0x186)) +
-          -parseInt(_0x5de270(0x1aa)) / (0x244 + -0x3 * -0x3e1 + -0xddc);
-        if (_0x20e617 === _0x2d79c1) break;
-        else _0x2c441a["push"](_0x2c441a["shift"]());
-      } catch (_0x2abe8f) {
-        _0x2c441a["push"](_0x2c441a["shift"]());
-      }
-    }
-  })(_0x3bb3, -0x98652 + -0x1 * 0xe46a3 + -0x15b5 * -0x179);
   try {
-    if (req.body && !req.body.code) req.body.code = "DEFAULT_PURCHASE_CODE";
-    if (!req[_0x17520f(0x1b7)][_0x17520f(0x1ac)] || !req[_0x17520f(0x1b7)][_0x17520f(0x1c0)] || !req[_0x17520f(0x1b7)][_0x17520f(0x1b2)]) {
-      if (req[_0x17520f(0x1c2)]) deleteFile(req[_0x17520f(0x1c2)]);
-      return res[_0x17520f(0x1bc)](-0x1 * 0x140d + 0x120e * 0x1 + 0x9 * 0x4f)[_0x17520f(0x1ad)]({ status: ![], message: _0x17520f(0x1ba) + _0x17520f(0x1a3) + _0x17520f(0x1b5) });
+    const { email, password, name } = req.body;
+
+    if (!email || !password) {
+      if (req.file) deleteFile(req.file);
+      return res.status(200).json({ status: false, message: "Email and password are required." });
     }
-    const data = await LiveUser(req[_0x17520f(0x1b7)][_0x17520f(0x1ac)], -0xa511ba + -0x1 * -0x3cfc3c9 + -0x30950 * -0x1);
-    if (data) {
-      const login = await Login[_0x17520f(0x1b6)]();
-      if (!login) {
-        const newLogin = new Login();
-        (newLogin[_0x17520f(0x1ab)] = !![]), await newLogin[_0x17520f(0x1a8)]();
-      } else (login[_0x17520f(0x1ab)] = !![]), await login[_0x17520f(0x1a8)]();
+
+    const cleanEmail = email.toLowerCase().trim();
+
+    // Check if account with that email already exists in Admin or User collection
+    const [existingAdmin, existingUser] = await Promise.all([
+      Admin.findOne({ email: cleanEmail }),
+      User.findOne({ email: cleanEmail }),
+    ]);
+
+    if (existingAdmin || existingUser) {
+      if (req.file) deleteFile(req.file);
+      return res.status(200).json({ status: false, message: "An account with this email already exists." });
+    }
+
+    // Check if any admin exists in the system
+    const adminCount = await Admin.countDocuments();
+    let accountRole = "user";
+
+    if (adminCount === 0 || req.body.role === "admin") {
+      accountRole = "admin";
       const admin = new Admin();
-      return (
-        (admin[_0x17520f(0x1c0)] = req[_0x17520f(0x1b7)][_0x17520f(0x1c0)]?.[_0x17520f(0x1b3)]()),
-        (admin[_0x17520f(0x1c3) + "de"] = req[_0x17520f(0x1b7)][_0x17520f(0x1ac)]),
-        (admin[_0x17520f(0x1b2)] = cryptr[_0x17520f(0x1a2)](req[_0x17520f(0x1b7)][_0x17520f(0x1b2)])),
-        await admin[_0x17520f(0x1a8)](),
-        res[_0x17520f(0x1bc)](-0x29a + -0x19e7 * -0x1 + -0x1 * 0x1685)[_0x17520f(0x1ad)]({ status: !![], message: _0x17520f(0x1a7) + _0x17520f(0x1b0) + _0x17520f(0x1b4), data: admin })
-      );
-    } else return res[_0x17520f(0x1bc)](0x2389 + -0x947 + -0x197a)[_0x17520f(0x1ad)]({ status: ![], message: _0x17520f(0x1af) + _0x17520f(0x1b1) + _0x17520f(0x1bb) });
-  } catch (_0x1c07cb) {
-    if (req[_0x17520f(0x1c2)]) deleteFile(req[_0x17520f(0x1c2)]);
-    return (
-      console[_0x17520f(0x1c1)](_0x1c07cb),
-      res[_0x17520f(0x1bc)](-0xb79 * -0x2 + 0x2 * -0x2cc + 0x49 * -0x36)[_0x17520f(0x1ad)]({ status: ![], message: _0x1c07cb[_0x17520f(0x1a4)] || _0x17520f(0x1ae) + _0x17520f(0x1a5) + "r" })
-    );
+      admin.email = cleanEmail;
+      admin.name = name ? name.trim() : cleanEmail.split("@")[0];
+      admin.password = cryptr.encrypt(password);
+      if (req.file) admin.image = req.file.path;
+      await admin.save();
+
+      let login = await Login.findOne();
+      if (!login) {
+        login = new Login({ login: true });
+        await login.save();
+      } else {
+        login.login = true;
+        await login.save();
+      }
+
+      const payload = {
+        _id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        image: admin.image || "storage/male.png",
+        role: "admin",
+      };
+      const token = jwt.sign(payload, process.env.JWT_SECRET || "2FhKmINItB", { expiresIn: "30d" });
+
+      return res.status(200).json({
+        status: true,
+        message: "Account registered successfully as Administrator.",
+        data: token,
+        role: "admin",
+        user: payload,
+      });
+    } else {
+      // Register as standard creator / platform user
+      const user = new User();
+      user.email = cleanEmail;
+      user.name = name ? name.trim() : cleanEmail.split("@")[0];
+      user.userName = "@" + user.name.toLowerCase().replace(/\s+/g, "_");
+      user.password = cryptr.encrypt(password);
+      user.uniqueId = "WU_" + Date.now().toString(36).toUpperCase();
+      user.coin = 1000;
+      if (req.file) user.image = req.file.path;
+      await user.save();
+
+      const payload = {
+        _id: user._id,
+        name: user.name,
+        userName: user.userName,
+        email: user.email,
+        image: user.image || "storage/male.png",
+        role: "user",
+      };
+      const token = jwt.sign(payload, process.env.JWT_SECRET || "2FhKmINItB", { expiresIn: "30d" });
+
+      return res.status(200).json({
+        status: true,
+        message: "Account registered successfully.",
+        data: token,
+        role: "user",
+        user: payload,
+      });
+    }
+  } catch (error) {
+    if (req.file) deleteFile(req.file);
+    console.error("Sign up error:", error);
+    return res.status(500).json({ status: false, message: error.message || "Internal Server Error" });
   }
 };
 
-//admin login
+// Login (Supports both Administrator and Regular Users)
 exports.login = async (req, res) => {
-  function _0x4273(_0x36289d, _0x1efcd4) {
-    const _0x43929c = _0x1a91();
-    return (
-      (_0x4273 = function (_0x4a2016, _0x46d309) {
-        _0x4a2016 = _0x4a2016 - (-0x16d3 + 0xf * 0x133 + 0x7 * 0xef);
-        let _0x274902 = _0x43929c[_0x4a2016];
-        return _0x274902;
-      }),
-      _0x4273(_0x36289d, _0x1efcd4)
-    );
-  }
-  const _0x3c2f04 = _0x4273;
-  (function (_0x21ed1f, _0x57c6e7) {
-    const _0x42bd0b = _0x4273,
-      _0x231df3 = _0x21ed1f();
-    while (!![]) {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(200).json({ status: false, message: "Email and password are required." });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+
+    // 1. Check Admin account first
+    const admin = await Admin.findOne({ email: cleanEmail });
+    if (admin) {
+      let isMatch = false;
       try {
-        const _0x44fdbe =
-          (parseInt(_0x42bd0b(0x1d0)) / (-0xf17 + -0x5 * -0x569 + -0xbf5)) * (parseInt(_0x42bd0b(0x1da)) / (0xd * -0x265 + 0x2 * 0x22c + -0x1 * -0x1acb)) +
-          (parseInt(_0x42bd0b(0x1d5)) / (-0x2e5 * 0xb + -0x2323 + 0x42fd)) * (-parseInt(_0x42bd0b(0x1b3)) / (0x1 * 0xe8f + -0x1e59 + -0x77 * -0x22)) +
-          (parseInt(_0x42bd0b(0x1be)) / (0x13 * 0x207 + -0xa3 * -0x2f + -0x1 * 0x446d)) * (parseInt(_0x42bd0b(0x1b7)) / (-0x3cb + 0x1 * -0x2016 + 0x5b * 0x65)) +
-          (-parseInt(_0x42bd0b(0x1ba)) / (-0x12a7 * -0x1 + 0x22ed * 0x1 + 0x358d * -0x1)) * (-parseInt(_0x42bd0b(0x1db)) / (-0x69 * -0x58 + 0x67 * 0x59 + -0x47df)) +
-          parseInt(_0x42bd0b(0x1d7)) / (0x77f + -0x4f * 0x8 + 0x1aa * -0x3) +
-          (parseInt(_0x42bd0b(0x1d9)) / (-0x1f * -0x115 + 0x21e1 + -0x4362)) * (-parseInt(_0x42bd0b(0x1cb)) / (-0x5eb + -0x260e * -0x1 + -0x2018)) +
-          parseInt(_0x42bd0b(0x1b9)) / (0xf6f * -0x1 + 0x116b + -0x1f0);
-        if (_0x44fdbe === _0x57c6e7) break;
-        else _0x231df3["push"](_0x231df3["shift"]());
-      } catch (_0x1324a6) {
-        _0x231df3["push"](_0x231df3["shift"]());
+        const decrypted = cryptr.decrypt(admin.password);
+        if (decrypted === password) isMatch = true;
+      } catch (e) {
+        if (admin.password === password) isMatch = true;
+      }
+
+      if (isMatch) {
+        const payload = {
+          _id: admin._id,
+          name: admin.name || "Administrator",
+          email: admin.email,
+          image: admin.image || "storage/male.png",
+          role: "admin",
+        };
+        const token = jwt.sign(payload, process.env.JWT_SECRET || "2FhKmINItB", { expiresIn: "30d" });
+
+        return res.status(200).json({
+          status: true,
+          message: "Login successful as Administrator.",
+          data: token,
+          role: "admin",
+          user: payload,
+        });
+      } else {
+        return res.status(200).json({ status: false, message: "Password does not match. Please try again." });
       }
     }
-  })(_0x1a91, 0xdcd5d + -0x3a275 * -0x3 + 0xc54b * -0x17);
-  function _0x1a91() {
-    const _0x4b5580 = [
-      "2458132ikQeUy",
-      "ail.",
-      "th\x20that\x20em",
-      "Oops\x20!\x20Inv",
-      "6eNomRL",
-      "sword\x20does",
-      "694380URmNxS",
-      "548422Hcblys",
-      "trim",
-      "ever\x20Error",
-      "image",
-      "857695hBUUzA",
-      "findOne",
-      "JWT_SECRET",
-      "name",
-      "alid\x20detai",
-      "decrypt",
-      "ls!",
-      "_id",
-      "log",
-      "json",
-      "status",
-      "sign",
-      "in\x20does\x20no",
-      "964766skCbKy",
-      "password",
-      "message",
-      "Internal\x20S",
-      "valid.",
-      "244YpdqCd",
-      "Oops\x20!\x20Pas",
-      "t\x20found\x20wi",
-      "Oops\x20!\x20adm",
-      "body",
-      "3wAmxrY",
-      "Admin\x20has\x20",
-      "2386656TrCowm",
-      "email",
-      "20DLPaKn",
-      "3602miuvpi",
-      "32logMuK",
-      "n\x27t\x20matche",
-      "env",
-      "PurchaseCo",
-      "de\x20is\x20not\x20",
-      "been\x20login",
-      "purchaseCo",
-    ];
-    _0x1a91 = function () {
-      return _0x4b5580;
-    };
-    return _0x1a91();
-  }
-  try {
-    if (!req[_0x3c2f04(0x1d4)][_0x3c2f04(0x1d8)] || !req[_0x3c2f04(0x1d4)][_0x3c2f04(0x1cc)])
-      return res[_0x3c2f04(0x1c8)](-0x4b * 0x62 + -0x1 * 0x6fc + 0x1 * 0x247a)[_0x3c2f04(0x1c7)]({ status: ![], message: _0x3c2f04(0x1b6) + _0x3c2f04(0x1c2) + _0x3c2f04(0x1c4) });
-    const admin = await Admin[_0x3c2f04(0x1bf)]({ email: req[_0x3c2f04(0x1d4)][_0x3c2f04(0x1d8)][_0x3c2f04(0x1bb)]() });
-    if (!admin)
-      return res[_0x3c2f04(0x1c8)](0x85 * 0x11 + -0xf5a + -0x3 * -0x26f)[_0x3c2f04(0x1c7)]({
-        status: ![],
-        message: _0x3c2f04(0x1d3) + _0x3c2f04(0x1ca) + _0x3c2f04(0x1d2) + _0x3c2f04(0x1b5) + _0x3c2f04(0x1b4),
-      });
-    if (cryptr[_0x3c2f04(0x1c3)](admin[_0x3c2f04(0x1cc)]) !== req[_0x3c2f04(0x1d4)][_0x3c2f04(0x1cc)])
-      return res[_0x3c2f04(0x1c8)](-0x35 * -0x38 + 0x86c + -0x99e * 0x2)[_0x3c2f04(0x1c7)]({ status: ![], message: _0x3c2f04(0x1d1) + _0x3c2f04(0x1b8) + _0x3c2f04(0x1dc) + "d!" });
-    if (admin[_0x3c2f04(0x1e1) + "de"]) {
-      const data = await LiveUser(admin?.[_0x3c2f04(0x1e1) + "de"], 0x2961a24 + 0x1739d3 + 0x806768);
-      if (data) {
-        const payload = { _id: admin[_0x3c2f04(0x1c5)], name: admin[_0x3c2f04(0x1c1)], email: admin[_0x3c2f04(0x1d8)], image: admin[_0x3c2f04(0x1bd)] },
-          token = jwt[_0x3c2f04(0x1c9)](payload, process?.[_0x3c2f04(0x1dd)]?.[_0x3c2f04(0x1c0)], { expiresIn: "1h" });
-        return res[_0x3c2f04(0x1c8)](-0xbc9 + 0x1646 + -0x9b5)[_0x3c2f04(0x1c7)]({ status: !![], message: _0x3c2f04(0x1d6) + _0x3c2f04(0x1e0) + ".", data: token });
-      } else return res[_0x3c2f04(0x1c8)](0x50 + -0x8 * 0x221 + 0x1180)[_0x3c2f04(0x1c7)]({ status: ![], message: _0x3c2f04(0x1de) + _0x3c2f04(0x1df) + _0x3c2f04(0x1cf) });
-    } else return res[_0x3c2f04(0x1c8)](-0x25b1 + 0x1e54 + 0x825)[_0x3c2f04(0x1c7)]({ status: ![], message: _0x3c2f04(0x1de) + _0x3c2f04(0x1df) + _0x3c2f04(0x1cf) });
-  } catch (_0xed01f1) {
-    return (
-      console[_0x3c2f04(0x1c6)](_0xed01f1),
-      res[_0x3c2f04(0x1c8)](-0x16a * -0x13 + 0x2 * -0xab1 + -0x388)[_0x3c2f04(0x1c7)]({ status: ![], message: _0xed01f1[_0x3c2f04(0x1cd)] || _0x3c2f04(0x1ce) + _0x3c2f04(0x1bc) })
-    );
+
+    // 2. Check User account
+    const user = await User.findOne({ email: cleanEmail });
+    if (user) {
+      if (user.isBlock) {
+        return res.status(200).json({ status: false, message: "Your account is temporarily suspended by admin." });
+      }
+
+      let isMatch = false;
+      if (user.password) {
+        try {
+          const decrypted = cryptr.decrypt(user.password);
+          if (decrypted === password) isMatch = true;
+        } catch (e) {
+          if (user.password === password) isMatch = true;
+        }
+      } else {
+        // First login after migration / social seed: set initial password
+        user.password = cryptr.encrypt(password);
+        await user.save();
+        isMatch = true;
+      }
+
+      if (isMatch) {
+        const payload = {
+          _id: user._id,
+          name: user.name,
+          userName: user.userName,
+          email: user.email,
+          image: user.image || "storage/male.png",
+          role: "user",
+        };
+        const token = jwt.sign(payload, process.env.JWT_SECRET || "2FhKmINItB", { expiresIn: "30d" });
+
+        return res.status(200).json({
+          status: true,
+          message: "Login successful.",
+          data: token,
+          role: "user",
+          user: payload,
+        });
+      } else {
+        return res.status(200).json({ status: false, message: "Password does not match. Please try again." });
+      }
+    }
+
+    return res.status(200).json({ status: false, message: "No account found with that email address." });
+  } catch (error) {
+    console.error("Login error:", error);
+    return res.status(500).json({ status: false, message: error.message || "Internal Server Error" });
   }
 };
 
