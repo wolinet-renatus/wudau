@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 48" fill="none">
+  <defs>
+    <linearGradient id="wGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF3CAC"/>
+      <stop offset="50%" stop-color="#784BA0"/>
+      <stop offset="100%" stop-color="#2B86C5"/>
+    </linearGradient>
+  </defs>
+  <!-- W lettermark -->
+  <path d="M8 12 L18 44 L28 24 L38 44 L48 12" stroke="url(#wGrad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- WUDAU text -->
+  <text x="60" y="42" font-family="'Arial Black', sans-serif" font-size="30" font-weight="900" letter-spacing="2" fill="white">WUDAU</text>
+
+</svg>

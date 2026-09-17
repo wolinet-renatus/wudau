@@ -1,0 +1,72 @@
+# ==============================================================================
+# WUDAU Root .gitignore
+# ==============================================================================
+
+# OS Metadata & Local Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE & Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Node.js & Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+
+# Next.js Build Output & Cache
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment Secret Files (Preserve templates)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+!.env.production.example
+
+# Backend Upload Storage (Preserve directory structure, ignore user uploads)
+admin/backend/storage/*
+!admin/backend/storage/.gitkeep
+
+# Flutter Mobile App Build & Cache
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.packages
+app/.pub-cache/
+app/.pub/
+app/build/
+app/ios/Pods/
+app/ios/.symlinks/
+app/ios/Flutter/Flutter.framework
+app/ios/Flutter/Flutter.podspec
+app/ios/Flutter/Generated.xcconfig
+app/ios/Flutter/app.framework
+app/android/.gradle/
+app/android/local.properties
+app/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+
+# Temporary Artifacts & Archives
+*.tar.gz
+*.zip
+*.log

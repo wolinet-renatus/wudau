@@ -1,0 +1,108 @@
+services:
+  # ----------------------------------------------------------------------------
+  # Unified Gateway (Reverse Proxy for wudao.wolinet.com)
+  # ----------------------------------------------------------------------------
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: wudau-gateway
+    restart: unless-stopped
+    ports:
+      - "${GATEWAY_PORT:-80}:80"
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - wudau-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wudao.rule=Host(`wudao.wolinet.com`)"
+      - "traefik.http.routers.wudao.entrypoints=websecure"
+      - "traefik.http.routers.wudao.tls=true"
+      - "traefik.http.routers.wudao.tls.certresolver=letsencrypt"
+      - "traefik.http.services.wudao.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.wudao-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+
+  # ----------------------------------------------------------------------------
+  # Next.js Web Application & Admin Portal
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./admin/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BASE_URL: ${BASE_URL:-https://wudao.wolinet.com/}
+        NEXT_PUBLIC_SECRET_KEY: ${SECRET_KEY:-5TIvw5cpc0}
+        NEXT_PUBLIC_PROJECT_NAME: ${PROJECT_NAME:-WUDAU}
+    container_name: wudau-frontend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=5001
+      - INTERNAL_API_URL=http://backend:5050/
+      - NEXT_PUBLIC_BASE_URL=${BASE_URL:-https://wudao.wolinet.com/}
+      - NEXT_PUBLIC_SECRET_KEY=${SECRET_KEY:-5TIvw5cpc0}
+      - NEXT_PUBLIC_PROJECT_NAME=${PROJECT_NAME:-WUDAU}
+    networks:
+      - wudau-network
+
+  # ----------------------------------------------------------------------------
+  # Node.js Express & Socket.IO Backend API
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./admin/backend
+      dockerfile: Dockerfile
+    container_name: wudau-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=5050
+      - baseURL=${BASE_URL:-https://wudao.wolinet.com/}
+      - projectName=${PROJECT_NAME:-WUDAU}
+      - JWT_SECRET=${JWT_SECRET:-2FhKmINItB}
+      - secretKey=${SECRET_KEY:-5TIvw5cpc0}
+      - EMAIL=${EMAIL:-kodebookapp@gmail.com}
+      - APP_PASSWORD=${APP_PASSWORD:-nohwrpybgiuhqjfy}
+      - MongoDb_Connection_String=${MONGO_URI:-mongodb://mongo:27017/shortie}
+    volumes:
+      # Persistent storage for uploaded reels, music, and avatars
+      - backend_storage:/app/storage
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - wudau-network
+
+  # ----------------------------------------------------------------------------
+  # Persistent MongoDB 7.0 Database
+  # ----------------------------------------------------------------------------
+  mongo:
+    image: mongo:7.0
+    container_name: wudau-mongo
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=shortie
+    volumes:
+      - mongo_data:/data/db
+      - ./DB:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - wudau-network
+
+volumes:
+  mongo_data:
+    name: wudau_mongo_data
+  backend_storage:
+    name: wudau_backend_storage
+
+networks:
+  wudau-network:
+    name: wudau-network
+    driver: bridge

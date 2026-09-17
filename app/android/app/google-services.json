@@ -1,0 +1,106 @@
+{
+  "project_info": {
+    "project_number": "62445718384",
+    "project_id": "shortie-8bb7c",
+    "storage_bucket": "shortie-8bb7c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:62445718384:android:32dbdaf2aec9af23d49db5",
+        "android_client_info": {
+          "package_name": "com.incodes.shortie"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "62445718384-g8562rfbdt20tfojde51m89n23uh73l7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.incodes.shortie",
+            "certificate_hash": "e64eb2db8decac14eb76afc5b201634b43c2c5cd"
+          }
+        },
+        {
+          "client_id": "62445718384-d415spsbkcd86ml1f3lqoe3cme2o2okm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtS2Q3ghLuXsCNd6IrlpoLiu2CD9yc7b8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "62445718384-d415spsbkcd86ml1f3lqoe3cme2o2okm.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "62445718384-8djj0eqqvfbhf01bjj57c0to9usrkv06.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.shortie.live"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:62445718384:android:55d8c25154c80480d49db5",
+        "android_client_info": {
+          "package_name": "com.shortie.live"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "62445718384-nv05ntuuk3oftarigvsds48tiocvekh0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.shortie.live",
+            "certificate_hash": "e64eb2db8decac14eb76afc5b201634b43c2c5cd"
+          }
+        },
+        {
+          "client_id": "62445718384-vuro92n37h4dd5matlknf2pdaclrpt2b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.shortie.live",
+            "certificate_hash": "97c198100bb27e82a1c25c009772058043f339f2"
+          }
+        },
+        {
+          "client_id": "62445718384-d415spsbkcd86ml1f3lqoe3cme2o2okm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtS2Q3ghLuXsCNd6IrlpoLiu2CD9yc7b8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "62445718384-d415spsbkcd86ml1f3lqoe3cme2o2okm.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "62445718384-8djj0eqqvfbhf01bjj57c0to9usrkv06.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.shortie.live"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- WUDAU brand colors -->
+    <color name="wudau_bg">#1a1a2e</color>
+    <color name="wudau_primary">#784BA0</color>
+    <color name="wudau_accent">#FF3CAC</color>
+    <color name="wudau_secondary">#2B86C5</color>
+</resources>

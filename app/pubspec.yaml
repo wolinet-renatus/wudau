@@ -1,0 +1,120 @@
+name: shortie
+description: "WUDAU – The ultimate short-video stage built to launch the next generation of creators."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  get: ^4.6.6
+  get_storage: ^2.1.1
+  fluttertoast: ^8.2.8
+#  intl: ^0.19.0
+  intl: ^0.18.0
+  connectivity_plus: ^6.0.3
+  url_launcher: ^6.3.0
+  lottie: ^3.1.0
+#  chewie: ^1.8.1
+  chewie: ^1.8.4
+  cached_network_image: ^3.3.1
+#  video_player: ^2.8.6
+  video_player: ^2.9.1
+  shimmer: ^3.0.0
+  country_picker: ^2.0.26
+  dotted_border: ^2.1.0
+  permission_handler: ^10.0.0
+  path_provider: ^2.1.3
+  socket_io_client: ^2.0.3+1
+  camera: ^0.10.3+2
+  flutter_spinkit: ^5.2.1
+  firebase_auth: ^4.20.0
+  firebase_core: ^2.30.1
+  preload_page_view: ^0.2.0
+  firebase_messaging: ^14.9.1
+  google_sign_in: ^6.2.1
+  video_thumbnail: ^0.5.3
+  image_picker: ^1.1.1
+  ffmpeg_kit_flutter: ^6.0.3
+  audioplayers: ^6.0.0
+  deepar_flutter: ^0.0.5
+#  zego_express_engine: ^3.14.5+2
+  zego_express_engine: ^3.16.2
+  encrypt: ^5.0.3
+  native_device_orientation: ^2.0.3
+  flutter_svg: ^2.0.10+1
+  record: ^5.1.0
+  webview_flutter: ^4.4.4
+  flutter_local_notifications: ^17.0.0
+  razorpay_flutter: ^1.3.7
+  flutter_stripe: ^10.1.1
+  in_app_purchase: ^3.2.0
+  dio: ^5.4.3+1
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^5.1.1
+  date_picker_plus: ^4.0.0
+  http: ^0.13.1
+  svgaplayer_flutter: ^2.0.0-nullsafety.0
+  in_app_purchase_android: any
+  in_app_purchase_storekit: any
+  vibration: ^1.9.0
+  screenshot: ^3.0.0
+  gallery_saver: ^2.3.2
+  flutter_launcher_icons: ^0.13.1
+  firebase_crashlytics: ^3.5.7
+  share_plus: ^9.0.0
+  flutter_branch_sdk: ^7.1.0
+  flutter_share: ^2.0.0
+  readmore: ^3.0.0
+  device_info_plus: ^10.1.0
+  blurrycontainer: ^2.1.0
+  flutterwave_standard: ^1.0.4
+  intl_phone_field: ^3.2.0
+  flutter_otp_text_field: ^1.2.0
+  video_trimmer: ^3.0.1
+
+
+dependency_overrides:
+  http: ^1.0.0
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/ic_app_logo.webp"
+  min_sdk_android: 21
+
+
+flutter:
+
+  uses-material-design: true
+
+  assets:
+   - assets/
+   - assets/fonts/
+   - assets/icons/
+   - assets/images/
+   - assets/lottie/
+   - assets/effects/
+
+  fonts:
+    - family: SfProRegular
+      fonts:
+        - asset: assets/fonts/Sf-Pro-Regular.otf
+
+    - family: SfProMedium
+      fonts:
+        - asset: assets/fonts/Sf-Pro-Medium.otf
+
+    - family: SfProBold
+      fonts:
+        - asset: assets/fonts/Sf-Pro-Bold.otf
+
