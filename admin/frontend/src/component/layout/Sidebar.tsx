@@ -14,7 +14,15 @@ import { projectName } from "@/util/config";
 import { color } from "html2canvas/dist/types/css/types/color";
 import axios from "axios";
 
-const Sidebar = ({ children }: { children: React.ReactNode }) => {
+const Sidebar = ({
+  children,
+  isOpen,
+  onClose,
+}: {
+  children?: React.ReactNode;
+  isOpen?: boolean;
+  onClose?: () => void;
+}) => {
   const router = useRouter();
 
   const handleLogout = () => {
@@ -736,7 +744,7 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
     <>
       <Script totalPage={totalPage} />
       <div className="mainSidebar">
-        <div className="sideBar webSidebar">
+        <div className={`sideBar webSidebar ${isOpen ? "mobSidebar" : ""}`}>
           <div className="sideBarLogo boxCenter">
             <Link
               href="/admin/dashboard"

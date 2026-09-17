@@ -2,7 +2,7 @@
 import { Providers } from "@/Provider";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
 
 const RootLayout = ({ children }) => {
@@ -42,16 +42,25 @@ const RootLayout = ({ children }) => {
       };
     }
   }, [resetTimeout]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev);
+  };
+
   return (
     <Providers>
-      <div className="mainContainer d-flex w-100">
-        <div className="containerLeft">
-          <Sidebar />
+      <div className={`mainContainer d-flex w-100 ${isSidebarOpen ? "sidebar-open" : ""}`}>
+        <div className={`containerLeft ${isSidebarOpen ? "mobSidebar-show" : ""}`}>
+          <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         </div>
         <div className="containerRight w-100 ">
-          <Navbar />
+          <Navbar onToggle={toggleSidebar} isSidebarOpen={isSidebarOpen} />
           <div className="mainAdmin ml-4">
-            <div className="mobSidebar-bg  d-none"></div>
+            <div
+              className={`mobSidebar-bg ${isSidebarOpen ? "responsive-bg d-block" : "d-none"}`}
+              onClick={() => setIsSidebarOpen(false)}
+            ></div>
             <main className="comShow">{children}</main>
           </div>
         </div>

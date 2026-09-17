@@ -9,7 +9,13 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { RootStore, useAppDispatch } from "../../store/store";
 import { baseURL, projectName } from "@/util/config";
 
-const Navbar = () => {
+const Navbar = ({
+  onToggle,
+  isSidebarOpen,
+}: {
+  onToggle?: () => void;
+  isSidebarOpen?: boolean;
+}) => {
   const [showImage, setShowImage] = useState<string>();
   const dispatch = useAppDispatch();
   const getAdminData =
@@ -46,7 +52,12 @@ const Navbar = () => {
               className="navBar boxBetween px-4 "
               style={{ padding: "10px 0px" }}
             >
-              <div className="navToggle" id={"toggle"}>
+              <div
+                className={`navToggle ${isSidebarOpen ? "active" : ""}`}
+                id={"toggle"}
+                onClick={onToggle}
+                style={{ cursor: "pointer" }}
+              >
                 <MenuIcon />
               </div>
               <div className=""></div>

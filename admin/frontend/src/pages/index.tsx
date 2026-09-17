@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import axios from "axios";
-import { baseURL, secretKey } from "@/util/config";
+import { baseURL, secretKey, projectName } from "@/util/config";
 
 interface VideoItem {
   _id: string;
@@ -19,6 +19,11 @@ interface VideoItem {
   totalLikes: number;
   totalComments: number;
   time: string;
+  songTitle?: string;
+  songImage?: string;
+  songLink?: string;
+  singerName?: string;
+  location?: string;
 }
 
 interface PostItem {
@@ -36,6 +41,8 @@ interface PostItem {
   totalLikes: number;
   totalComments: number;
   time: string;
+  location?: string;
+  mainPostImage?: string;
 }
 
 interface CommentItem {
@@ -55,10 +62,10 @@ interface GiftItem {
 const GIFTS_LIST: GiftItem[] = [
   { id: "g1", name: "Rose", icon: "🌹", coins: 10 },
   { id: "g2", name: "Love Heart", icon: "💖", coins: 50 },
-  { id: "g3", name: "Party Popper", icon: "🎉", coins: 100 },
+  { id: "g3", name: "African Drum", icon: "🪘", coins: 100 },
   { id: "g4", name: "Diamond", icon: "💎", coins: 500 },
   { id: "g5", name: "Crown", icon: "👑", coins: 1000 },
-  { id: "g6", name: "Rocket", icon: "🚀", coins: 2000 },
+  { id: "g6", name: "Safari Lion", icon: "🦁", coins: 2500 },
 ];
 
 export default function Home({
@@ -68,8 +75,11 @@ export default function Home({
   initialVideos?: VideoItem[];
   initialPosts?: PostItem[];
 }) {
-  // Navigation
-  const [currentTab, setCurrentTab] = useState<"reels" | "live" | "social" | "upload" | "chat" | "profile">("reels");
+  // Navigation & Viewport Modes
+  const [currentTab, setCurrentTab] = useState<"reels" | "live" | "social" | "music" | "explore" | "profile">("reels");
+  const [viewMode, setViewMode] = useState<"phone" | "wide">("phone");
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [currentFilter, setCurrentFilter] = useState<string>("all");
   const [currentReelIndex, setCurrentReelIndex] = useState<number>(0);
   const [language, setLanguage] = useState<string>("English");
   const [showLanguageDropdown, setShowLanguageDropdown] = useState<boolean>(false);
@@ -85,85 +95,155 @@ export default function Home({
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  // Social Interactions
+  // Social Interactions & Modals
   const [likedReelIds, setLikedReelIds] = useState<{ [id: string]: boolean }>({});
   const [reelLikesCount, setReelLikesCount] = useState<{ [id: string]: number }>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Modals / Drawers
   const [showCommentsDrawer, setShowCommentsDrawer] = useState<boolean>(false);
   const [showGiftModal, setShowGiftModal] = useState<boolean>(false);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authModalTitle, setAuthModalTitle] = useState<string>("");
   const [commentInput, setCommentInput] = useState<string>("");
 
-  // Comments map
-  const [commentsMap, setCommentsMap] = useState<{ [id: string]: CommentItem[] }>({
-    VID_SOFIA: [
-      { id: "c1", userName: "@lucas_fitness", text: "Incredible rhythm & choreography! 🔥", time: "2m ago" },
-      { id: "c2", userName: "@liam_carter", text: "That city backdrop is unmatched 🌆", time: "5m ago" },
+  // Music Preview in Sound Tab
+  const [playingAudioUrl, setPlayingAudioUrl] = useState<string | null>(null);
+  const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
+
+  // Comments map initialized with realistic Swahili and English commentary
+  const [commentsMap, setCommentsMap] = useState<{ [videoId: string]: CommentItem[] }>({
+    default: [
+      { id: "c1", userName: "@jay_bongo", text: "Hii ni kali sana bro! Dar es Salaam stand up! 🔥🇹🇿", time: "2m ago" },
+      { id: "c2", userName: "@zuhura_znz", text: "Mambo ni moto sana, Zanzibar tuko pamoja! 🌴✨", time: "8m ago" },
+      { id: "c3", userName: "@rehema_wildlife", text: "Unbelievable nature, Serengeti is truly the pride of Africa 🦁❤️", time: "15m ago" },
+      { id: "c4", userName: "@kenji_tokyo", text: "Greetings from Tokyo! Absolutely love the energy of WUDAU 🇯🇵🇹🇿", time: "25m ago" },
+      { id: "c5", userName: "@mollel_arusha", text: "Ngoma inabamba mbaya! Saluti tele kutoka Arusha 🏔️", time: "1h ago" },
     ],
   });
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
-
+  // Client-side authentication check
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setIsAuth(sessionStorage.getItem("isAuth") === "true");
+      const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+      setIsAuth(!!token);
     }
-
-    // Refresh client data
-    const refreshData = async () => {
-      try {
-        const [videosRes, postsRes] = await Promise.all([
-          axios.get("client/video/getAllVideos?start=1&limit=30").catch(() => ({ data: { data: [] } })),
-          axios.get("client/post/getAllPosts?start=1&limit=30").catch(() => ({ data: { post: [] } })),
-        ]);
-
-        if (videosRes.data?.data && videosRes.data.data.length > 0) {
-          // Ensure Sofia Martinez is prioritized to match demo screenshot if present
-          const list: VideoItem[] = videosRes.data.data;
-          list.sort((a, b) => {
-            if (a.userName === "@Sofia_Martinez_0") return -1;
-            if (b.userName === "@Sofia_Martinez_0") return 1;
-            return 0;
-          });
-          setVideos(list);
-        }
-        if (postsRes.data?.post && postsRes.data.post.length > 0) {
-          setPosts(postsRes.data.post);
-        }
-      } catch (err) {
-        console.error("Failed to refresh home data:", err);
-      }
-    };
-
-    refreshData();
   }, []);
 
-  // Filtered videos based on search
+  // Fetch updated data from API on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [vRes, pRes] = await Promise.all([
+          axios.get("client/video/getAllVideos?start=1&limit=30", { headers: { key: secretKey } }),
+          axios.get("client/post/getAllPosts?start=1&limit=30", { headers: { key: secretKey } }),
+        ]);
+        if (vRes.data?.data?.length) setVideos(vRes.data.data);
+        if (pRes.data?.post?.length) setPosts(pRes.data.post);
+      } catch (err) {
+        console.warn("Client data fetch error, using SSR data:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Keyboard navigation for reels
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsMenuOpen(false);
+        setShowCommentsDrawer(false);
+        setShowGiftModal(false);
+        setShowAuthModal(false);
+      }
+      if (currentTab === "reels" && !showCommentsDrawer && !showGiftModal && !showAuthModal) {
+        if (e.key === "ArrowDown") {
+          handleNextReel();
+        } else if (e.key === "ArrowUp") {
+          handlePrevReel();
+        } else if (e.key === " " || e.key === "k") {
+          e.preventDefault();
+          togglePlay();
+        } else if (e.key === "m") {
+          setIsMuted((prev) => !prev);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentTab, currentReelIndex, videos.length, showCommentsDrawer, showGiftModal, showAuthModal]);
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  // Resolve media URLs
+  const resolveMedia = (path?: string): string => {
+    if (!path) return "storage/thumb1.jpg";
+    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+    const base = baseURL.endsWith("/") ? baseURL : `${baseURL}/`;
+    const cleanPath = path.startsWith("/") ? path.slice(1) : path;
+    return `${base}${cleanPath}`;
+  };
+
+  // Toast Notification helper
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // Quick Filter Logic
   const filteredVideos = useMemo(() => {
-    if (!searchQuery.trim()) return videos;
-    const q = searchQuery.toLowerCase();
-    return videos.filter(
-      (v) =>
-        v.caption?.toLowerCase().includes(q) ||
-        v.name?.toLowerCase().includes(q) ||
-        v.userName?.toLowerCase().includes(q) ||
-        v.hashTag?.some((t) => t.toLowerCase().includes(q))
-    );
-  }, [videos, searchQuery]);
+    let list = videos;
+    if (currentFilter === "tanzania") {
+      list = list.filter((v) =>
+        (v.caption + " " + v.location + " " + v.name + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("tanzania") ||
+        (v.location || "").toLowerCase().includes("dar") ||
+        (v.location || "").toLowerCase().includes("zanzibar") ||
+        (v.location || "").toLowerCase().includes("arusha")
+      );
+    } else if (currentFilter === "serengeti") {
+      list = list.filter((v) =>
+        (v.caption + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("serengeti") ||
+        (v.caption + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("nature")
+      );
+    } else if (currentFilter === "singeli") {
+      list = list.filter((v) =>
+        (v.caption + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("singeli") ||
+        (v.caption + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("bongo")
+      );
+    } else if (currentFilter === "zanzibar") {
+      list = list.filter((v) =>
+        (v.caption + " " + v.location + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("zanzibar")
+      );
+    } else if (currentFilter === "global") {
+      list = list.filter((v) =>
+        (v.caption + " " + v.location + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("tokyo") ||
+        (v.caption + " " + v.location + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("paris") ||
+        (v.caption + " " + v.location + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("johannesburg")
+      );
+    }
 
-  // Current active reel video
-  const activeVideo = useMemo(() => {
-    if (filteredVideos.length === 0) return null;
-    return filteredVideos[currentReelIndex % filteredVideos.length];
-  }, [filteredVideos, currentReelIndex]);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (v) =>
+          (v.caption || "").toLowerCase().includes(q) ||
+          (v.name || "").toLowerCase().includes(q) ||
+          (v.userName || "").toLowerCase().includes(q) ||
+          (v.location || "").toLowerCase().includes(q) ||
+          (v.hashTag || []).some((h) => h.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [videos, currentFilter, searchQuery]);
 
-  // Navigation handlers
+  const activeVideo = filteredVideos[currentReelIndex] || filteredVideos[0];
+
   const handleNextReel = () => {
     if (filteredVideos.length === 0) return;
     setCurrentReelIndex((prev) => (prev + 1) % filteredVideos.length);
@@ -176,317 +256,194 @@ export default function Home({
     setIsPlaying(true);
   };
 
-  // Keyboard navigation & Wheel
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (currentTab === "reels" && !showCommentsDrawer && !showGiftModal && !showAuthModal) {
-        if (e.key === "ArrowDown") handleNextReel();
-        if (e.key === "ArrowUp") handlePrevReel();
-        if (e.key === " " || e.key === "k") {
-          e.preventDefault();
-          togglePlay();
-        }
-        if (e.key === "m") {
-          setIsMuted((prev) => !prev);
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentTab, showCommentsDrawer, showGiftModal, showAuthModal, filteredVideos]);
-
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (videoRef.current.paused) {
-        videoRef.current.play();
-        setIsPlaying(true);
-      } else {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      }
-    }
+  const handleLike = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const wasLiked = likedReelIds[id];
+    const currentCount = reelLikesCount[id] !== undefined ? reelLikesCount[id] : activeVideo?.totalLikes || 0;
+    setLikedReelIds((prev) => ({ ...prev, [id]: !wasLiked }));
+    setReelLikesCount((prev) => ({ ...prev, [id]: wasLiked ? Math.max(0, currentCount - 1) : currentCount + 1 }));
+    showToast(wasLiked ? "Removed like" : "❤️ Liked reel!");
   };
 
-  // Like handler
-  const handleLike = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!activeVideo) return;
-    const id = activeVideo._id;
-    const isLiked = !likedReelIds[id];
-    setLikedReelIds((prev) => ({ ...prev, [id]: isLiked }));
-    setReelLikesCount((prev) => ({
-      ...prev,
-      [id]: (prev[id] !== undefined ? prev[id] : activeVideo.totalLikes || 0) + (isLiked ? 1 : -1),
-    }));
-    showToast(isLiked ? "❤️ Liked reel!" : "Removed like");
-  };
-
-  // Share handler
-  const handleShare = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleShare = (video: VideoItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (typeof window !== "undefined") {
-      navigator.clipboard?.writeText(window.location.href);
-      showToast("🔗 Link copied to clipboard!");
+      const url = `${window.location.origin}/?videoId=${video._id}`;
+      navigator.clipboard?.writeText(url);
+      showToast("🔗 Reel link copied to clipboard!");
     }
   };
 
-  // Add Comment
-  const handleAddComment = () => {
-    if (!commentInput.trim() || !activeVideo) return;
+  const handleSendGift = (gift: GiftItem) => {
+    setShowGiftModal(false);
+    showToast(`🎁 Sent ${gift.icon} ${gift.name} (${gift.coins} coins) to ${activeVideo?.name || "Creator"}!`);
+  };
+
+  const handleAddComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentInput.trim()) return;
+    const vidId = activeVideo?._id || "default";
+    const currentList = commentsMap[vidId] || commentsMap["default"] || [];
     const newComment: CommentItem = {
-      id: "guest_" + Date.now(),
-      userName: "@WudauGuest",
+      id: "c_" + Date.now(),
+      userName: "@You (Visitor)",
       text: commentInput.trim(),
       time: "Just now",
     };
-    const key = activeVideo._id;
-    setCommentsMap((prev) => ({
-      ...prev,
-      [key]: [newComment, ...(prev[key] || [])],
-    }));
+    setCommentsMap({ ...commentsMap, [vidId]: [newComment, ...currentList] });
     setCommentInput("");
     showToast("💬 Comment posted!");
   };
 
-  // Send Gift
-  const handleSendGift = (gift: GiftItem) => {
-    setShowGiftModal(false);
-    showToast(`🎁 Sent ${gift.name} ${gift.icon} (${gift.coins} coins) to creator!`);
-  };
-
-  // Protected tabs handler
-  const handleSidebarClick = (tab: "reels" | "live" | "social" | "upload" | "chat" | "profile") => {
-    if (tab === "upload" || tab === "chat" || tab === "profile") {
-      setAuthModalTitle(
-        tab === "upload"
-          ? "Upload Your Rhythm Reel"
-          : tab === "chat"
-          ? "Direct Messaging & Chat"
-          : "Your Creator Profile"
-      );
-      setShowAuthModal(true);
+  const handleToggleMusic = (songUrl?: string) => {
+    if (!songUrl) return;
+    const fullUrl = resolveMedia(songUrl);
+    if (playingAudioUrl === fullUrl) {
+      audioPreviewRef.current?.pause();
+      setPlayingAudioUrl(null);
     } else {
-      setCurrentTab(tab);
+      setPlayingAudioUrl(fullUrl);
+      if (audioPreviewRef.current) {
+        audioPreviewRef.current.src = fullUrl;
+        audioPreviewRef.current.play().catch(() => {});
+      }
     }
-  };
-
-  const resolveMedia = (path: string | undefined, fallback: string = "/assets/images/female.png") => {
-    if (!path) return fallback;
-    if (path.startsWith("http://") || path.startsWith("https://")) return path;
-    const cleanBase = baseURL.endsWith("/") ? baseURL : `${baseURL}/`;
-    const cleanPath = path.startsWith("/") ? path.slice(1) : path;
-    return `${cleanBase}${cleanPath}`;
   };
 
   return (
     <>
       <Head>
-        <title>WUDAU | Reels</title>
-        <meta name="description" content="Watch trending reels and shorts on WUDAU without logging in." />
+        <title>{projectName} - African Rhythm & Global Talent Discovery</title>
+        <meta
+          name="description"
+          content="Experience vibrant Tanzanian street dance, Bongo Flava, Singeli 300BPM, Serengeti wildlife safari, and global creative reels on WUDAU."
+        />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div style={{ backgroundColor: "#ffffff", minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", color: "#111827" }}>
-        {/* Toast Notification */}
-        {toastMessage && (
-          <div
-            style={{
-              position: "fixed",
-              top: "84px",
-              left: "50%",
-              transform: "translateX(-50%)",
-              zIndex: 9999,
-              backgroundColor: "rgba(17, 24, 39, 0.95)",
-              color: "#fff",
-              padding: "10px 22px",
-              borderRadius: "30px",
-              fontSize: "14px",
-              fontWeight: "600",
-              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-              backdropFilter: "blur(8px)",
-            }}
-          >
-            {toastMessage}
+      {/* Audio preview element */}
+      <audio ref={audioPreviewRef} onEnded={() => setPlayingAudioUrl(null)} />
+
+      {/* Toast alert */}
+      {toastMessage && (
+        <div className="wudau-toast" role="alert">
+          {toastMessage}
+        </div>
+      )}
+
+      {/* MAIN CONTAINER */}
+      <div className="app-viewport">
+        {/* ==================================================================== */}
+        {/* TOP MENU NAVIGATION BAR (OPEN & CLOSE NAVIGATION ON TOP)            */}
+        {/* ==================================================================== */}
+        <header className="top-nav-bar">
+          <div className="top-nav-left">
+            {/* Menu Open/Close Button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className={`menu-hamburger-btn ${isMenuOpen ? "active" : ""}`}
+              aria-label="Toggle Menu"
+              title="Open Navigation Menu"
+            >
+              <div className="hamburger-box">
+                <span className="ham-line top"></span>
+                <span className="ham-line mid"></span>
+                <span className="ham-line bot"></span>
+              </div>
+              <span className="menu-btn-text">Menu</span>
+            </button>
+
+            {/* Brand Logo & Tag */}
+            <Link href="/" className="brand-logo-wrap">
+              <div className="brand-icon-badge">W</div>
+              <div className="brand-name-wrap">
+                <span className="brand-title">WUDAU</span>
+                <span className="brand-sub">RHYTHM & TALENT</span>
+              </div>
+            </Link>
           </div>
-        )}
 
-        {/* TOP NAVBAR (Identical to screenshot) */}
-        <header
-          style={{
-            height: "72px",
-            borderBottom: "1px solid #edf0f5",
-            padding: "0 28px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            backgroundColor: "#ffffff",
-            position: "sticky",
-            top: 0,
-            zIndex: 100,
-          }}
-        >
-          {/* Logo Brand */}
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
-            {/* Stylized Logo Icon (matching Solar Blaze ribbon) */}
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "10px",
-                background: "linear-gradient(135deg, #FF4B1F 0%, #FF9F00 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                fontWeight: "900",
-                fontSize: "20px",
-                boxShadow: "0 4px 12px rgba(255, 75, 31, 0.3)",
-              }}
-            >
-              W
+          {/* Quick Filter Categories (Tanzania, Serengeti, Bongo, Global) */}
+          <div className="top-nav-center">
+            <div className="filter-chips-scroll">
+              {[
+                { id: "all", label: "🔥 All" },
+                { id: "tanzania", label: "🇹🇿 Tanzania" },
+                { id: "serengeti", label: "🦁 Serengeti" },
+                { id: "singeli", label: "⚡ Singeli & Bongo" },
+                { id: "zanzibar", label: "🌴 Zanzibar" },
+                { id: "global", label: "🌍 Global" },
+              ].map((chip) => (
+                <button
+                  key={chip.id}
+                  onClick={() => {
+                    setCurrentFilter(chip.id);
+                    setCurrentReelIndex(0);
+                  }}
+                  className={`filter-chip ${currentFilter === chip.id ? "active" : ""}`}
+                >
+                  {chip.label}
+                </button>
+              ))}
             </div>
-            <span
-              style={{
-                fontSize: "26px",
-                fontWeight: "800",
-                letterSpacing: "-0.5px",
-                color: "#FF4B1F",
-              }}
-            >
-              WUDAU
-            </span>
-            <span
-              style={{
-                fontSize: "11px",
-                fontWeight: "700",
-                color: "#9CA3AF",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-                marginLeft: "2px",
-              }}
-            >
-              WUDAU
-            </span>
-          </Link>
+          </div>
 
-          {/* Search Bar + Live Button */}
-          <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: "1", maxWidth: "440px", margin: "0 24px" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                backgroundColor: "#F3F4F6",
-                borderRadius: "30px",
-                padding: "8px 18px",
-                width: "100%",
-                border: "1px solid #E5E7EB",
-              }}
-            >
-              <span style={{ color: "#9CA3AF", fontSize: "15px", marginRight: "8px" }}>🔍</span>
-              <span style={{ color: "#D1D5DB", marginRight: "10px" }}>|</span>
+          {/* Right Action Tools: Search, View Mode, Language, and Login */}
+          <div className="top-nav-right">
+            {/* Search Input (Expandable) */}
+            <div className="search-pill">
+              <span className="search-icon">🔍</span>
               <input
                 type="text"
-                placeholder="Search users , hashtags..."
+                placeholder="Search reels, artists, #tags..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  border: "none",
-                  backgroundColor: "transparent",
-                  outline: "none",
-                  fontSize: "14px",
-                  color: "#1F2937",
-                  width: "100%",
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentReelIndex(0);
                 }}
               />
               {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  style={{ background: "transparent", border: "none", color: "#9CA3AF", cursor: "pointer", fontSize: "14px" }}
-                >
+                <button onClick={() => setSearchQuery("")} className="search-clear-btn">
                   ✕
                 </button>
               )}
             </div>
 
-            {/* Live Camera Button (matching red pill in screenshot) */}
-            <button
-              onClick={() => setCurrentTab("live")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                background: "linear-gradient(135deg, #FF4B1F 0%, #FF9F00 100%)",
-                border: "none",
-                borderRadius: "30px",
-                padding: "8px 18px",
-                color: "#ffffff",
-                fontWeight: "700",
-                fontSize: "13px",
-                cursor: "pointer",
-                boxShadow: "0 3px 10px rgba(225, 29, 72, 0.3)",
-                whiteSpace: "nowrap",
-              }}
-            >
-              <span>📹</span>
-              <span>Live</span>
-            </button>
-          </div>
-
-          {/* Right Header Actions: Language & App Badges */}
-          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            {/* Language Dropdown */}
-            <div style={{ position: "relative" }}>
+            {/* Viewport Fitness Toggle (Desktop/Tablet: Native Phone vs Wide) */}
+            <div className="view-mode-toggle d-none-mobile">
               <button
-                onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  background: "#ffffff",
-                  border: "1px solid #E5E7EB",
-                  borderRadius: "8px",
-                  padding: "6px 14px",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  color: "#374151",
-                  cursor: "pointer",
-                }}
+                onClick={() => setViewMode("phone")}
+                className={`mode-btn ${viewMode === "phone" ? "active" : ""}`}
+                title="Native Smartphone Mockup View"
               >
-                <span>🌐</span>
-                <span>{language}</span>
-                <span style={{ fontSize: "10px", color: "#9CA3AF" }}>⌄</span>
+                📱 Phone
               </button>
+              <button
+                onClick={() => setViewMode("wide")}
+                className={`mode-btn ${viewMode === "wide" ? "active" : ""}`}
+                title="Expanded Wide Studio View"
+              >
+                💻 Wide
+              </button>
+            </div>
 
+            {/* Language Dropdown */}
+            <div className="lang-dropdown-wrap">
+              <button onClick={() => setShowLanguageDropdown(!showLanguageDropdown)} className="lang-btn">
+                🌐 {language} <span className="caret">▾</span>
+              </button>
               {showLanguageDropdown && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "100%",
-                    right: 0,
-                    marginTop: "6px",
-                    backgroundColor: "#ffffff",
-                    borderRadius: "8px",
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-                    border: "1px solid #E5E7EB",
-                    minWidth: "120px",
-                    zIndex: 200,
-                    overflow: "hidden",
-                  }}
-                >
-                  {["English", "中文 (Chinese)", "Español", "Français"].map((lang) => (
+                <div className="lang-menu">
+                  {["English", "Swahili (Kiswahili) 🇹🇿", "Français", "中文 (Chinese)"].map((lang) => (
                     <div
                       key={lang}
                       onClick={() => {
                         setLanguage(lang.split(" ")[0]);
                         setShowLanguageDropdown(false);
+                        showToast(`Language set to ${lang.split(" ")[0]}`);
                       }}
-                      style={{
-                        padding: "8px 14px",
-                        fontSize: "13px",
-                        cursor: "pointer",
-                        color: "#374151",
-                        backgroundColor: language === lang.split(" ")[0] ? "#F3F4F6" : "transparent",
-                      }}
+                      className={`lang-item ${language === lang.split(" ")[0] ? "selected" : ""}`}
                     >
                       {lang}
                     </div>
@@ -495,188 +452,224 @@ export default function Home({
               )}
             </div>
 
-            {/* Google Play Store Badge (exact button match) */}
-            <a
-              href="#google-play"
-              onClick={(e) => {
-                e.preventDefault();
-                showToast("WUDAU for Android download package available in /app directory");
-              }}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                backgroundColor: "#000000",
-                color: "#ffffff",
-                padding: "6px 14px",
-                borderRadius: "6px",
-                textDecoration: "none",
-                gap: "8px",
-                height: "38px",
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M3.6 1.8L13.8 12L3.6 22.2C3.2 21.8 3 21.2 3 20.5V3.5C3 2.8 3.2 2.2 3.6 1.8Z" fill="#2196F3" />
-                <path d="M17.4 8.4L13.8 12L17.4 15.6L20.8 13.6C21.7 13.1 21.7 10.9 20.8 10.4L17.4 8.4Z" fill="#FFC107" />
-                <path d="M3.6 22.2L17.4 15.6L13.8 12L3.6 22.2Z" fill="#F44336" />
-                <path d="M3.6 1.8L13.8 12L17.4 8.4L3.6 1.8Z" fill="#4CAF50" />
-              </svg>
-              <div style={{ display: "flex", flexDirection: "column", textAlign: "left", lineHeight: "1" }}>
-                <span style={{ fontSize: "8px", textTransform: "uppercase", color: "#9CA3AF" }}>GET IT ON</span>
-                <span style={{ fontSize: "12px", fontWeight: "700" }}>Google Play</span>
-              </div>
-            </a>
-
-            {/* Apple App Store Badge (exact button match) */}
-            <a
-              href="#app-store"
-              onClick={(e) => {
-                e.preventDefault();
-                showToast("WUDAU for iOS app package available in /app directory");
-              }}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                backgroundColor: "#000000",
-                color: "#ffffff",
-                padding: "6px 14px",
-                borderRadius: "6px",
-                textDecoration: "none",
-                gap: "8px",
-                height: "38px",
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.99.6-2.64 1.35-.58.67-.99 1.74-.88 2.76 1.01.08 2.04-.54 2.6-1.26z" />
-              </svg>
-              <div style={{ display: "flex", flexDirection: "column", textAlign: "left", lineHeight: "1" }}>
-                <span style={{ fontSize: "8px", textTransform: "uppercase", color: "#9CA3AF" }}>Download on the</span>
-                <span style={{ fontSize: "12px", fontWeight: "700" }}>App Store</span>
-              </div>
-            </a>
+            {/* Login / Dashboard Action */}
+            <Link href={isAuth ? "/admin/dashboard" : "/login"} className="header-login-btn">
+              <span>👤</span>
+              <span>{isAuth ? "Dashboard" : "Sign In"}</span>
+            </Link>
           </div>
         </header>
 
-        {/* MAIN BODY: SIDEBAR + CENTER CONTENT */}
-        <div style={{ display: "flex", flex: "1", height: "calc(100vh - 72px)", overflow: "hidden" }}>
-          {/* LEFT SIDEBAR (Matching screenshot items and active purple highlight) */}
-          <aside
-            style={{
-              width: "230px",
-              backgroundColor: "#ffffff",
-              borderRight: "1px solid #edf0f5",
-              padding: "20px 14px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "6px",
-              flexShrink: 0,
-            }}
-          >
-            {[
-              { id: "reels", label: "Reels", icon: "▶" },
-              { id: "live", label: "Live Stream", icon: "📶" },
-              { id: "social", label: "Social Feed", icon: "🤍" },
-              { id: "upload", label: "Upload", icon: "➕" },
-              { id: "chat", label: "Chat", icon: "💬" },
-              { id: "profile", label: "Profile", icon: "👤" },
-            ].map((item) => {
-              const isActive = currentTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleSidebarClick(item.id as any)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "14px",
-                    padding: "12px 18px",
-                    borderRadius: "14px",
-                    border: "none",
-                    backgroundColor: isActive ? "#FFF0EB" : "transparent",
-                    color: isActive ? "#FF4B1F" : "#374151",
-                    fontWeight: isActive ? "800" : "600",
-                    fontSize: "15px",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "all 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.backgroundColor = "#F9FAFB";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) e.currentTarget.style.backgroundColor = "transparent";
-                  }}
-                >
-                  <span style={{ fontSize: "16px", color: isActive ? "#FF4B1F" : "#6B7280" }}>{item.icon}</span>
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-
-            {/* Bottom brand credit */}
-            <div style={{ marginTop: "auto", padding: "16px 10px", fontSize: "11px", color: "#9CA3AF", textAlign: "left", lineHeight: "1.4" }}>
-              <strong style={{ color: "#FF4B1F" }}>WUDAU</strong>
-              <p style={{ margin: "2px 0 0 0" }}>Where Rhythm Meets Raw Potential</p>
-            </div>
-          </aside>
-
-          {/* CENTER STAGE (THE REELS VIEWER - IDENTICAL TO SCREENSHOT) */}
-          <main
-            style={{
-              flex: "1",
-              backgroundColor: "#F9FAFB",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            {currentTab === "reels" && (
-              <>
-                {filteredVideos.length === 0 ? (
-                  <div style={{ textAlign: "center", color: "#6B7280" }}>
-                    <p style={{ fontSize: "18px", fontWeight: "700" }}>No reels found matching &quot;{searchQuery}&quot;</p>
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      style={{
-                        padding: "8px 20px",
-                        borderRadius: "20px",
-                        backgroundColor: "#FF4B1F",
-                        color: "#fff",
-                        border: "none",
-                        fontWeight: "700",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Clear Search
-                    </button>
+        {/* ==================================================================== */}
+        {/* SLIDE-OVER NAVIGATION DRAWER (OPEN & CLOSE OPTIONS)                 */}
+        {/* ==================================================================== */}
+        {isMenuOpen && (
+          <div className="drawer-overlay" onClick={() => setIsMenuOpen(false)}>
+            <aside className="nav-drawer" onClick={(e) => e.stopPropagation()}>
+              {/* Drawer Top Bar */}
+              <div className="drawer-header">
+                <div className="drawer-brand">
+                  <div className="brand-icon-badge mini">W</div>
+                  <div>
+                    <h3 className="drawer-title">{projectName}</h3>
+                    <p className="drawer-tagline">Where Rhythm Meets Potential</p>
                   </div>
-                ) : (
-                  activeVideo && (
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "24px",
+                </div>
+                {/* Close Button */}
+                <button
+                  onClick={() => setIsMenuOpen(false)}
+                  className="drawer-close-btn"
+                  aria-label="Close Menu"
+                  title="Close Navigation"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Guest / User Profile Box */}
+              <div className="drawer-user-card">
+                <div className="drawer-user-info">
+                  <div className="user-avatar-circle">
+                    {isAuth ? "👑" : "🌍"}
+                  </div>
+                  <div>
+                    <h4 className="user-name">{isAuth ? "WUDAU Creator" : "Welcome to WUDAU"}</h4>
+                    <p className="user-status">{isAuth ? "Authenticated Creator" : "Guest Explorer • Tanzania & Global"}</p>
+                  </div>
+                </div>
+                <Link
+                  href={isAuth ? "/admin/dashboard" : "/login"}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="drawer-auth-cta"
+                >
+                  {isAuth ? "Go to Dashboard →" : "Sign In / Register →"}
+                </Link>
+              </div>
+
+              {/* Primary Feed Navigation */}
+              <div className="drawer-section">
+                <span className="drawer-section-title">EXPLORE CONTENT</span>
+                <nav className="drawer-nav-list">
+                  {[
+                    { id: "reels", label: "🎬 Reels & Shorts", desc: "Tanzanian & African Video Feed" },
+                    { id: "live", label: "🔴 Live Streams", desc: "Coco Beach & Stone Town Stages" },
+                    { id: "social", label: "🤍 Community Social Feed", desc: "Photos & Stories from Creators" },
+                    { id: "music", label: "🎵 Sound & Music Library", desc: "Bongo Flava, Singeli, Serengeti Audio" },
+                    { id: "explore", label: "🦁 Discover Tanzania", desc: "#TanzaniaUnforgettable Showcase" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setCurrentTab(item.id as any);
+                        setIsMenuOpen(false);
                       }}
+                      className={`drawer-nav-item ${currentTab === item.id ? "active" : ""}`}
                     >
-                      {/* Vertical Phone Card (The Reel) */}
-                      <div
-                        onClick={togglePlay}
-                        style={{
-                          position: "relative",
-                          width: "390px",
-                          height: "calc(100vh - 110px)",
-                          maxHeight: "720px",
-                          minHeight: "560px",
-                          backgroundColor: "#000000",
-                          borderRadius: "20px",
-                          overflow: "hidden",
-                          boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {/* Video Element */}
+                      <div className="nav-item-content">
+                        <span className="nav-item-label">{item.label}</span>
+                        <span className="nav-item-desc">{item.desc}</span>
+                      </div>
+                      <span className="nav-item-arrow">→</span>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Cultural Channels */}
+              <div className="drawer-section">
+                <span className="drawer-section-title">CULTURAL CHANNELS 🇹🇿</span>
+                <div className="channel-pills-grid">
+                  {[
+                    { tag: "tanzania", name: "🇹🇿 Dar Street Dance", count: "Kinondoni" },
+                    { tag: "singeli", name: "⚡ Singeli 300BPM", count: "Mbagala" },
+                    { tag: "serengeti", name: "🦁 Serengeti Safari", count: "Mara" },
+                    { tag: "zanzibar", name: "🌴 Zanzibar Taarab", count: "Stone Town" },
+                    { tag: "global", name: "🇯🇵 Tokyo & Paris Loops", count: "World Beats" },
+                  ].map((chan) => (
+                    <button
+                      key={chan.tag}
+                      onClick={() => {
+                        setCurrentFilter(chan.tag);
+                        setCurrentTab("reels");
+                        setCurrentReelIndex(0);
+                        setIsMenuOpen(false);
+                      }}
+                      className="channel-pill-card"
+                    >
+                      <span className="chan-name">{chan.name}</span>
+                      <span className="chan-count">{chan.count}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Actions & Links */}
+              <div className="drawer-section">
+                <span className="drawer-section-title">QUICK ACTIONS</span>
+                <div className="quick-action-row">
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setAuthModalTitle("Upload Reel");
+                      setShowAuthModal(true);
+                    }}
+                    className="action-btn-outline"
+                  >
+                    ➕ Upload Reel
+                  </button>
+                  <Link
+                    href="/admin/dashboard"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="action-btn-outline"
+                  >
+                    ⚙️ Admin Portal
+                  </Link>
+                </div>
+              </div>
+
+              {/* Mobile App Download Badges */}
+              <div className="drawer-footer">
+                <span className="drawer-footer-title">GET WUDAU FOR MOBILE</span>
+                <div className="app-store-badges">
+                  <a
+                    href="#android"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      showToast("Android APK download available in /app directory");
+                    }}
+                    className="store-badge-card"
+                  >
+                    <span>🤖</span>
+                    <div>
+                      <span className="badge-small">GET IT ON</span>
+                      <span className="badge-bold">Google Play</span>
+                    </div>
+                  </a>
+                  <a
+                    href="#ios"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      showToast("iOS app package available in /app directory");
+                    }}
+                    className="store-badge-card"
+                  >
+                    <span>🍎</span>
+                    <div>
+                      <span className="badge-small">DOWNLOAD ON</span>
+                      <span className="badge-bold">App Store</span>
+                    </div>
+                  </a>
+                </div>
+                <p className="drawer-copyright">
+                  © 2026 WUDAU Technologies • Built for Tanzania & Global Creators
+                </p>
+              </div>
+            </aside>
+          </div>
+        )}
+
+        {/* ==================================================================== */}
+        {/* MAIN BODY: NATIVE FITNESS DEVICE STAGE                               */}
+        {/* ==================================================================== */}
+        <main className={`main-stage ${viewMode === "wide" ? "wide-layout" : "phone-layout"}`}>
+          {/* TAB 1: REELS EXPERIENCE (WELL-FITTED NATIVE REEL VIEWER) */}
+          {currentTab === "reels" && (
+            <div className="reels-stage-wrapper">
+              {filteredVideos.length === 0 ? (
+                <div className="empty-state-card">
+                  <span style={{ fontSize: "44px" }}>🔍</span>
+                  <h3>No reels found for this category</h3>
+                  <p>Try clearing your filter or searching for another hashtag.</p>
+                  <button
+                    onClick={() => {
+                      setCurrentFilter("all");
+                      setSearchQuery("");
+                    }}
+                    className="primary-gradient-btn"
+                  >
+                    View All Reels
+                  </button>
+                </div>
+              ) : (
+                activeVideo && (
+                  <div className="stage-device-container">
+                    {/* Flagship Native Phone Mockup Frame */}
+                    <div className="phone-device-frame">
+                      {/* Top Phone Speaker & Dynamic Island */}
+                      <div className="device-status-notch">
+                        <span className="status-clock">09:41</span>
+                        <div className="dynamic-island">
+                          <span className="dynamic-indicator"></span>
+                        </div>
+                        <div className="status-icons">
+                          <span>5G</span>
+                          <span>📶</span>
+                          <span>🔋</span>
+                        </div>
+                      </div>
+
+                      {/* Video Player Box */}
+                      <div className="reel-player-box" onClick={togglePlay}>
                         <video
                           ref={videoRef}
                           key={activeVideo._id}
@@ -686,708 +679,2601 @@ export default function Home({
                           loop
                           muted={isMuted}
                           playsInline
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
+                          className="reel-video-element"
                         />
 
-                        {/* Top-Right Sound Button (identical to circle button in screenshot) */}
+                        {/* Sound Mute/Unmute Floating Button */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setIsMuted(!isMuted);
+                            showToast(isMuted ? "🔊 Sound Enabled" : "🔇 Muted");
                           }}
-                          style={{
-                            position: "absolute",
-                            top: "16px",
-                            right: "16px",
-                            width: "36px",
-                            height: "36px",
-                            borderRadius: "50%",
-                            backgroundColor: "rgba(0, 0, 0, 0.4)",
-                            backdropFilter: "blur(4px)",
-                            border: "none",
-                            color: "#ffffff",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                            fontSize: "16px",
-                            zIndex: 10,
-                          }}
+                          className="reel-sound-btn"
+                          aria-label="Toggle Sound"
                         >
                           {isMuted ? "🔇" : "🔊"}
                         </button>
 
-                        {/* Play/Pause Center Indicator */}
+                        {/* Centered Play/Pause Indicator */}
                         {!isPlaying && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              inset: 0,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              backgroundColor: "rgba(0, 0, 0, 0.2)",
-                              zIndex: 5,
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "64px",
-                                height: "64px",
-                                borderRadius: "50%",
-                                backgroundColor: "rgba(0, 0, 0, 0.6)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: "#fff",
-                                fontSize: "28px",
-                              }}
-                            >
-                              ▶
-                            </div>
+                          <div className="reel-play-indicator">
+                            <div className="play-icon-glow">▶</div>
                           </div>
                         )}
 
-                        {/* Bottom-Left Creator Overlay (Identical to Sofia Martinez in screenshot) */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            bottom: "20px",
-                            left: "16px",
-                            right: "72px",
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: "10px",
-                            zIndex: 10,
-                          }}
-                        >
-                          <img
-                            src={resolveMedia(activeVideo.userImage)}
-                            alt={activeVideo.name}
-                            style={{
-                              width: "42px",
-                              height: "42px",
-                              borderRadius: "50%",
-                              border: "2px solid #ffffff",
-                              objectFit: "cover",
-                              flexShrink: 0,
-                            }}
-                          />
-                          <div style={{ overflow: "hidden", textShadow: "0 2px 4px rgba(0,0,0,0.8)" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                              <span style={{ color: "#ffffff", fontSize: "16px", fontWeight: "700" }}>
-                                {activeVideo.name || "Sofia Martinez"}
-                              </span>
-                              {activeVideo.isVerified && (
-                                <span style={{ color: "#38BDF8", fontSize: "13px" }}>✓</span>
-                              )}
-                            </div>
-                            <span style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: "12px", display: "block" }}>
-                              {activeVideo.userName || "@Sofia_Martinez_0"}
-                            </span>
-                            <p
-                              style={{
-                                color: "#ffffff",
-                                fontSize: "13px",
-                                margin: "4px 0 0 0",
-                                lineHeight: "1.3",
-                                display: "-webkit-box",
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: "vertical",
-                                overflow: "hidden",
-                              }}
-                            >
-                              {activeVideo.caption}
-                            </p>
-                          </div>
+                        {/* Top Overlay Badge (Culture Tag) */}
+                        <div className="reel-top-tag">
+                          <span>🇹🇿 WUDAU LIVE REELS</span>
                         </div>
 
-                        {/* Right Vertical Action Icons (Identical to screenshot: Gift, Heart, Comment, Share, Music Disc) */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            bottom: "24px",
-                            right: "14px",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            gap: "16px",
-                            zIndex: 10,
-                          }}
-                        >
-                          {/* Gift Box Icon */}
-                          <div
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowGiftModal(true);
-                            }}
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "42px",
-                                height: "42px",
-                                borderRadius: "50%",
-                                backgroundColor: "rgba(255, 255, 255, 0.15)",
-                                backdropFilter: "blur(6px)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: "20px",
-                              }}
+                        {/* Right Floating Actions Column (Like, Comment, Gift, Share, Sound) */}
+                        <div className="reel-actions-column" onClick={(e) => e.stopPropagation()}>
+                          {/* Creator Avatar with follow + badge */}
+                          <div className="action-avatar-wrap">
+                            <img
+                              src={resolveMedia(activeVideo.userImage)}
+                              alt={activeVideo.name}
+                              className="action-creator-avatar"
+                            />
+                            <button
+                              onClick={() => showToast(`Followed ${activeVideo.name}!`)}
+                              className="avatar-follow-badge"
                             >
-                              🎁
-                            </div>
+                              +
+                            </button>
                           </div>
 
-                          {/* Like Heart */}
-                          <div
-                            onClick={handleLike}
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              cursor: "pointer",
-                            }}
+                          {/* Like Button */}
+                          <button
+                            onClick={(e) => handleLike(activeVideo._id, e)}
+                            className={`action-btn-bubble ${likedReelIds[activeVideo._id] ? "liked" : ""}`}
                           >
-                            <div
-                              style={{
-                                width: "42px",
-                                height: "42px",
-                                borderRadius: "50%",
-                                backgroundColor: "rgba(255, 255, 255, 0.15)",
-                                backdropFilter: "blur(6px)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: "20px",
-                                color: likedReelIds[activeVideo._id] ? "#EF4444" : "#ffffff",
-                              }}
-                            >
-                              {likedReelIds[activeVideo._id] ? "❤️" : "🤍"}
-                            </div>
-                            <span style={{ color: "#ffffff", fontSize: "11px", fontWeight: "700", marginTop: "3px", textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}>
+                            <span className="bubble-icon">❤️</span>
+                            <span className="bubble-count">
                               {reelLikesCount[activeVideo._id] !== undefined
                                 ? reelLikesCount[activeVideo._id]
                                 : activeVideo.totalLikes || 0}
                             </span>
-                          </div>
+                          </button>
 
-                          {/* Comments */}
-                          <div
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowCommentsDrawer(true);
-                            }}
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              cursor: "pointer",
-                            }}
+                          {/* Comments Button */}
+                          <button
+                            onClick={() => setShowCommentsDrawer(true)}
+                            className="action-btn-bubble"
                           >
-                            <div
-                              style={{
-                                width: "42px",
-                                height: "42px",
-                                borderRadius: "50%",
-                                backgroundColor: "rgba(255, 255, 255, 0.15)",
-                                backdropFilter: "blur(6px)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: "19px",
-                                color: "#ffffff",
-                              }}
-                            >
-                              💬
-                            </div>
-                            <span style={{ color: "#ffffff", fontSize: "11px", fontWeight: "700", marginTop: "3px", textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}>
-                              {(commentsMap[activeVideo._id]?.length || 0) +
-                                (activeVideo.totalComments || 0)}
+                            <span className="bubble-icon">💬</span>
+                            <span className="bubble-count">
+                              {(commentsMap[activeVideo._id] || commentsMap["default"] || []).length}
                             </span>
-                          </div>
+                          </button>
 
-                          {/* Share Arrow */}
-                          <div
-                            onClick={handleShare}
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              cursor: "pointer",
-                            }}
+                          {/* Gift Button */}
+                          <button
+                            onClick={() => setShowGiftModal(true)}
+                            className="action-btn-bubble gift-bubble"
                           >
-                            <div
-                              style={{
-                                width: "42px",
-                                height: "42px",
-                                borderRadius: "50%",
-                                backgroundColor: "rgba(255, 255, 255, 0.15)",
-                                backdropFilter: "blur(6px)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: "18px",
-                                color: "#ffffff",
-                              }}
-                            >
-                              ↪️
-                            </div>
-                          </div>
+                            <span className="bubble-icon">🎁</span>
+                            <span className="bubble-count">Gift</span>
+                          </button>
 
-                          {/* Spinning Music Vinyl Disc */}
-                          <div
-                            style={{
-                              width: "38px",
-                              height: "38px",
-                              borderRadius: "50%",
-                              backgroundColor: "#111827",
-                              border: "2px solid #ffffff",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              animation: "spin 4s linear infinite",
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
-                              fontSize: "14px",
-                            }}
+                          {/* Share Button */}
+                          <button
+                            onClick={(e) => handleShare(activeVideo, e)}
+                            className="action-btn-bubble"
                           >
-                            🎵
+                            <span className="bubble-icon">↗️</span>
+                            <span className="bubble-count">{activeVideo.shareCount || 0}</span>
+                          </button>
+
+                          {/* Rotating Vinyl Record */}
+                          <div
+                            onClick={() => handleToggleMusic(activeVideo.songLink)}
+                            className={`spinning-record ${isPlaying ? "spinning" : ""}`}
+                            title={activeVideo.songTitle || "Original Soundtrack"}
+                          >
+                            <div className="record-center">🎵</div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* UP / DOWN NAVIGATION BUTTONS (Outside to the right, matching screenshot) */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                        {/* Up Arrow */}
+                        {/* Bottom Metadata Overlay */}
+                        <div className="reel-metadata-vignette" onClick={(e) => e.stopPropagation()}>
+                          <div className="creator-meta-row">
+                            <span className="creator-display-name">{activeVideo.name}</span>
+                            {activeVideo.isVerified && <span className="verified-badge">✓</span>}
+                            <span className="creator-handle">{activeVideo.userName}</span>
+                          </div>
+
+                          {/* Geolocation Tag */}
+                          {activeVideo.location && (
+                            <div className="location-pin-row">
+                              <span>📍</span>
+                              <span>{activeVideo.location}</span>
+                            </div>
+                          )}
+
+                          {/* Caption & Hashtags */}
+                          <p className="reel-caption-text">{activeVideo.caption}</p>
+
+                          {/* Sound Ticker Row */}
+                          <div className="sound-ticker-row">
+                            <span className="ticker-icon">🎵</span>
+                            <div className="ticker-marquee">
+                              <span>
+                                {activeVideo.songTitle || "Original Sound"} • {activeVideo.singerName || activeVideo.name}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Native Bottom Navigation Bar Inside Mobile Mockup */}
+                        <div className="device-bottom-nav">
+                          <button
+                            onClick={() => setCurrentTab("reels")}
+                            className="dev-nav-btn active"
+                          >
+                            <span>▶</span>
+                            <span>Reels</span>
+                          </button>
+                          <button
+                            onClick={() => setCurrentTab("live")}
+                            className="dev-nav-btn"
+                          >
+                            <span>🔴</span>
+                            <span>Live</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setAuthModalTitle("Create Reel");
+                              setShowAuthModal(true);
+                            }}
+                            className="dev-nav-btn create-btn"
+                          >
+                            <span>➕</span>
+                          </button>
+                          <button
+                            onClick={() => setCurrentTab("social")}
+                            className="dev-nav-btn"
+                          >
+                            <span>🤍</span>
+                            <span>Feed</span>
+                          </button>
+                          <button
+                            onClick={() => setCurrentTab("profile")}
+                            className="dev-nav-btn"
+                          >
+                            <span>👤</span>
+                            <span>Profile</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Desktop Side Companion Controls (Only visible on wide/tablet screens) */}
+                    <aside className="desktop-companion-controls">
+                      {/* Up/Down Reel Switcher */}
+                      <div className="reel-arrow-controls">
                         <button
                           onClick={handlePrevReel}
-                          title="Previous Reel (Up Arrow)"
-                          style={{
-                            width: "44px",
-                            height: "44px",
-                            borderRadius: "50%",
-                            backgroundColor: "#4B5563",
-                            border: "none",
-                            color: "#ffffff",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "20px",
-                            cursor: "pointer",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                            transition: "background 0.2s",
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#374151")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#4B5563")}
+                          className="arrow-nav-btn"
+                          title="Previous Reel (Arrow Up)"
                         >
-                          ↑
+                          ▲
                         </button>
-
-                        {/* Down Arrow */}
+                        <div className="reel-counter-badge">
+                          {currentReelIndex + 1} / {filteredVideos.length}
+                        </div>
                         <button
                           onClick={handleNextReel}
-                          title="Next Reel (Down Arrow)"
-                          style={{
-                            width: "44px",
-                            height: "44px",
-                            borderRadius: "50%",
-                            backgroundColor: "#4B5563",
-                            border: "none",
-                            color: "#ffffff",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "20px",
-                            cursor: "pointer",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                            transition: "background 0.2s",
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#374151")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#4B5563")}
+                          className="arrow-nav-btn"
+                          title="Next Reel (Arrow Down)"
                         >
-                          ↓
+                          ▼
+                        </button>
+                      </div>
+
+                      {/* Creator Spotlight Box */}
+                      <div className="companion-creator-box">
+                        <div className="comp-avatar-row">
+                          <img
+                            src={resolveMedia(activeVideo.userImage)}
+                            alt={activeVideo.name}
+                            className="comp-avatar"
+                          />
+                          <div>
+                            <h4 className="comp-name">{activeVideo.name}</h4>
+                            <p className="comp-handle">{activeVideo.userName}</p>
+                          </div>
+                        </div>
+                        <div className="comp-stats-grid">
+                          <div className="comp-stat">
+                            <strong>{activeVideo.totalLikes || 1420}</strong>
+                            <span>Likes</span>
+                          </div>
+                          <div className="comp-stat">
+                            <strong>{activeVideo.shareCount || 389}</strong>
+                            <span>Shares</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => showToast(`Followed ${activeVideo.name}!`)}
+                          className="comp-follow-btn"
+                        >
+                          + Follow Artist
+                        </button>
+                      </div>
+
+                      {/* Soundtrack Preview Card */}
+                      {activeVideo.songTitle && (
+                        <div className="companion-sound-card">
+                          <div className="sound-card-header">
+                            <span>🎵</span>
+                            <div>
+                              <h5>{activeVideo.songTitle}</h5>
+                              <p>{activeVideo.singerName || "WUDAU Sound"}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleToggleMusic(activeVideo.songLink)}
+                            className="sound-play-preview-btn"
+                          >
+                            {playingAudioUrl === resolveMedia(activeVideo.songLink) ? "⏸ Stop Audio" : "▶ Play Soundtrack"}
+                          </button>
+                        </div>
+                      )}
+                    </aside>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: LIVE BROADCASTS */}
+          {currentTab === "live" && (
+            <div className="tab-page-container">
+              <div className="tab-header-banner">
+                <h2>🔴 WUDAU Live Stages</h2>
+                <p>Real-time interactive streams, coastal music sessions, and street dance competitions.</p>
+              </div>
+              <div className="live-streams-grid">
+                {[
+                  {
+                    id: "l1",
+                    title: "Coco Beach Street Dance Battle 2026",
+                    host: "Kassim Mwambao (Dar es Salaam)",
+                    viewers: "2.8k",
+                    image: "storage/thumb2.jpg",
+                    tag: "DANCE LIVE",
+                  },
+                  {
+                    id: "l2",
+                    title: "Stone Town Acoustic Dhow Sunset Live",
+                    host: "Zuhura Bakari (Zanzibar)",
+                    viewers: "1.9k",
+                    image: "storage/thumb4.jpg",
+                    tag: "MUSIC LIVE",
+                  },
+                  {
+                    id: "l3",
+                    title: "Serengeti Dawn Wildlife Migration Patrol",
+                    host: "Rehema Mushi (Serengeti)",
+                    viewers: "4.5k",
+                    image: "storage/thumb1.jpg",
+                    tag: "SAFARI LIVE",
+                  },
+                  {
+                    id: "l4",
+                    title: "Singeli 300BPM Speed Challenge Live",
+                    host: "Amani Juma (Mbagala)",
+                    viewers: "3.2k",
+                    image: "storage/thumb3.jpg",
+                    tag: "BEAT LIVE",
+                  },
+                ].map((stream) => (
+                  <div
+                    key={stream.id}
+                    onClick={() => {
+                      setCurrentTab("reels");
+                      showToast(`Entering live broadcast: ${stream.title}`);
+                    }}
+                    className="live-card-item"
+                  >
+                    <img src={resolveMedia(stream.image)} alt={stream.title} className="live-card-img" />
+                    <div className="live-badge-overlay">🔴 {stream.tag}</div>
+                    <div className="live-viewers-count">👁️ {stream.viewers}</div>
+                    <div className="live-card-details">
+                      <h4>{stream.title}</h4>
+                      <p>Hosted by {stream.host}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: COMMUNITY SOCIAL FEED */}
+          {currentTab === "social" && (
+            <div className="tab-page-container">
+              <div className="tab-header-banner">
+                <h2>🤍 Community Social Feed</h2>
+                <p>Authentic creator photography, behind-the-scenes culture, and community moments.</p>
+              </div>
+              <div className="social-feed-grid">
+                {posts.map((post) => (
+                  <article key={post._id} className="social-post-card">
+                    <div className="post-author-row">
+                      <img
+                        src={resolveMedia(post.userImage)}
+                        alt={post.name}
+                        className="post-author-avatar"
+                      />
+                      <div className="post-author-text">
+                        <span className="author-name">{post.name}</span>
+                        <span className="author-location">{post.location || post.userName}</span>
+                      </div>
+                      <span className="post-time-badge">{post.time || "Recently"}</span>
+                    </div>
+                    <div className="post-photo-frame">
+                      <img
+                        src={resolveMedia(post.postImage?.[0] || post.mainPostImage)}
+                        alt="Community Post"
+                        className="post-image-element"
+                      />
+                    </div>
+                    <div className="post-body">
+                      <p className="post-caption">{post.caption}</p>
+                      <div className="post-action-bar">
+                        <button
+                          onClick={() => showToast("Liked community post!")}
+                          className="post-heart-btn"
+                        >
+                          ❤️ {post.totalLikes || 18} Likes
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowCommentsDrawer(true);
+                          }}
+                          className="post-comment-btn"
+                        >
+                          💬 Comments
                         </button>
                       </div>
                     </div>
-                  )
-                )}
-              </>
-            )}
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
 
-            {/* LIVE STREAM TAB */}
-            {currentTab === "live" && (
-              <div style={{ maxWidth: "800px", width: "100%", padding: "24px", textAlign: "center" }}>
-                <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#111827", marginBottom: "8px" }}>
-                  🔴 Live Broadcasts
-                </h2>
-                <p style={{ color: "#6B7280", marginBottom: "24px" }}>
-                  Watch live creator streams, interactive music stages, and dance competitions.
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-                  {filteredVideos.slice(0, 2).map((v) => (
-                    <div
-                      key={v._id}
-                      onClick={() => setCurrentTab("reels")}
-                      style={{
-                        borderRadius: "16px",
-                        overflow: "hidden",
-                        backgroundColor: "#000",
-                        position: "relative",
-                        height: "360px",
-                        cursor: "pointer",
-                        boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-                      }}
+          {/* TAB 4: SOUNDS & MUSIC LIBRARY */}
+          {currentTab === "music" && (
+            <div className="tab-page-container">
+              <div className="tab-header-banner">
+                <h2>🎵 WUDAU Sounds & Audio Tracks</h2>
+                <p>Discover original African rhythms, Bongo Flava, Singeli, and global collaborations.</p>
+              </div>
+              <div className="music-tracks-list">
+                {[
+                  {
+                    title: "Mapenzi ya Bongo",
+                    singer: "Kassim ft. Jay Temba",
+                    time: "0:45",
+                    genre: "Bongo Flava",
+                    link: "storage/song_bongo_1.mp3",
+                    image: "storage/category_bongo.jpg",
+                  },
+                  {
+                    title: "Kinondoni Singeli Rush 300BPM",
+                    singer: "Amani Juma",
+                    time: "0:35",
+                    genre: "Singeli",
+                    link: "storage/song_singeli_1.mp3",
+                    image: "storage/category_bongo.jpg",
+                  },
+                  {
+                    title: "Serengeti Sunrise Acoustic",
+                    singer: "Zuhura Bakari",
+                    time: "0:50",
+                    genre: "Coastal Acoustic",
+                    link: "storage/song_acoustic_tz.mp3",
+                    image: "storage/category_nature.jpg",
+                  },
+                  {
+                    title: "Ngorongoro Dawn Chants",
+                    singer: "Emmanuel Mollel",
+                    time: "0:40",
+                    genre: "Traditional Maasai",
+                    link: "storage/song_maasai_chant.mp3",
+                    image: "storage/category_nature.jpg",
+                  },
+                  {
+                    title: "Durban Sunset Amapiano",
+                    singer: "Nolwazi Khumalo",
+                    time: "0:55",
+                    genre: "Amapiano",
+                    link: "storage/song_amapiano.mp3",
+                    image: "storage/category_afrobeats.jpg",
+                  },
+                  {
+                    title: "Shibuya Afro Groove",
+                    singer: "Kenji Takahashi",
+                    time: "0:42",
+                    genre: "Tokyo Fusion",
+                    link: "storage/song_tokyo_fusion.mp3",
+                    image: "storage/category_global.jpg",
+                  },
+                ].map((track, idx) => (
+                  <div key={idx} className="music-track-card">
+                    <img src={resolveMedia(track.image)} alt={track.title} className="track-cover-art" />
+                    <div className="track-text">
+                      <h4>{track.title}</h4>
+                      <p>{track.singer} • <span className="genre-tag">{track.genre}</span></p>
+                    </div>
+                    <span className="track-duration">{track.time}</span>
+                    <button
+                      onClick={() => handleToggleMusic(track.link)}
+                      className="track-play-btn"
                     >
-                      <img src={resolveMedia(v.videoImage)} alt="live" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      <div style={{ position: "absolute", top: "14px", left: "14px", backgroundColor: "#EF4444", color: "#fff", padding: "4px 10px", borderRadius: "12px", fontSize: "11px", fontWeight: "800" }}>
-                        LIVE
-                      </div>
-                      <div style={{ position: "absolute", bottom: "14px", left: "14px", right: "14px", color: "#fff", textShadow: "0 2px 4px rgba(0,0,0,0.8)" }}>
-                        <span style={{ fontWeight: "700", fontSize: "15px", display: "block" }}>{v.name}</span>
-                        <span style={{ fontSize: "12px", opacity: 0.8 }}>{v.caption}</span>
-                      </div>
+                      {playingAudioUrl === resolveMedia(track.link) ? "⏸ Pause" : "▶ Play"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: DISCOVER TANZANIA SHOWCASE */}
+          {currentTab === "explore" && (
+            <div className="tab-page-container">
+              <div className="tab-header-banner">
+                <h2>🦁 Discover Tanzania Unforgettable</h2>
+                <p>Explore the natural beauty, cultural rhythm, and untamed spirit of Tanzania.</p>
+              </div>
+              <div className="explore-destinations-grid">
+                {[
+                  {
+                    name: "Serengeti National Park",
+                    subtitle: "Great Migration & Lion Prides",
+                    desc: "Witness the greatest wildlife spectacle on Earth across the endless savanna plains.",
+                    image: "storage/thumb1.jpg",
+                    tag: "#SerengetiMagic",
+                  },
+                  {
+                    name: "Stone Town, Zanzibar",
+                    subtitle: "Spice Island & Swahili Soul",
+                    desc: "Labyrinthine alleys, acoustic coastal melodies, and sunset dhow sails on turquoise waters.",
+                    image: "storage/post4.jpg",
+                    tag: "#ZanzibarVibes",
+                  },
+                  {
+                    name: "Mount Kilimanjaro & Meru",
+                    subtitle: "The Roof of Africa",
+                    desc: "Towering snow peaks meeting vibrant Maasai culture and rhythmic footwork traditions.",
+                    image: "storage/thumb5.jpg",
+                    tag: "#Kilimanjaro",
+                  },
+                  {
+                    name: "Dar es Salaam & Coco Beach",
+                    subtitle: "Street Dance & Singeli Capital",
+                    desc: "Electric urban vibes, beach dance battles, and high-energy music production.",
+                    image: "storage/thumb2.jpg",
+                    tag: "#DarEsSalaam",
+                  },
+                ].map((item, i) => (
+                  <div key={i} className="explore-card">
+                    <div className="explore-card-img-wrap">
+                      <img src={resolveMedia(item.image)} alt={item.name} />
+                      <span className="explore-tag-chip">{item.tag}</span>
                     </div>
-                  ))}
+                    <div className="explore-card-info">
+                      <h3>{item.name}</h3>
+                      <h4>{item.subtitle}</h4>
+                      <p>{item.desc}</p>
+                      <button
+                        onClick={() => {
+                          setCurrentFilter("tanzania");
+                          setCurrentTab("reels");
+                        }}
+                        className="explore-view-reels-btn"
+                      >
+                        Watch Reels From Here →
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: PROFILE & WALLET */}
+          {currentTab === "profile" && (
+            <div className="tab-page-container">
+              <div className="profile-dashboard-card">
+                <div className="profile-banner-top">
+                  <div className="profile-avatar-large">
+                    {isAuth ? "👑" : "🌍"}
+                  </div>
+                </div>
+                <div className="profile-info-body">
+                  <h3>{isAuth ? "WUDAU Creator" : "Guest Explorer"}</h3>
+                  <p>{isAuth ? "creator@wudau.tz" : "Connect with creators, send gifts, and upload reels."}</p>
+                  
+                  <div className="wallet-balance-card">
+                    <div className="wallet-left">
+                      <span>💎 WUDAU COINS BALANCE</span>
+                      <h2>1,500 Coins</h2>
+                    </div>
+                    <button
+                      onClick={() => showToast("Recharge coins package via Flutterwave / Stripe")}
+                      className="primary-gradient-btn"
+                    >
+                      + Top Up Coins
+                    </button>
+                  </div>
+
+                  <div className="profile-cta-actions">
+                    <Link href={isAuth ? "/admin/dashboard" : "/login"} className="full-width-btn">
+                      {isAuth ? "Open Admin Management Portal" : "Sign In to Your Account"}
+                    </Link>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
+        </main>
 
-            {/* SOCIAL FEED TAB */}
-            {currentTab === "social" && (
-              <div style={{ maxWidth: "900px", width: "100%", height: "100%", overflowY: "auto", padding: "30px" }}>
-                <h2 style={{ fontSize: "24px", fontWeight: "800", color: "#111827", marginBottom: "20px" }}>
-                  🤍 Community Social Feed
-                </h2>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
-                  {posts.map((post) => (
-                    <div key={post._id} style={{ backgroundColor: "#ffffff", borderRadius: "16px", border: "1px solid #E5E7EB", overflow: "hidden", boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
-                      <div style={{ padding: "12px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
-                        <img src={resolveMedia(post.userImage)} alt={post.name} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }} />
-                        <div>
-                          <span style={{ fontSize: "14px", fontWeight: "700", display: "block", color: "#111827" }}>{post.name}</span>
-                          <span style={{ fontSize: "12px", color: "#9CA3AF" }}>{post.userName}</span>
-                        </div>
-                      </div>
-                      <div style={{ width: "100%", height: "240px", backgroundColor: "#000" }}>
-                        <img src={resolveMedia(post.postImage?.[0])} alt="post" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      </div>
-                      <div style={{ padding: "14px" }}>
-                        <p style={{ fontSize: "13px", color: "#374151", margin: "0 0 10px 0" }}>{post.caption}</p>
-                        <span style={{ fontSize: "12px", color: "#6B7280" }}>❤️ {post.totalLikes || 0} Likes</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* FLOATING LOGIN BUTTON (Bottom-Right corner, matching screenshot) */}
-            <Link
-              href={isAuth ? "/dashboard" : "/login"}
-              style={{
-                position: "fixed",
-                bottom: "30px",
-                right: "30px",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "12px 26px",
-                borderRadius: "30px",
-                background: "linear-gradient(135deg, #EC4899 0%, #A855F7 100%)",
-                color: "#ffffff",
-                fontWeight: "700",
-                fontSize: "15px",
-                textDecoration: "none",
-                boxShadow: "0 8px 24px rgba(236, 72, 153, 0.45)",
-                zIndex: 90,
-                transition: "transform 0.15s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-            >
-              <span>👤</span>
-              <span>{isAuth ? "Dashboard" : "Login"}</span>
-            </Link>
-          </main>
-        </div>
-
-        {/* COMMENTS SLIDE-OVER DRAWER */}
+        {/* ==================================================================== */}
+        {/* SLIDE-OVER COMMENTS DRAWER (NATIVE MOBILE BOTTOM-SHEET / MODAL)      */}
+        {/* ==================================================================== */}
         {showCommentsDrawer && activeVideo && (
-          <div
-            onClick={() => setShowCommentsDrawer(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              backgroundColor: "rgba(0,0,0,0.5)",
-              zIndex: 300,
-              display: "flex",
-              justifyContent: "flex-end",
-            }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                width: "360px",
-                backgroundColor: "#ffffff",
-                height: "100%",
-                padding: "24px",
-                display: "flex",
-                flexDirection: "column",
-                boxShadow: "-10px 0 30px rgba(0,0,0,0.2)",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                <h3 style={{ fontSize: "18px", fontWeight: "800", margin: 0 }}>Comments</h3>
-                <button
-                  onClick={() => setShowCommentsDrawer(false)}
-                  style={{ background: "transparent", border: "none", fontSize: "18px", cursor: "pointer", color: "#6B7280" }}
-                >
+          <div className="comments-drawer-backdrop" onClick={() => setShowCommentsDrawer(false)}>
+            <div className="comments-sheet-container" onClick={(e) => e.stopPropagation()}>
+              <div className="sheet-handle-bar"></div>
+              <div className="sheet-header-row">
+                <h3>Comments ({(commentsMap[activeVideo._id] || commentsMap["default"] || []).length})</h3>
+                <button onClick={() => setShowCommentsDrawer(false)} className="sheet-close-btn">
                   ✕
                 </button>
               </div>
 
-              {/* Comment list */}
-              <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px" }}>
-                {(commentsMap[activeVideo._id] || []).length === 0 ? (
-                  <p style={{ color: "#9CA3AF", textAlign: "center", margin: "auto 0" }}>No comments yet. Be the first!</p>
-                ) : (
-                  (commentsMap[activeVideo._id] || []).map((c) => (
-                    <div key={c.id} style={{ backgroundColor: "#F9FAFB", padding: "10px 14px", borderRadius: "12px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2px" }}>
-                        <span style={{ fontSize: "12px", fontWeight: "700", color: "#FF4B1F" }}>{c.userName}</span>
-                        <span style={{ fontSize: "10px", color: "#9CA3AF" }}>{c.time}</span>
-                      </div>
-                      <p style={{ fontSize: "13px", color: "#374151", margin: 0 }}>{c.text}</p>
+              {/* Comments Feed */}
+              <div className="comments-list-scroll">
+                {(commentsMap[activeVideo._id] || commentsMap["default"] || []).map((c) => (
+                  <div key={c.id} className="comment-bubble-item">
+                    <div className="comment-avatar-bubble">
+                      {c.userName.slice(1, 3).toUpperCase()}
                     </div>
-                  ))
-                )}
-              </div>
-
-              {/* Add comment input */}
-              <div style={{ display: "flex", gap: "8px", paddingTop: "14px", borderTop: "1px solid #E5E7EB" }}>
-                <input
-                  type="text"
-                  placeholder="Add a comment..."
-                  value={commentInput}
-                  onChange={(e) => setCommentInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
-                  style={{
-                    flex: 1,
-                    padding: "8px 14px",
-                    borderRadius: "20px",
-                    border: "1px solid #E5E7EB",
-                    outline: "none",
-                    fontSize: "13px",
-                  }}
-                />
-                <button
-                  onClick={handleAddComment}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: "20px",
-                    backgroundColor: "#FF4B1F",
-                    color: "#fff",
-                    border: "none",
-                    fontWeight: "700",
-                    fontSize: "13px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Send
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SEND GIFT MODAL */}
-        {showGiftModal && (
-          <div
-            onClick={() => setShowGiftModal(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              backgroundColor: "rgba(0,0,0,0.6)",
-              zIndex: 300,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "20px",
-            }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                backgroundColor: "#ffffff",
-                borderRadius: "24px",
-                maxWidth: "440px",
-                width: "100%",
-                padding: "24px",
-                boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
-                textAlign: "center",
-              }}
-            >
-              <h3 style={{ fontSize: "20px", fontWeight: "800", margin: "0 0 6px 0", color: "#111827" }}>
-                Send Gift To Creator 🎁
-              </h3>
-              <p style={{ fontSize: "13px", color: "#6B7280", margin: "0 0 20px 0" }}>
-                Show appreciation for this rhythm performance on WUDAU!
-              </p>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "20px" }}>
-                {GIFTS_LIST.map((gift) => (
-                  <button
-                    key={gift.id}
-                    onClick={() => handleSendGift(gift)}
-                    style={{
-                      padding: "16px 10px",
-                      borderRadius: "16px",
-                      border: "1px solid #E5E7EB",
-                      backgroundColor: "#F9FAFB",
-                      cursor: "pointer",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: "4px",
-                      transition: "transform 0.1s",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#FF4B1F")}
-                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
-                  >
-                    <span style={{ fontSize: "28px" }}>{gift.icon}</span>
-                    <span style={{ fontSize: "12px", fontWeight: "700", color: "#111827" }}>{gift.name}</span>
-                    <span style={{ fontSize: "11px", color: "#F59E0B", fontWeight: "600" }}>🪙 {gift.coins}</span>
-                  </button>
+                    <div className="comment-text-wrap">
+                      <div className="comment-author-row">
+                        <span className="c-author">{c.userName}</span>
+                        <span className="c-time">{c.time}</span>
+                      </div>
+                      <p className="c-text">{c.text}</p>
+                    </div>
+                  </div>
                 ))}
               </div>
 
-              <button
-                onClick={() => setShowGiftModal(false)}
-                style={{
-                  padding: "10px 24px",
-                  borderRadius: "20px",
-                  backgroundColor: "#E5E7EB",
-                  color: "#374151",
-                  border: "none",
-                  fontWeight: "700",
-                  fontSize: "13px",
-                  cursor: "pointer",
-                }}
-              >
-                Close
-              </button>
+              {/* Add Comment Input Bar */}
+              <form onSubmit={handleAddComment} className="comment-input-form">
+                <input
+                  type="text"
+                  placeholder="Add an authentic comment... (e.g. Kali sana! 🔥)"
+                  value={commentInput}
+                  onChange={(e) => setCommentInput(e.target.value)}
+                  className="comment-text-input"
+                />
+                <button type="submit" className="comment-send-btn">
+                  Send
+                </button>
+              </form>
             </div>
           </div>
         )}
 
-        {/* AUTH PROMPT MODAL (for protected sidebar actions) */}
-        {showAuthModal && (
-          <div
-            onClick={() => setShowAuthModal(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              backgroundColor: "rgba(0,0,0,0.6)",
-              zIndex: 300,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "20px",
-            }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                backgroundColor: "#ffffff",
-                borderRadius: "24px",
-                maxWidth: "420px",
-                width: "100%",
-                padding: "28px",
-                textAlign: "center",
-                boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
-              }}
-            >
-              <div style={{ fontSize: "36px", marginBottom: "12px" }}>🔐</div>
-              <h3 style={{ fontSize: "20px", fontWeight: "800", color: "#111827", margin: "0 0 8px 0" }}>
-                {authModalTitle}
-              </h3>
-              <p style={{ fontSize: "14px", color: "#6B7280", lineHeight: "1.5", margin: "0 0 24px 0" }}>
-                Sign in to your WUDAU account to post content, message other artists, and manage your dashboard.
-              </p>
+        {/* ==================================================================== */}
+        {/* GIFT TRAY MODAL                                                      */}
+        {/* ==================================================================== */}
+        {showGiftModal && (
+          <div className="modal-backdrop" onClick={() => setShowGiftModal(false)}>
+            <div className="gift-tray-card" onClick={(e) => e.stopPropagation()}>
+              <div className="gift-tray-header">
+                <h3>🎁 Send Creator Gift</h3>
+                <button onClick={() => setShowGiftModal(false)} className="sheet-close-btn">
+                  ✕
+                </button>
+              </div>
+              <p className="gift-subhead">Support {activeVideo?.name} with virtual tokens & gifts!</p>
+              <div className="gifts-grid">
+                {GIFTS_LIST.map((g) => (
+                  <button
+                    key={g.id}
+                    onClick={() => handleSendGift(g)}
+                    className="gift-option-card"
+                  >
+                    <span className="gift-icon">{g.icon}</span>
+                    <span className="gift-name">{g.name}</span>
+                    <span className="gift-price">{g.coins} Coins</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
-              <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+        {/* ==================================================================== */}
+        {/* QUICK AUTH / UPLOAD MODAL                                            */}
+        {/* ==================================================================== */}
+        {showAuthModal && (
+          <div className="modal-backdrop" onClick={() => setShowAuthModal(false)}>
+            <div className="auth-modal-card" onClick={(e) => e.stopPropagation()}>
+              <div className="auth-header">
+                <h3>{authModalTitle}</h3>
+                <button onClick={() => setShowAuthModal(false)} className="sheet-close-btn">
+                  ✕
+                </button>
+              </div>
+              <p className="auth-sub">Sign in or create a creator profile to upload videos and interact.</p>
+              <div className="auth-actions-group">
                 <Link
                   href="/login"
-                  style={{
-                    padding: "10px 22px",
-                    borderRadius: "24px",
-                    backgroundColor: "#374151",
-                    color: "#ffffff",
-                    textDecoration: "none",
-                    fontWeight: "700",
-                    fontSize: "14px",
-                  }}
+                  onClick={() => setShowAuthModal(false)}
+                  className="primary-gradient-btn full-width"
                 >
-                  Sign In
+                  Log In with Email / ID
                 </Link>
                 <Link
                   href="/Registration"
-                  style={{
-                    padding: "10px 22px",
-                    borderRadius: "24px",
-                    background: "linear-gradient(135deg, #FF4B1F 0%, #FF9F00 100%)",
-                    color: "#ffffff",
-                    textDecoration: "none",
-                    fontWeight: "700",
-                    fontSize: "14px",
-                    boxShadow: "0 4px 14px rgba(255, 75, 31, 0.4)",
-                  }}
-                >
-                  Create Account
-                </Link>
-                <button
                   onClick={() => setShowAuthModal(false)}
-                  style={{
-                    padding: "10px 18px",
-                    borderRadius: "24px",
-                    backgroundColor: "#F3F4F6",
-                    color: "#4B5563",
-                    border: "none",
-                    fontWeight: "600",
-                    fontSize: "14px",
-                    cursor: "pointer",
-                  }}
+                  className="secondary-outline-btn full-width"
                 >
-                  Browse
-                </button>
+                  Create New Creator Account
+                </Link>
               </div>
             </div>
           </div>
         )}
       </div>
 
+      {/* ==================================================================== */}
+      {/* GLOBAL HIGH-PERFORMANCE RESPONSIVE & WELL-FITTED NATIVE STYLES       */}
+      {/* ==================================================================== */}
       <style jsx global>{`
-        @keyframes spin {
-          100% {
-            transform: rotate(360deg);
+        :root {
+          --brand-orange: #ff4b1f;
+          --brand-gold: #ff9f00;
+          --brand-gradient: linear-gradient(135deg, #ff4b1f 0%, #ff9f00 100%);
+          --bg-dark: #0f172a;
+          --bg-card: #1e293b;
+          --text-main: #1f2937;
+          --text-muted: #6b7280;
+          --border-color: #e5e7eb;
+        }
+
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+          width: 100%;
+          height: 100%;
+          overflow-x: hidden;
+          background-color: #f8fafc;
+          color: var(--text-main);
+        }
+
+        /* App Viewport Root */
+        .app-viewport {
+          display: flex;
+          flex-direction: column;
+          min-height: 100vh;
+          width: 100vw;
+          overflow-x: hidden;
+          position: relative;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* TOP NAVIGATION BAR                                                 */
+        /* ------------------------------------------------------------------ */
+        .top-nav-bar {
+          position: sticky;
+          top: 0;
+          z-index: 100;
+          height: 64px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 16px;
+          background: rgba(255, 255, 255, 0.94);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+          gap: 12px;
+        }
+
+        .top-nav-left {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-shrink: 0;
+        }
+
+        /* Menu Hamburger Button with Open/Close Animation */
+        .menu-hamburger-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: #f3f4f6;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 8px 12px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .menu-hamburger-btn:hover {
+          background: #e5e7eb;
+          transform: translateY(-1px);
+        }
+
+        .hamburger-box {
+          width: 18px;
+          height: 14px;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+
+        .ham-line {
+          width: 100%;
+          height: 2px;
+          background-color: #1f2937;
+          border-radius: 2px;
+          transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+
+        .menu-hamburger-btn.active .ham-line.top {
+          transform: translateY(6px) rotate(45deg);
+        }
+        .menu-hamburger-btn.active .ham-line.mid {
+          opacity: 0;
+        }
+        .menu-hamburger-btn.active .ham-line.bot {
+          transform: translateY(-6px) rotate(-45deg);
+        }
+
+        .menu-btn-text {
+          font-size: 13px;
+          font-weight: 700;
+          color: #1f2937;
+        }
+
+        /* Brand Logo */
+        .brand-logo-wrap {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          text-decoration: none;
+        }
+
+        .brand-icon-badge {
+          width: 34px;
+          height: 34px;
+          border-radius: 10px;
+          background: var(--brand-gradient);
+          color: #fff;
+          font-weight: 900;
+          font-size: 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 10px rgba(255, 75, 31, 0.35);
+        }
+
+        .brand-icon-badge.mini {
+          width: 28px;
+          height: 28px;
+          font-size: 15px;
+        }
+
+        .brand-name-wrap {
+          display: flex;
+          flex-direction: column;
+          line-height: 1.1;
+        }
+
+        .brand-title {
+          font-size: 18px;
+          font-weight: 800;
+          letter-spacing: -0.5px;
+          background: var(--brand-gradient);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .brand-sub {
+          font-size: 8px;
+          font-weight: 800;
+          color: #9ca3af;
+          letter-spacing: 0.8px;
+        }
+
+        /* Center Filter Chips */
+        .top-nav-center {
+          display: flex;
+          align-items: center;
+          overflow-x: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          max-width: 460px;
+        }
+        .top-nav-center::-webkit-scrollbar {
+          display: none;
+        }
+
+        .filter-chips-scroll {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .filter-chip {
+          white-space: nowrap;
+          padding: 6px 12px;
+          border-radius: 20px;
+          border: 1px solid #e5e7eb;
+          background: #ffffff;
+          font-size: 12px;
+          font-weight: 600;
+          color: #4b5563;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .filter-chip:hover {
+          background: #f3f4f6;
+        }
+
+        .filter-chip.active {
+          background: var(--brand-gradient);
+          color: #ffffff;
+          border-color: transparent;
+          box-shadow: 0 2px 8px rgba(255, 75, 31, 0.3);
+        }
+
+        /* Right Nav Tools */
+        .top-nav-right {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-shrink: 0;
+        }
+
+        .search-pill {
+          display: flex;
+          align-items: center;
+          background: #f3f4f6;
+          border: 1px solid #e5e7eb;
+          border-radius: 20px;
+          padding: 6px 12px;
+          gap: 6px;
+          width: 220px;
+        }
+
+        .search-pill input {
+          border: none;
+          background: transparent;
+          outline: none;
+          font-size: 12px;
+          color: #1f2937;
+          width: 100%;
+        }
+
+        .search-clear-btn {
+          border: none;
+          background: transparent;
+          color: #9ca3af;
+          cursor: pointer;
+          font-size: 11px;
+        }
+
+        /* Viewport Mode Switcher */
+        .view-mode-toggle {
+          display: flex;
+          background: #f3f4f6;
+          border-radius: 8px;
+          padding: 2px;
+          border: 1px solid #e5e7eb;
+        }
+
+        .mode-btn {
+          border: none;
+          background: transparent;
+          padding: 4px 8px;
+          font-size: 11px;
+          font-weight: 700;
+          color: #6b7280;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .mode-btn.active {
+          background: #ffffff;
+          color: #1f2937;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Language Menu */
+        .lang-dropdown-wrap {
+          position: relative;
+        }
+
+        .lang-btn {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          padding: 6px 10px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .lang-menu {
+          position: absolute;
+          top: 100%;
+          right: 0;
+          margin-top: 6px;
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+          min-width: 160px;
+          z-index: 120;
+          overflow: hidden;
+        }
+
+        .lang-item {
+          padding: 8px 12px;
+          font-size: 12px;
+          cursor: pointer;
+          color: #374151;
+        }
+
+        .lang-item:hover {
+          background: #f3f4f6;
+        }
+
+        .lang-item.selected {
+          background: #fff0eb;
+          color: #ff4b1f;
+          font-weight: 700;
+        }
+
+        .header-login-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: var(--brand-gradient);
+          color: #ffffff;
+          padding: 7px 16px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 700;
+          text-decoration: none;
+          box-shadow: 0 3px 10px rgba(255, 75, 31, 0.35);
+          transition: transform 0.15s ease;
+        }
+
+        .header-login-btn:hover {
+          transform: translateY(-1px);
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* SLIDE-OVER NAVIGATION DRAWER (OPEN / CLOSE OPTIONS)                */
+        /* ------------------------------------------------------------------ */
+        .drawer-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.55);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          z-index: 200;
+          display: flex;
+          animation: fadeIn 0.2s ease-out;
+        }
+
+        .nav-drawer {
+          width: 340px;
+          max-width: 85vw;
+          height: 100%;
+          background: #ffffff;
+          box-shadow: 4px 0 30px rgba(0, 0, 0, 0.25);
+          display: flex;
+          flex-direction: column;
+          overflow-y: auto;
+          padding: 20px 18px;
+          animation: slideRight 0.25s ease-out;
+        }
+
+        .drawer-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-bottom: 16px;
+          border-bottom: 1px solid #f3f4f6;
+        }
+
+        .drawer-brand {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .drawer-title {
+          font-size: 18px;
+          font-weight: 800;
+          color: #1f2937;
+        }
+
+        .drawer-tagline {
+          font-size: 11px;
+          color: #9ca3af;
+        }
+
+        .drawer-close-btn {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: 1px solid #e5e7eb;
+          background: #f9fafb;
+          color: #4b5563;
+          font-size: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .drawer-close-btn:hover {
+          background: #ef4444;
+          color: #fff;
+          border-color: #ef4444;
+        }
+
+        .drawer-user-card {
+          margin-top: 14px;
+          padding: 14px;
+          border-radius: 12px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+        }
+
+        .drawer-user-info {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .user-avatar-circle {
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          background: #e2e8f0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+        }
+
+        .user-name {
+          font-size: 14px;
+          font-weight: 700;
+          color: #1f2937;
+        }
+
+        .user-status {
+          font-size: 11px;
+          color: #64748b;
+        }
+
+        .drawer-auth-cta {
+          display: block;
+          margin-top: 10px;
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--brand-orange);
+          text-decoration: none;
+        }
+
+        .drawer-section {
+          margin-top: 20px;
+        }
+
+        .drawer-section-title {
+          display: block;
+          font-size: 10px;
+          font-weight: 800;
+          color: #9ca3af;
+          letter-spacing: 0.8px;
+          margin-bottom: 8px;
+        }
+
+        .drawer-nav-list {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .drawer-nav-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 12px;
+          border-radius: 10px;
+          border: none;
+          background: transparent;
+          text-align: left;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .drawer-nav-item:hover {
+          background: #f1f5f9;
+        }
+
+        .drawer-nav-item.active {
+          background: #fff0eb;
+        }
+
+        .drawer-nav-item.active .nav-item-label {
+          color: var(--brand-orange);
+          font-weight: 800;
+        }
+
+        .nav-item-label {
+          display: block;
+          font-size: 13px;
+          font-weight: 600;
+          color: #1f2937;
+        }
+
+        .nav-item-desc {
+          display: block;
+          font-size: 10px;
+          color: #64748b;
+        }
+
+        .nav-item-arrow {
+          color: #cbd5e1;
+          font-size: 14px;
+        }
+
+        .channel-pills-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .channel-pill-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 8px 12px;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          background: #ffffff;
+          cursor: pointer;
+          font-size: 12px;
+          color: #334155;
+          font-weight: 600;
+          text-align: left;
+        }
+
+        .channel-pill-card:hover {
+          background: #f8fafc;
+          border-color: #cbd5e1;
+        }
+
+        .chan-count {
+          font-size: 10px;
+          color: #94a3b8;
+        }
+
+        .quick-action-row {
+          display: flex;
+          gap: 8px;
+        }
+
+        .action-btn-outline {
+          flex: 1;
+          padding: 9px;
+          border-radius: 8px;
+          border: 1px solid #cbd5e1;
+          background: #ffffff;
+          font-size: 12px;
+          font-weight: 700;
+          color: #334155;
+          text-align: center;
+          text-decoration: none;
+          cursor: pointer;
+        }
+
+        .action-btn-outline:hover {
+          background: #f1f5f9;
+        }
+
+        .drawer-footer {
+          margin-top: auto;
+          padding-top: 20px;
+          border-top: 1px solid #f1f5f9;
+        }
+
+        .drawer-footer-title {
+          display: block;
+          font-size: 10px;
+          font-weight: 800;
+          color: #9ca3af;
+          margin-bottom: 8px;
+        }
+
+        .app-store-badges {
+          display: flex;
+          gap: 8px;
+        }
+
+        .store-badge-card {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background: #000000;
+          color: #ffffff;
+          border-radius: 6px;
+          padding: 6px 8px;
+          text-decoration: none;
+        }
+
+        .badge-small {
+          display: block;
+          font-size: 7px;
+          color: #9ca3af;
+          text-transform: uppercase;
+        }
+
+        .badge-bold {
+          display: block;
+          font-size: 10px;
+          font-weight: 700;
+        }
+
+        .drawer-copyright {
+          font-size: 10px;
+          color: #94a3b8;
+          margin-top: 12px;
+          line-height: 1.4;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* MAIN STAGE & DEVICE FITNESS LAYOUT                                 */
+        /* ------------------------------------------------------------------ */
+        .main-stage {
+          flex: 1;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          position: relative;
+          background: radial-gradient(circle at 50% 30%, #ffffff 0%, #f1f5f9 100%);
+          padding: 16px;
+          overflow: hidden;
+          min-height: calc(100vh - 64px);
+        }
+
+        .reels-stage-wrapper {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .stage-device-container {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+        }
+
+        /* Flagship Smartphone Mockup Frame */
+        .phone-device-frame {
+          position: relative;
+          width: 380px;
+          height: calc(100vh - 96px);
+          max-height: 780px;
+          min-height: 580px;
+          background: #000000;
+          border-radius: 44px;
+          box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.45), 0 0 0 10px #1e293b, 0 0 0 12px #334155;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* Top Notch / Status Bar */
+        .device-status-notch {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 38px;
+          z-index: 40;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 22px;
+          color: #ffffff;
+          font-size: 11px;
+          font-weight: 600;
+          pointer-events: none;
+        }
+
+        .status-clock {
+          letter-spacing: -0.2px;
+        }
+
+        .dynamic-island {
+          width: 90px;
+          height: 22px;
+          background: #000000;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .dynamic-indicator {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #10b981;
+          animation: pulse 2s infinite;
+        }
+
+        .status-icons {
+          display: flex;
+          gap: 4px;
+          font-size: 10px;
+        }
+
+        /* Reel Video Box */
+        .reel-player-box {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          background: #000000;
+          overflow: hidden;
+          cursor: pointer;
+        }
+
+        .reel-video-element {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .reel-sound-btn {
+          position: absolute;
+          top: 48px;
+          right: 14px;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+          cursor: pointer;
+          z-index: 30;
+          transition: transform 0.15s ease;
+        }
+
+        .reel-sound-btn:hover {
+          transform: scale(1.08);
+        }
+
+        .reel-play-indicator {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0, 0, 0, 0.25);
+          z-index: 25;
+        }
+
+        .play-icon-glow {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.65);
+          border: 2px solid rgba(255, 255, 255, 0.4);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #ffffff;
+          font-size: 24px;
+        }
+
+        .reel-top-tag {
+          position: absolute;
+          top: 48px;
+          left: 16px;
+          background: rgba(0, 0, 0, 0.45);
+          backdrop-filter: blur(4px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 12px;
+          padding: 4px 10px;
+          font-size: 10px;
+          font-weight: 800;
+          color: #ffffff;
+          z-index: 30;
+          letter-spacing: 0.5px;
+        }
+
+        /* Right Floating Action Column */
+        .reel-actions-column {
+          position: absolute;
+          right: 12px;
+          bottom: 74px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+          z-index: 35;
+        }
+
+        .action-avatar-wrap {
+          position: relative;
+          margin-bottom: 4px;
+        }
+
+        .action-creator-avatar {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          border: 2px solid #ffffff;
+          object-fit: cover;
+          display: block;
+        }
+
+        .avatar-follow-badge {
+          position: absolute;
+          bottom: -4px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: var(--brand-orange);
+          color: #ffffff;
+          border: 2px solid #ffffff;
+          font-size: 12px;
+          font-weight: 900;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+
+        .action-btn-bubble {
+          border: none;
+          background: transparent;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          cursor: pointer;
+          color: #ffffff;
+        }
+
+        .bubble-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.45);
+          backdrop-filter: blur(6px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .action-btn-bubble:hover .bubble-icon {
+          transform: scale(1.12);
+        }
+
+        .action-btn-bubble.liked .bubble-icon {
+          color: #ef4444;
+          transform: scale(1.2);
+        }
+
+        .bubble-count {
+          font-size: 11px;
+          font-weight: 700;
+          margin-top: 3px;
+          text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .spinning-record {
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          background: #111827;
+          border: 2px solid #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+          cursor: pointer;
+        }
+
+        .spinning-record.spinning {
+          animation: spin 4s linear infinite;
+        }
+
+        .record-center {
+          font-size: 14px;
+        }
+
+        /* Bottom Metadata Overlay */
+        .reel-metadata-vignette {
+          position: absolute;
+          left: 0;
+          right: 68px;
+          bottom: 60px;
+          padding: 16px;
+          background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 70%, transparent 100%);
+          z-index: 30;
+          color: #ffffff;
+          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+        }
+
+        .creator-meta-row {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+
+        .creator-display-name {
+          font-size: 15px;
+          font-weight: 800;
+        }
+
+        .verified-badge {
+          color: #38bdf8;
+          font-size: 13px;
+        }
+
+        .creator-handle {
+          font-size: 12px;
+          opacity: 0.85;
+        }
+
+        .location-pin-row {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 11px;
+          color: #fbbf24;
+          margin: 3px 0;
+          font-weight: 600;
+        }
+
+        .reel-caption-text {
+          font-size: 13px;
+          line-height: 1.35;
+          margin: 4px 0 6px 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .sound-ticker-row {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          opacity: 0.9;
+        }
+
+        .ticker-marquee {
+          overflow: hidden;
+          white-space: nowrap;
+        }
+
+        /* Native Device Bottom Nav inside Smartphone Frame */
+        .device-bottom-nav {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 56px;
+          background: rgba(15, 23, 42, 0.85);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          display: flex;
+          align-items: center;
+          justify-content: space-around;
+          z-index: 35;
+          padding-bottom: 6px;
+        }
+
+        .dev-nav-btn {
+          border: none;
+          background: transparent;
+          color: #94a3b8;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+          font-size: 9px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .dev-nav-btn span:first-child {
+          font-size: 16px;
+        }
+
+        .dev-nav-btn.active {
+          color: #ffffff;
+        }
+
+        .dev-nav-btn.create-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 12px;
+          background: var(--brand-gradient);
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 10px rgba(255, 75, 31, 0.4);
+        }
+
+        .dev-nav-btn.create-btn span {
+          font-size: 18px !important;
+        }
+
+        /* Desktop Companion Controls Beside Phone */
+        .desktop-companion-controls {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          width: 260px;
+        }
+
+        .reel-arrow-controls {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: #ffffff;
+          padding: 8px 14px;
+          border-radius: 14px;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        .arrow-nav-btn {
+          width: 38px;
+          height: 38px;
+          border-radius: 10px;
+          border: 1px solid #e2e8f0;
+          background: #f8fafc;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .arrow-nav-btn:hover {
+          background: #e2e8f0;
+          transform: scale(1.05);
+        }
+
+        .reel-counter-badge {
+          flex: 1;
+          text-align: center;
+          font-size: 12px;
+          font-weight: 700;
+          color: #64748b;
+        }
+
+        .companion-creator-box {
+          background: #ffffff;
+          border-radius: 16px;
+          border: 1px solid #e2e8f0;
+          padding: 16px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        .comp-avatar-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 12px;
+        }
+
+        .comp-avatar {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid var(--brand-orange);
+        }
+
+        .comp-name {
+          font-size: 14px;
+          font-weight: 800;
+          color: #1f2937;
+        }
+
+        .comp-handle {
+          font-size: 11px;
+          color: #64748b;
+        }
+
+        .comp-stats-grid {
+          display: flex;
+          border-top: 1px solid #f1f5f9;
+          border-bottom: 1px solid #f1f5f9;
+          padding: 8px 0;
+          margin-bottom: 12px;
+        }
+
+        .comp-stat {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .comp-stat strong {
+          font-size: 13px;
+          color: #1f2937;
+        }
+
+        .comp-stat span {
+          font-size: 10px;
+          color: #94a3b8;
+        }
+
+        .comp-follow-btn {
+          width: 100%;
+          padding: 8px;
+          border-radius: 8px;
+          background: var(--brand-gradient);
+          color: #ffffff;
+          border: none;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .companion-sound-card {
+          background: #ffffff;
+          border-radius: 16px;
+          border: 1px solid #e2e8f0;
+          padding: 14px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        .sound-card-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 10px;
+        }
+
+        .sound-card-header h5 {
+          font-size: 12px;
+          font-weight: 800;
+          color: #1f2937;
+        }
+
+        .sound-card-header p {
+          font-size: 10px;
+          color: #64748b;
+        }
+
+        .sound-play-preview-btn {
+          width: 100%;
+          padding: 8px;
+          border-radius: 8px;
+          border: 1px solid #cbd5e1;
+          background: #f8fafc;
+          color: #334155;
+          font-size: 11px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* TAB PAGES (LIVE, SOCIAL, MUSIC, EXPLORE, PROFILE)                  */
+        /* ------------------------------------------------------------------ */
+        .tab-page-container {
+          max-width: 960px;
+          width: 100%;
+          height: 100%;
+          overflow-y: auto;
+          padding: 16px;
+        }
+
+        .tab-header-banner {
+          margin-bottom: 20px;
+          text-align: left;
+        }
+
+        .tab-header-banner h2 {
+          font-size: 22px;
+          font-weight: 800;
+          color: #0f172a;
+        }
+
+        .tab-header-banner p {
+          font-size: 13px;
+          color: #64748b;
+          margin-top: 4px;
+        }
+
+        .live-streams-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 16px;
+        }
+
+        .live-card-item {
+          position: relative;
+          height: 320px;
+          border-radius: 18px;
+          overflow: hidden;
+          background: #000;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          cursor: pointer;
+        }
+
+        .live-card-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        }
+
+        .live-card-item:hover .live-card-img {
+          transform: scale(1.05);
+        }
+
+        .live-badge-overlay {
+          position: absolute;
+          top: 12px;
+          left: 12px;
+          background: #ef4444;
+          color: #ffffff;
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 10px;
+          font-weight: 800;
+        }
+
+        .live-viewers-count {
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          background: rgba(0,0,0,0.6);
+          color: #fff;
+          padding: 3px 8px;
+          border-radius: 10px;
+          font-size: 10px;
+          font-weight: 600;
+        }
+
+        .live-card-details {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          padding: 16px;
+          background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+          color: #fff;
+        }
+
+        .live-card-details h4 {
+          font-size: 14px;
+          font-weight: 700;
+        }
+
+        .live-card-details p {
+          font-size: 11px;
+          opacity: 0.8;
+          margin-top: 2px;
+        }
+
+        /* Social Feed Cards */
+        .social-feed-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 16px;
+        }
+
+        .social-post-card {
+          background: #ffffff;
+          border-radius: 16px;
+          border: 1px solid #e2e8f0;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        .post-author-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px;
+        }
+
+        .post-author-avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+
+        .post-author-text {
+          flex: 1;
+        }
+
+        .author-name {
+          display: block;
+          font-size: 13px;
+          font-weight: 700;
+          color: #0f172a;
+        }
+
+        .author-location {
+          display: block;
+          font-size: 11px;
+          color: #64748b;
+        }
+
+        .post-time-badge {
+          font-size: 10px;
+          color: #94a3b8;
+        }
+
+        .post-photo-frame {
+          width: 100%;
+          height: 240px;
+          background: #000;
+        }
+
+        .post-image-element {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .post-body {
+          padding: 12px;
+        }
+
+        .post-caption {
+          font-size: 12px;
+          color: #334155;
+          line-height: 1.4;
+          margin-bottom: 8px;
+        }
+
+        .post-action-bar {
+          display: flex;
+          gap: 12px;
+        }
+
+        .post-heart-btn, .post-comment-btn {
+          border: none;
+          background: transparent;
+          font-size: 11px;
+          font-weight: 700;
+          color: #64748b;
+          cursor: pointer;
+        }
+
+        /* Music Track Cards */
+        .music-tracks-list {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .music-track-card {
+          display: flex;
+          align-items: center;
+          background: #ffffff;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+          padding: 10px 14px;
+          gap: 12px;
+        }
+
+        .track-cover-art {
+          width: 48px;
+          height: 48px;
+          border-radius: 8px;
+          object-fit: cover;
+        }
+
+        .track-text {
+          flex: 1;
+        }
+
+        .track-text h4 {
+          font-size: 13px;
+          font-weight: 700;
+          color: #0f172a;
+        }
+
+        .track-text p {
+          font-size: 11px;
+          color: #64748b;
+          margin-top: 2px;
+        }
+
+        .genre-tag {
+          color: var(--brand-orange);
+          font-weight: 600;
+        }
+
+        .track-duration {
+          font-size: 11px;
+          color: #94a3b8;
+        }
+
+        .track-play-btn {
+          padding: 6px 14px;
+          border-radius: 20px;
+          border: 1px solid #cbd5e1;
+          background: #f8fafc;
+          font-size: 11px;
+          font-weight: 700;
+          color: #0f172a;
+          cursor: pointer;
+        }
+
+        /* Explore Grid */
+        .explore-destinations-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 16px;
+        }
+
+        .explore-card {
+          background: #ffffff;
+          border-radius: 16px;
+          border: 1px solid #e2e8f0;
+          overflow: hidden;
+        }
+
+        .explore-card-img-wrap {
+          position: relative;
+          height: 180px;
+          background: #000;
+        }
+
+        .explore-card-img-wrap img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .explore-tag-chip {
+          position: absolute;
+          bottom: 10px;
+          left: 10px;
+          background: rgba(0,0,0,0.7);
+          color: #fff;
+          font-size: 10px;
+          font-weight: 800;
+          padding: 3px 8px;
+          border-radius: 8px;
+        }
+
+        .explore-card-info {
+          padding: 14px;
+        }
+
+        .explore-card-info h3 {
+          font-size: 15px;
+          font-weight: 800;
+          color: #0f172a;
+        }
+
+        .explore-card-info h4 {
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--brand-orange);
+          margin: 2px 0 6px 0;
+        }
+
+        .explore-card-info p {
+          font-size: 12px;
+          color: #64748b;
+          line-height: 1.4;
+          margin-bottom: 10px;
+        }
+
+        .explore-view-reels-btn {
+          border: none;
+          background: transparent;
+          color: var(--brand-orange);
+          font-size: 12px;
+          font-weight: 800;
+          cursor: pointer;
+        }
+
+        /* Profile Tab Card */
+        .profile-dashboard-card {
+          background: #ffffff;
+          border-radius: 20px;
+          border: 1px solid #e2e8f0;
+          overflow: hidden;
+          max-width: 500px;
+          margin: 0 auto;
+        }
+
+        .profile-banner-top {
+          height: 120px;
+          background: var(--brand-gradient);
+          position: relative;
+          display: flex;
+          justify-content: center;
+        }
+
+        .profile-avatar-large {
+          position: absolute;
+          bottom: -32px;
+          width: 68px;
+          height: 68px;
+          border-radius: 50%;
+          background: #ffffff;
+          border: 3px solid #ffffff;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 30px;
+        }
+
+        .profile-info-body {
+          padding: 44px 20px 24px 20px;
+          text-align: center;
+        }
+
+        .wallet-balance-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 14px;
+          padding: 14px;
+          margin: 20px 0;
+          text-align: left;
+        }
+
+        .wallet-left span {
+          display: block;
+          font-size: 9px;
+          font-weight: 800;
+          color: #64748b;
+        }
+
+        .wallet-left h2 {
+          font-size: 20px;
+          font-weight: 800;
+          color: #0f172a;
+          margin-top: 2px;
+        }
+
+        /* Comments Bottom Sheet / Drawer */
+        .comments-drawer-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.6);
+          z-index: 210;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+        }
+
+        .comments-sheet-container {
+          width: 100%;
+          max-width: 440px;
+          max-height: 70vh;
+          background: #ffffff;
+          border-radius: 24px 24px 0 0;
+          display: flex;
+          flex-direction: column;
+          padding: 16px 18px 24px 18px;
+          animation: slideUp 0.25s ease-out;
+        }
+
+        .sheet-handle-bar {
+          width: 40px;
+          height: 4px;
+          border-radius: 2px;
+          background: #cbd5e1;
+          margin: 0 auto 12px auto;
+        }
+
+        .sheet-header-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 14px;
+        }
+
+        .sheet-close-btn {
+          border: none;
+          background: #f1f5f9;
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          cursor: pointer;
+        }
+
+        .comments-list-scroll {
+          flex: 1;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          max-height: 44vh;
+          padding-right: 4px;
+        }
+
+        .comment-bubble-item {
+          display: flex;
+          gap: 10px;
+        }
+
+        .comment-avatar-bubble {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: var(--brand-orange);
+          color: #fff;
+          font-size: 11px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .comment-text-wrap {
+          flex: 1;
+          background: #f8fafc;
+          border-radius: 12px;
+          padding: 8px 12px;
+        }
+
+        .comment-author-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 2px;
+        }
+
+        .c-author {
+          font-size: 11px;
+          font-weight: 700;
+          color: #0f172a;
+        }
+
+        .c-time {
+          font-size: 9px;
+          color: #94a3b8;
+        }
+
+        .c-text {
+          font-size: 12px;
+          color: #334155;
+          line-height: 1.35;
+        }
+
+        .comment-input-form {
+          display: flex;
+          gap: 8px;
+          margin-top: 14px;
+        }
+
+        .comment-text-input {
+          flex: 1;
+          padding: 10px 14px;
+          border-radius: 20px;
+          border: 1px solid #cbd5e1;
+          outline: none;
+          font-size: 12px;
+        }
+
+        .comment-send-btn {
+          padding: 8px 18px;
+          border-radius: 20px;
+          background: var(--brand-gradient);
+          color: #fff;
+          border: none;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        /* Gift Tray Modal */
+        .modal-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.65);
+          z-index: 220;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 16px;
+        }
+
+        .gift-tray-card, .auth-modal-card {
+          width: 100%;
+          max-width: 400px;
+          background: #ffffff;
+          border-radius: 20px;
+          padding: 20px;
+          animation: scaleUp 0.2s ease-out;
+        }
+
+        .gift-tray-header, .auth-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .gift-subhead, .auth-sub {
+          font-size: 12px;
+          color: #64748b;
+          margin: 4px 0 16px 0;
+        }
+
+        .gifts-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 10px;
+        }
+
+        .gift-option-card {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 12px 6px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .gift-option-card:hover {
+          border-color: var(--brand-orange);
+          background: #fff0eb;
+          transform: translateY(-2px);
+        }
+
+        .gift-icon {
+          font-size: 26px;
+        }
+
+        .gift-name {
+          font-size: 11px;
+          font-weight: 700;
+          color: #0f172a;
+        }
+
+        .gift-price {
+          font-size: 10px;
+          color: var(--brand-orange);
+          font-weight: 800;
+        }
+
+        .auth-actions-group {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        /* Buttons & Utility Styles */
+        .primary-gradient-btn {
+          background: var(--brand-gradient);
+          color: #ffffff;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 20px;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          text-align: center;
+          text-decoration: none;
+          box-shadow: 0 4px 12px rgba(255, 75, 31, 0.35);
+        }
+
+        .secondary-outline-btn {
+          background: #ffffff;
+          color: #0f172a;
+          border: 1px solid #cbd5e1;
+          padding: 10px 20px;
+          border-radius: 20px;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          text-align: center;
+          text-decoration: none;
+        }
+
+        .full-width {
+          width: 100%;
+        }
+
+        .full-width-btn {
+          display: block;
+          width: 100%;
+          background: var(--brand-gradient);
+          color: #fff;
+          padding: 12px;
+          border-radius: 12px;
+          font-weight: 700;
+          font-size: 13px;
+          text-decoration: none;
+        }
+
+        /* Toast Popup */
+        .wudau-toast {
+          position: fixed;
+          top: 76px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #111827;
+          color: #ffffff;
+          padding: 9px 18px;
+          border-radius: 24px;
+          font-size: 12px;
+          font-weight: 700;
+          z-index: 300;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+          animation: dropIn 0.25s ease-out;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* RESPONSIVE MEDIA QUERIES (MOBILE FITNESS & TABLET/DESKTOP SCALING) */
+        /* ------------------------------------------------------------------ */
+        @media (max-width: 768px) {
+          .top-nav-bar {
+            padding: 0 10px;
+            height: 58px;
           }
+
+          .brand-sub {
+            display: none;
+          }
+
+          .search-pill {
+            display: none;
+          }
+
+          .d-none-mobile {
+            display: none !important;
+          }
+
+          .main-stage {
+            padding: 0;
+            background: #000000;
+          }
+
+          .stage-device-container {
+            width: 100%;
+            height: calc(100dvh - 58px);
+            margin: 0;
+          }
+
+          .phone-device-frame {
+            width: 100vw;
+            height: 100%;
+            max-height: none;
+            min-height: none;
+            border-radius: 0;
+            box-shadow: none;
+          }
+
+          .device-status-notch {
+            display: none;
+          }
+
+          .reel-sound-btn {
+            top: 14px;
+            right: 14px;
+          }
+
+          .reel-top-tag {
+            top: 14px;
+            left: 14px;
+          }
+
+          .desktop-companion-controls {
+            display: none;
+          }
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes slideRight {
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
+        }
+
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+
+        @keyframes scaleUp {
+          from { transform: scale(0.92); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes dropIn {
+          from { transform: translate(-50%, -20px); opacity: 0; }
+          to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        @keyframes spin {
+          100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
         }
       `}</style>
     </>
   );
 }
 
-// Pre-render with SSR for instant load
+// Server-Side Props for Instant First Paint
 export async function getServerSideProps() {
   try {
     const apiBase = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_BASE_URL || baseURL;
@@ -1395,16 +3281,24 @@ export async function getServerSideProps() {
     const [videosRes, postsRes] = await Promise.all([
       fetch(`${cleanBase}client/video/getAllVideos?start=1&limit=30`, {
         headers: { key: secretKey },
-      }).then((r) => r.json()).catch(() => ({ data: [] })),
+      })
+        .then((r) => r.json())
+        .catch(() => ({ data: [] })),
       fetch(`${cleanBase}client/post/getAllPosts?start=1&limit=30`, {
         headers: { key: secretKey },
-      }).then((r) => r.json()).catch(() => ({ post: [] })),
+      })
+        .then((r) => r.json())
+        .catch(() => ({ post: [] })),
     ]);
 
     const videoList: VideoItem[] = videosRes.data || [];
+
+    // Prioritize Tanzanian & African creators first
     videoList.sort((a, b) => {
-      if (a.userName === "@Sofia_Martinez_0") return -1;
-      if (b.userName === "@Sofia_Martinez_0") return 1;
+      const aIsTz = (a.userName || "").includes("_tz") || (a.userName || "").includes("_znz");
+      const bIsTz = (b.userName || "").includes("_tz") || (b.userName || "").includes("_znz");
+      if (aIsTz && !bIsTz) return -1;
+      if (!aIsTz && bIsTz) return 1;
       return 0;
     });
 
