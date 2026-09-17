@@ -583,7 +583,7 @@ export default function Home({
           const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.drawImage(tempVid, 0, 0, canvas.width, canvas.height);
-            // Stamp Official WUDAU Watermark onto Thumbnail
+            // Stamp Official WUDAO Watermark onto Thumbnail
             const stampW = Math.min(220, Math.round(canvas.width * 0.38));
             const stampH = Math.round(stampW * 0.22);
             const pad = Math.round(canvas.width * 0.04);
@@ -606,8 +606,8 @@ export default function Home({
             ctx.font = `bold ${Math.round(stampH * 0.42)}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            const creatorTag = currentUser?.userName ? `@${currentUser.userName}` : "@wudau";
-            ctx.fillText(`WUDAU • ${creatorTag}`, bx + stampW / 2, by + stampH / 2);
+            const creatorTag = currentUser?.userName ? `@${currentUser.userName}` : "@wudao";
+            ctx.fillText(`WUDAO • ${creatorTag}`, bx + stampW / 2, by + stampH / 2);
             ctx.restore();
 
             canvas.toBlob((blob) => {
@@ -630,7 +630,7 @@ export default function Home({
   const handlePostImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const rawFiles = Array.from(e.target.files).slice(0, 5);
-    const creatorTag = currentUser?.userName ? `@${currentUser.userName}` : "@wudau";
+    const creatorTag = currentUser?.userName ? `@${currentUser.userName}` : "@wudao";
 
     const watermarkedFiles: File[] = await Promise.all(
       rawFiles.map((file) => {
@@ -665,7 +665,7 @@ export default function Home({
                 ctx.font = `bold ${Math.round(stampH * 0.42)}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
-                ctx.fillText(`WUDAU • ${creatorTag}`, bx + stampW / 2, by + stampH / 2);
+                ctx.fillText(`WUDAO • ${creatorTag}`, bx + stampW / 2, by + stampH / 2);
                 ctx.restore();
 
                 canvas.toBlob((blob) => {
@@ -752,7 +752,7 @@ export default function Home({
         }
       }
 
-      setUploadStatusText("Uploading video stream to WUDAU servers...");
+      setUploadStatusText("Uploading video stream to WUDAO servers...");
       const res = await axios.post(
         `${baseURL}client/video/uploadvideo?userId=${creatorId}`,
         formData,
@@ -789,7 +789,7 @@ export default function Home({
         setVideos((prev) => [enrichedReel, ...prev]);
         setCurrentReelIndex(0);
         setCurrentTab("reels");
-        showToast("🎉 Reel published to WUDAU successfully!");
+        showToast("🎉 Reel published to WUDAO successfully!");
         resetStudioForm();
         setShowUploadStudio(false);
       } else {
@@ -1167,7 +1167,7 @@ export default function Home({
   ) => {
     if (isAuth) return true;
 
-    let title = "Join the WUDAU Community";
+    let title = "Join the WUDAO Community";
     let subtitle = "Log in or create a free account to like, comment, and interact with creators.";
 
     if (action === "like") {
@@ -1183,10 +1183,10 @@ export default function Home({
       title = "Send Virtual Gift";
       subtitle = customReason || "Sign in to send gifts, cheer for live streams, and show love to creators.";
     } else if (action === "create") {
-      title = "WUDAU Creator Studio";
+      title = "WUDAO Creator Studio";
       subtitle = customReason || "Sign in or create an account to upload your own vertical reels, photos, and music.";
     } else if (action === "preview_limit") {
-      title = "Enjoying WUDAU?";
+      title = "Enjoying WUDAO?";
       subtitle = customReason || "You've reached the guest preview limit. Sign in to unlock unlimited streaming, infinite feeds, and creative moments.";
     }
 
@@ -1434,7 +1434,7 @@ export default function Home({
       const url = `${window.location.origin}/?videoId=${video._id}`;
       setShareTarget({
         url,
-        title: video.caption || "Watch this viral reel on WUDAU 🔥",
+        title: video.caption || "Watch this viral reel on WUDAO 🔥",
         type: "reel",
         author: video.userName || "Creator",
       });
@@ -1607,7 +1607,7 @@ export default function Home({
       const url = `${window.location.origin}/?tab=social&postId=${post._id}`;
       setShareTarget({
         url,
-        title: post.caption || "View this community moment on WUDAU ✨",
+        title: post.caption || "View this community moment on WUDAO ✨",
         type: "post",
         author: post.userName || post.name || "Creator",
       });
@@ -1652,7 +1652,7 @@ export default function Home({
         <title>{projectName} — Watch & Discover Short Videos</title>
         <meta
           name="description"
-          content="Discover trending Tanzanian street dance, Bongo Flava, Singeli 300BPM, Serengeti wildlife, and global creative reels on WUDAU."
+          content="Discover trending Tanzanian street dance, Bongo Flava, Singeli 300BPM, Serengeti wildlife, and global creative reels on WUDAO."
         />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <link rel="icon" href="/favicon.ico" />
@@ -1663,7 +1663,7 @@ export default function Home({
 
       {/* Toast alert */}
       {toastMessage && (
-        <div className="wudau-toast" role="alert">
+        <div className="wudao-toast" role="alert">
           {toastMessage}
         </div>
       )}
@@ -1699,8 +1699,10 @@ export default function Home({
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
             >
-              <div className="brand-logo-mark">W</div>
-              <span className="brand-name">WUDAU</span>
+              <div className="brand-logo-mark">
+                <img src="/favicon.svg" alt="WUDAO" width={22} height={22} style={{ display: "block" }} />
+              </div>
+              <span className="brand-name">WUDAO</span>
             </Link>
           </div>
 
@@ -1880,8 +1882,10 @@ export default function Home({
             <aside className="nav-drawer" onClick={(e) => e.stopPropagation()}>
               <div className="drawer-top-bar">
                 <Link href="/" className="drawer-brand" onClick={() => setIsMenuOpen(false)}>
-                  <div className="brand-logo-mark mini">W</div>
-                  <span className="brand-name">WUDAU</span>
+                  <div className="brand-logo-mark mini">
+                    <img src="/favicon.svg" alt="WUDAO" width={18} height={18} style={{ display: "block" }} />
+                  </div>
+                  <span className="brand-name">WUDAO</span>
                 </Link>
                 <button onClick={() => setIsMenuOpen(false)} className="drawer-close-btn" aria-label="Close menu">
                   ✕
@@ -1908,7 +1912,7 @@ export default function Home({
                   </div>
                 ) : (
                   <div className="drawer-guest-prompt">
-                    <p className="guest-prompt-title">Sign in to WUDAU</p>
+                    <p className="guest-prompt-title">Sign in to WUDAO</p>
                     <p className="guest-prompt-sub">Follow creators, like reels, and share your talent.</p>
                     <div className="drawer-guest-btn-row">
                       <Link href="/login" onClick={() => setIsMenuOpen(false)} className="drawer-btn primary">
@@ -2005,7 +2009,7 @@ export default function Home({
               )}
 
               <div className="drawer-footer-note">
-                <p>© 2026 WUDAU Technologies • Made for African & Global Creators</p>
+                <p>© 2026 WUDAO Technologies • Made for African & Global Creators</p>
               </div>
             </aside>
           </div>
@@ -2082,11 +2086,11 @@ export default function Home({
                             </div>
                           )}
 
-                          {/* WUDAU Watermark Overlay */}
-                          <div className="wudau-reel-watermark">
+                          {/* WUDAO Watermark Overlay */}
+                          <div className="wudao-reel-watermark">
                             <div className="watermark-brand-pill">
                               <span className="watermark-flame-icon">🔥</span>
-                              <span className="watermark-brand-word">WUDAU</span>
+                              <span className="watermark-brand-word">WUDAO</span>
                             </div>
                             <span className="watermark-author-handle">@{activeVideo.userName || "creator"}</span>
                           </div>
@@ -2321,7 +2325,7 @@ export default function Home({
                             <IconMusic size={16} />
                             <div>
                               <h5>{activeVideo.songTitle}</h5>
-                              <p>{activeVideo.singerName || "WUDAU Audio"}</p>
+                              <p>{activeVideo.singerName || "WUDAO Audio"}</p>
                             </div>
                           </div>
                           <button
@@ -2530,10 +2534,10 @@ export default function Home({
                             onClick={() => handleOpenPostModal(post)}
                           />
 
-                          {/* WUDAU Watermark on Photo */}
-                          <div className="wudau-photo-watermark">
+                          {/* WUDAO Watermark on Photo */}
+                          <div className="wudao-photo-watermark">
                             <span className="photo-watermark-flame">🔥</span>
-                            <span className="photo-watermark-brand">WUDAU</span>
+                            <span className="photo-watermark-brand">WUDAO</span>
                             <span className="photo-watermark-dot">•</span>
                             <span className="photo-watermark-user">@{post.userName}</span>
                           </div>
@@ -2760,7 +2764,7 @@ export default function Home({
             <div className="tab-surface-page">
               <div className="page-header-row">
                 <h2>Explore & Discover</h2>
-                <p>Natural beauty, cultural rhythm, and authentic creator moments aggregated from real posts across WUDAU.</p>
+                <p>Natural beauty, cultural rhythm, and authentic creator moments aggregated from real posts across WUDAO.</p>
               </div>
               <div className="destinations-showcase-grid">
                 {dynamicExploreCards.length === 0 ? (
@@ -2817,7 +2821,7 @@ export default function Home({
                     {currentUser?.name || (isAuth ? "Creator Account" : "Guest Explorer")}
                   </h3>
                   <p className="profile-user-handle">
-                    {currentUser?.userName || (isAuth ? "@wudau_creator" : "Guest")}
+                    {currentUser?.userName || (isAuth ? "@wudao_creator" : "Guest")}
                   </p>
                   <p className="profile-user-email">
                     {currentUser?.email || "Connect with creators, send gifts, and share your talent."}
@@ -3004,10 +3008,10 @@ export default function Home({
                   />
                 )}
 
-                {/* WUDAU Watermark on Photo Modal */}
-                <div className="wudau-photo-watermark modal-pos">
+                {/* WUDAO Watermark on Photo Modal */}
+                <div className="wudao-photo-watermark modal-pos">
                   <span className="photo-watermark-flame">🔥</span>
-                  <span className="photo-watermark-brand">WUDAU</span>
+                  <span className="photo-watermark-brand">WUDAO</span>
                   <span className="photo-watermark-dot">•</span>
                   <span className="photo-watermark-user">@{selectedPost.userName}</span>
                 </div>
@@ -3487,7 +3491,7 @@ export default function Home({
                           {availableCreators.find((c) => c._id === (currentUser?._id || studioCreatorId))?.name ||
                             currentUser?.name ||
                             availableCreators[0]?.name ||
-                            "WUDAU Creator"}
+                            "WUDAO Creator"}
                         </div>
                         <div className="studio-creator-handle">
                           {availableCreators.find((c) => c._id === (currentUser?._id || studioCreatorId))?.userName ||
@@ -3667,9 +3671,9 @@ export default function Home({
               </button>
               <div className="auth-modal-top-brand">
                 <span className="auth-modal-flame">🔥</span>
-                <span className="auth-modal-brand-name">WUDAU</span>
+                <span className="auth-modal-brand-name">WUDAO</span>
               </div>
-              <h3 className="auth-modal-title">{authModalTitle || "Join the WUDAU Community"}</h3>
+              <h3 className="auth-modal-title">{authModalTitle || "Join the WUDAO Community"}</h3>
               <p className="auth-modal-subtitle">
                 {authModalSubtitle || "Log in or create an account to like, comment, and interact with creators across Africa."}
               </p>
@@ -3695,7 +3699,7 @@ export default function Home({
                   onClick={() => setShowAuthModal(false)}
                   className="auth-action-btn primary"
                 >
-                  Log In to WUDAU
+                  Log In to WUDAO
                 </Link>
                 <Link
                   href="/Registration"
@@ -3803,7 +3807,7 @@ export default function Home({
                   href={`mailto:?subject=${encodeURIComponent(
                     shareTarget.title
                   )}&body=${encodeURIComponent(
-                    shareTarget.title + "\n\nWatch on WUDAU:\n" + shareTarget.url
+                    shareTarget.title + "\n\nWatch on WUDAO:\n" + shareTarget.url
                   )}`}
                   className="share-app-item"
                   onClick={() => showToast("Opening Email...")}
@@ -4010,20 +4014,18 @@ export default function Home({
           width: 30px;
           height: 30px;
           border-radius: 8px;
-          background: var(--brand-accent);
-          color: #ffffff;
-          font-weight: 900;
-          font-size: 16px;
+          background: #0c0d12;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 2px 8px rgba(255, 87, 34, 0.35);
+          box-shadow: 0 2px 8px rgba(120, 75, 160, 0.45);
+          overflow: hidden;
+          flex-shrink: 0;
         }
 
         .brand-logo-mark.mini {
           width: 26px;
           height: 26px;
-          font-size: 14px;
         }
 
         .brand-name {
@@ -6844,8 +6846,8 @@ export default function Home({
           }
         }
 
-        /* WUDAU Watermark Floating Badge */
-        .wudau-reel-watermark {
+        /* WUDAO Watermark Floating Badge */
+        .wudao-reel-watermark {
           position: absolute;
           top: 18px;
           left: 18px;
@@ -6890,7 +6892,7 @@ export default function Home({
           color: rgba(255, 255, 255, 0.82);
         }
 
-        .wudau-photo-watermark {
+        .wudao-photo-watermark {
           position: absolute;
           bottom: 14px;
           right: 14px;
@@ -6908,7 +6910,7 @@ export default function Home({
           box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
         }
 
-        .wudau-photo-watermark.modal-pos {
+        .wudao-photo-watermark.modal-pos {
           bottom: 20px;
           right: 20px;
           padding: 5px 12px;
@@ -7729,7 +7731,7 @@ export default function Home({
           margin-bottom: 14px;
         }
 
-        .wudau-toast {
+        .wudao-toast {
           position: fixed;
           top: 68px;
           left: 50%;
