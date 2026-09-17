@@ -1245,8 +1245,8 @@ export default function Home({
 
   // Continuous Social Feed: Infinite Scroll Loader
   const loadMorePosts = async () => {
-    if (!isAuth) return; // Guests are limited to preview posts
-    if (isLoadingMorePosts || !hasMorePosts) return;
+    if (isLoadingMorePosts || !hasMorePosts) return; // all users can load more
+
     setIsLoadingMorePosts(true);
     try {
       const nextPage = postPage + 1;
@@ -1319,18 +1319,8 @@ export default function Home({
     setIsBuffering(false);
   }, [currentReelIndex, currentFilter]);
 
-  const GUEST_REEL_LIMIT = 3;
-
   const handleNextReel = () => {
     if (filteredVideos.length === 0) return;
-    if (!isAuth && currentReelIndex >= GUEST_REEL_LIMIT - 1) {
-      setCurrentReelIndex(GUEST_REEL_LIMIT);
-      requireAuth(
-        "preview_limit",
-        "You've completed your 3-reel guest preview! Sign in or create a free account to watch continuous reels."
-      );
-      return;
-    }
     setProgressPercent(0);
     setCurrentReelIndex((prev) => (prev + 1) % filteredVideos.length);
     setIsPlaying(true);
@@ -2049,41 +2039,12 @@ export default function Home({
                     {/* Centered Video Player Card */}
                     <div
                       className="video-player-card"
-                      onClick={!isAuth && currentReelIndex >= 3 ? undefined : handleSurfaceClick}
+                      onClick={handleSurfaceClick}
                       onWheel={handleWheel}
                       onTouchStart={handleTouchStart}
                       onTouchEnd={handleTouchEnd}
                     >
-                      {!isAuth && currentReelIndex >= 3 ? (
-                        <div className="guest-reel-preview-gate">
-                          <div className="preview-gate-card">
-                            <div className="preview-gate-icon">🔥</div>
-                            <div className="preview-gate-badge">WUDAU REELS PREVIEW</div>
-                            <h3>Join WUDAU to Watch Unlimited Reels</h3>
-                            <p>
-                              You've completed your 3-reel guest preview! Sign in or create a free account to watch continuous reels, follow creators, and discover the sounds of East Africa.
-                            </p>
-                            <div className="preview-gate-actions">
-                              <Link href="/login" className="gate-btn primary">
-                                Log In to WUDAU
-                              </Link>
-                              <Link href="/Registration" className="gate-btn secondary">
-                                Create Free Account
-                              </Link>
-                              <button
-                                onClick={() => {
-                                  setCurrentReelIndex(0);
-                                  setProgressPercent(0);
-                                }}
-                                className="gate-btn reset"
-                              >
-                                ↺ Back to First Reel
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
+                      <>
                           {/* Video Element */}
                           <video
                             ref={videoRef}
@@ -2163,7 +2124,6 @@ export default function Home({
                             </div>
                           )}
                         </>
-                      )}
 
                       {/* Floating Right Actions Column */}
                       <div className="player-actions-column" onClick={(e) => e.stopPropagation()}>
@@ -2732,31 +2692,7 @@ export default function Home({
                   })
                 )}
 
-                {/* Guest Feed Preview Gate Barrier */}
-                {!isAuth && filteredPosts.length > 3 && (
-                  <div className="guest-feed-preview-gate">
-                    <div className="feed-gate-card">
-                      <div className="feed-gate-avatar-stack">
-                        {availableCreators.slice(0, 4).map((c) => (
-                          <img key={c._id} src={resolveMedia(c.image)} alt={c.name} className="stack-avatar" />
-                        ))}
-                      </div>
-                      <div className="feed-gate-badge">JOIN WUDAU COMMUNITY</div>
-                      <h3>Want to see more community moments?</h3>
-                      <p>
-                        Join thousands of artists, dancers, and creators sharing daily stories across Tanzania and beyond. Log in or register to unlock unlimited community feeds, likes, and comments.
-                      </p>
-                      <div className="feed-gate-actions">
-                        <Link href="/login" className="gate-btn primary">
-                          Log In to Continue
-                        </Link>
-                        <Link href="/Registration" className="gate-btn secondary">
-                          Create Free Account
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Guests have unlimited view access — auth only required for interactions */}
 
                 {/* Continuous Infinite Scroll Sentinel */}
                 <div ref={feedSentinelRef} className="feed-infinite-scroll-sentinel">
