@@ -95,6 +95,12 @@ export default function Home({
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
+  // Auto-Scrolling & Reel Playback Progress
+  const [isAutoScroll, setIsAutoScroll] = useState<boolean>(true);
+  const [progressPercent, setProgressPercent] = useState<number>(0);
+  const lastWheelTime = useRef<number>(0);
+  const touchStartY = useRef<number | null>(null);
+
   // Social Interactions & Modals
   const [likedReelIds, setLikedReelIds] = useState<{ [id: string]: boolean }>({});
   const [reelLikesCount, setReelLikesCount] = useState<{ [id: string]: number }>({});
@@ -244,16 +250,71 @@ export default function Home({
 
   const activeVideo = filteredVideos[currentReelIndex] || filteredVideos[0];
 
+  // Reset playback progress when switching reel or category
+  useEffect(() => {
+    setProgressPercent(0);
+  }, [currentReelIndex, currentFilter]);
+
   const handleNextReel = () => {
     if (filteredVideos.length === 0) return;
+    setProgressPercent(0);
     setCurrentReelIndex((prev) => (prev + 1) % filteredVideos.length);
     setIsPlaying(true);
   };
 
   const handlePrevReel = () => {
     if (filteredVideos.length === 0) return;
+    setProgressPercent(0);
     setCurrentReelIndex((prev) => (prev - 1 + filteredVideos.length) % filteredVideos.length);
     setIsPlaying(true);
+  };
+
+  const handleVideoEnded = () => {
+    if (isAutoScroll) {
+      handleNextReel();
+    }
+  };
+
+  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const target = e.currentTarget;
+    if (target.duration && !isNaN(target.duration)) {
+      const pct = (target.currentTime / target.duration) * 100;
+      setProgressPercent(Math.min(100, Math.max(0, pct)));
+      // Auto-advance safely if video reaches within 0.25s of duration
+      if (isAutoScroll && target.duration > 1 && (target.duration - target.currentTime) < 0.25) {
+        handleNextReel();
+      }
+    }
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    const now = Date.now();
+    if (now - lastWheelTime.current < 400) return;
+    if (Math.abs(e.deltaY) > 25) {
+      lastWheelTime.current = now;
+      if (e.deltaY > 0) {
+        handleNextReel();
+      } else {
+        handlePrevReel();
+      }
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartY.current === null) return;
+    const diff = touchStartY.current - e.changedTouches[0].clientY;
+    touchStartY.current = null;
+    if (Math.abs(diff) > 45) {
+      if (diff > 0) {
+        handleNextReel(); // Swiped up -> next reel
+      } else {
+        handlePrevReel(); // Swiped down -> prev reel
+      }
+    }
   };
 
   const handleLike = (id: string, e?: React.MouseEvent) => {
@@ -410,6 +471,19 @@ export default function Home({
               )}
             </div>
 
+            {/* Auto-Scroll Toggle Button */}
+            <button
+              onClick={() => {
+                setIsAutoScroll(!isAutoScroll);
+                showToast(!isAutoScroll ? "🔄 Auto-Scroll: ON (Next reel on finish)" : "🔁 Auto-Scroll: OFF (Video loops)");
+              }}
+              className={`auto-scroll-nav-pill ${isAutoScroll ? "active" : ""}`}
+              title={isAutoScroll ? "Auto-Scroll: Enabled (Click to switch to loop mode)" : "Auto-Scroll: Disabled (Click to enable auto-advance)"}
+            >
+              <span className={`auto-scroll-dot ${isAutoScroll ? "active" : ""}`}></span>
+              <span className="auto-scroll-text">Auto: <strong>{isAutoScroll ? "ON" : "OFF"}</strong></span>
+            </button>
+
             {/* Viewport Fitness Toggle (Desktop/Tablet: Native Phone vs Wide) */}
             <div className="view-mode-toggle d-none-mobile">
               <button
@@ -563,6 +637,27 @@ export default function Home({
                 </div>
               </div>
 
+              {/* Feed Playback Settings */}
+              <div className="drawer-section">
+                <span className="drawer-section-title">FEED SETTINGS</span>
+                <div className="drawer-setting-row">
+                  <div className="drawer-setting-text">
+                    <span className="setting-title">🔄 Auto-Scroll Reels</span>
+                    <span className="setting-desc">{isAutoScroll ? "Advances automatically when video ends" : "Current reel loops continuously"}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsAutoScroll(!isAutoScroll);
+                      showToast(!isAutoScroll ? "🔄 Auto-Scroll: ON" : "🔁 Auto-Scroll: OFF (Loop Mode)");
+                    }}
+                    className={`drawer-switch-btn ${isAutoScroll ? "active" : ""}`}
+                    aria-label="Toggle Auto-Scroll"
+                  >
+                    <span className="switch-knob"></span>
+                  </button>
+                </div>
+              </div>
+
               {/* Quick Actions & Links */}
               <div className="drawer-section">
                 <span className="drawer-section-title">QUICK ACTIONS</span>
@@ -668,17 +763,25 @@ export default function Home({
                         </div>
                       </div>
 
-                      {/* Video Player Box */}
-                      <div className="reel-player-box" onClick={togglePlay}>
+                      {/* Video Player Box with Wheel and Swipe Gestures */}
+                      <div
+                        className="reel-player-box"
+                        onClick={togglePlay}
+                        onWheel={handleWheel}
+                        onTouchStart={handleTouchStart}
+                        onTouchEnd={handleTouchEnd}
+                      >
                         <video
                           ref={videoRef}
                           key={activeVideo._id}
                           src={resolveMedia(activeVideo.videoUrl)}
                           poster={resolveMedia(activeVideo.videoImage)}
                           autoPlay
-                          loop
+                          loop={!isAutoScroll}
                           muted={isMuted}
                           playsInline
+                          onEnded={handleVideoEnded}
+                          onTimeUpdate={handleTimeUpdate}
                           className="reel-video-element"
                         />
 
@@ -766,6 +869,20 @@ export default function Home({
                             <span className="bubble-count">{activeVideo.shareCount || 0}</span>
                           </button>
 
+                          {/* Auto-Scroll Toggle Bubble */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsAutoScroll(!isAutoScroll);
+                              showToast(!isAutoScroll ? "🔄 Auto-Scroll ON (Advances automatically)" : "🔁 Auto-Scroll OFF (Loop Mode)");
+                            }}
+                            className={`action-btn-bubble auto-scroll-bubble ${isAutoScroll ? "active" : ""}`}
+                            title={isAutoScroll ? "Auto-Scroll: ON (Click for loop mode)" : "Auto-Scroll: OFF (Click for auto-scroll)"}
+                          >
+                            <span className="bubble-icon">{isAutoScroll ? "🔄" : "🔁"}</span>
+                            <span className="bubble-count">{isAutoScroll ? "Auto" : "Loop"}</span>
+                          </button>
+
                           {/* Rotating Vinyl Record */}
                           <div
                             onClick={() => handleToggleMusic(activeVideo.songLink)}
@@ -804,6 +921,17 @@ export default function Home({
                               </span>
                             </div>
                           </div>
+                        </div>
+
+                        {/* Auto-Scroll Playback Progress Bar */}
+                        <div
+                          className="reel-progress-track"
+                          title={`Auto-Scroll: ${isAutoScroll ? "ON (Advances automatically at 100%)" : "OFF (Loop Mode)"}`}
+                        >
+                          <div
+                            className={`reel-progress-bar ${isAutoScroll ? "auto-active" : ""}`}
+                            style={{ width: `${progressPercent}%` }}
+                          />
                         </div>
 
                         {/* Native Bottom Navigation Bar Inside Mobile Mockup */}
@@ -851,6 +979,28 @@ export default function Home({
 
                     {/* Desktop Side Companion Controls (Only visible on wide/tablet screens) */}
                     <aside className="desktop-companion-controls">
+                      {/* Auto-Scroll Desktop Switch Card */}
+                      <div className="companion-autoscroll-card">
+                        <div className="autoscroll-card-left">
+                          <span className="autoscroll-icon-badge">{isAutoScroll ? "🔄" : "🔁"}</span>
+                          <div>
+                            <span className="autoscroll-title">Auto-Scroll</span>
+                            <span className="autoscroll-desc">{isAutoScroll ? "Auto-advancing" : "Looping reel"}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setIsAutoScroll(!isAutoScroll);
+                            showToast(!isAutoScroll ? "🔄 Auto-Scroll: ON" : "🔁 Auto-Scroll: OFF (Loop Mode)");
+                          }}
+                          className={`comp-toggle-switch ${isAutoScroll ? "active" : ""}`}
+                          title="Toggle Auto-Scroll"
+                          aria-label="Toggle Auto-Scroll"
+                        >
+                          <span className="comp-switch-slider"></span>
+                        </button>
+                      </div>
+
                       {/* Up/Down Reel Switcher */}
                       <div className="reel-arrow-controls">
                         <button
@@ -1582,6 +1732,55 @@ export default function Home({
           font-size: 11px;
         }
 
+        /* Top Navigation Auto-Scroll Pill */
+        .auto-scroll-nav-pill {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 9999px;
+          padding: 5px 12px;
+          font-size: 11px;
+          font-weight: 700;
+          color: #475569;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          white-space: nowrap;
+        }
+
+        .auto-scroll-nav-pill:hover {
+          background: #f1f5f9;
+          border-color: #cbd5e1;
+        }
+
+        .auto-scroll-nav-pill.active {
+          background: #ecfdf5;
+          border-color: #a7f3d0;
+          color: #065f46;
+          box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);
+        }
+
+        .auto-scroll-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #94a3b8;
+          transition: all 0.2s ease;
+        }
+
+        .auto-scroll-dot.active {
+          background: #10b981;
+          box-shadow: 0 0 6px #10b981;
+          animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+          0% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.4); opacity: 0.7; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+
         /* Viewport Mode Switcher */
         .view-mode-toggle {
           display: flex;
@@ -1887,6 +2086,67 @@ export default function Home({
         .chan-count {
           font-size: 10px;
           color: #94a3b8;
+        }
+
+        /* Drawer Settings & Switches */
+        .drawer-setting-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 12px;
+          border-radius: 10px;
+          border: 1px solid #e2e8f0;
+          background: #f8fafc;
+          margin-bottom: 8px;
+        }
+
+        .drawer-setting-text {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .setting-title {
+          font-size: 12px;
+          font-weight: 700;
+          color: #1e293b;
+        }
+
+        .setting-desc {
+          font-size: 10px;
+          color: #64748b;
+        }
+
+        .drawer-switch-btn {
+          width: 42px;
+          height: 24px;
+          border-radius: 9999px;
+          background: #cbd5e1;
+          border: none;
+          position: relative;
+          cursor: pointer;
+          transition: background 0.2s ease;
+          flex-shrink: 0;
+        }
+
+        .drawer-switch-btn.active {
+          background: #10b981;
+        }
+
+        .drawer-switch-btn .switch-knob {
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #ffffff;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+          transition: transform 0.2s ease;
+        }
+
+        .drawer-switch-btn.active .switch-knob {
+          transform: translateX(18px);
         }
 
         .quick-action-row {
@@ -2219,6 +2479,19 @@ export default function Home({
           text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
+        .auto-scroll-bubble .bubble-icon {
+          font-size: 16px;
+          transition: all 0.2s ease;
+        }
+
+        .auto-scroll-bubble.active .bubble-icon {
+          border-color: #10b981;
+          background: rgba(16, 185, 129, 0.35);
+          box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+          color: #34d399;
+          transform: scale(1.08);
+        }
+
         .spinning-record {
           width: 38px;
           height: 38px;
@@ -2308,6 +2581,32 @@ export default function Home({
           white-space: nowrap;
         }
 
+        /* Auto-Scroll Playback Progress Track & Fill Indicator */
+        .reel-progress-track {
+          position: absolute;
+          bottom: 56px;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: rgba(255, 255, 255, 0.25);
+          z-index: 38;
+          pointer-events: none;
+          overflow: hidden;
+        }
+
+        .reel-progress-bar {
+          height: 100%;
+          background: linear-gradient(90deg, #ff4b1f 0%, #fbbf24 100%);
+          box-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+          transition: width 0.1s linear;
+          border-radius: 0 2px 2px 0;
+        }
+
+        .reel-progress-bar.auto-active {
+          background: linear-gradient(90deg, #ff4b1f 0%, #00e5ff 60%, #10b981 100%);
+          box-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
+        }
+
         /* Native Device Bottom Nav inside Smartphone Frame */
         .device-bottom-nav {
           position: absolute;
@@ -2369,6 +2668,81 @@ export default function Home({
           flex-direction: column;
           gap: 16px;
           width: 260px;
+        }
+
+        .companion-autoscroll-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: #ffffff;
+          padding: 10px 14px;
+          border-radius: 14px;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        .autoscroll-card-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .autoscroll-icon-badge {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 15px;
+        }
+
+        .autoscroll-title {
+          display: block;
+          font-size: 12px;
+          font-weight: 800;
+          color: #1e293b;
+        }
+
+        .autoscroll-desc {
+          display: block;
+          font-size: 10px;
+          color: #64748b;
+        }
+
+        .comp-toggle-switch {
+          width: 44px;
+          height: 24px;
+          border-radius: 9999px;
+          background: #cbd5e1;
+          border: none;
+          position: relative;
+          cursor: pointer;
+          transition: background 0.2s ease;
+          padding: 2px;
+          flex-shrink: 0;
+        }
+
+        .comp-toggle-switch.active {
+          background: #10b981;
+        }
+
+        .comp-switch-slider {
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #ffffff;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          transition: transform 0.2s ease;
+        }
+
+        .comp-toggle-switch.active .comp-switch-slider {
+          transform: translateX(20px);
         }
 
         .reel-arrow-controls {
