@@ -5,6 +5,189 @@ import { useRouter } from "next/router";
 import axios from "axios";
 import { baseURL, secretKey, projectName } from "@/util/config";
 
+// ============================================================================
+// SLEEK VECTOR SVG ICONS (NO AMATEUR EMOJIS)
+// ============================================================================
+const SvgIcon = ({
+  children,
+  size = 20,
+  className = "",
+}: {
+  children: React.ReactNode;
+  size?: number;
+  className?: string;
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    style={{ flexShrink: 0 }}
+  >
+    {children}
+  </svg>
+);
+
+const IconReels = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <rect x="2" y="2" width="20" height="20" rx="4" />
+    <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none" />
+  </SvgIcon>
+);
+
+const IconLive = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M4.93 4.93a10 10 0 0 1 14.14 0" />
+    <path d="M7.76 7.76a6 6 0 0 1 8.48 0" />
+    <circle cx="12" cy="12" r="2" fill="currentColor" />
+  </SvgIcon>
+);
+
+const IconCommunity = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <polyline points="21 15 16 10 5 21" />
+  </SvgIcon>
+);
+
+const IconMusic = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M9 18V5l12-2v13" />
+    <circle cx="6" cy="18" r="3" />
+    <circle cx="18" cy="16" r="3" />
+  </SvgIcon>
+);
+
+const IconCompass = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <circle cx="12" cy="12" r="10" />
+    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+  </SvgIcon>
+);
+
+const IconHeart = ({ filled = false, size = 20 }: { filled?: boolean; size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill={filled ? "#ff2d55" : "none"}
+    stroke={filled ? "#ff2d55" : "currentColor"}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ flexShrink: 0 }}
+  >
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+  </svg>
+);
+
+const IconMessage = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+  </SvgIcon>
+);
+
+const IconShare = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+  </SvgIcon>
+);
+
+const IconGift = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <polyline points="20 12 20 22 4 22 4 12" />
+    <rect x="2" y="7" width="20" height="5" />
+    <line x1="12" y1="22" x2="12" y2="7" />
+    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+  </SvgIcon>
+);
+
+const IconRepeat = ({ size = 18 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <polyline points="17 1 21 5 17 9" />
+    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+    <polyline points="7 23 3 19 7 15" />
+    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+  </SvgIcon>
+);
+
+const IconVolume = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+  </SvgIcon>
+);
+
+const IconVolumeX = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <line x1="23" y1="9" x2="17" y2="15" />
+    <line x1="17" y1="9" x2="23" y2="15" />
+  </SvgIcon>
+);
+
+const IconSearch = ({ size = 16 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </SvgIcon>
+);
+
+const IconUser = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </SvgIcon>
+);
+
+const IconPlus = ({ size = 18 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </SvgIcon>
+);
+
+const IconChevronUp = ({ size = 18 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <polyline points="18 15 12 9 6 15" />
+  </SvgIcon>
+);
+
+const IconChevronDown = ({ size = 18 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <polyline points="6 9 12 15 18 9" />
+  </SvgIcon>
+);
+
+const IconLogOut = ({ size = 16 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
+  </SvgIcon>
+);
+
+const IconMapPin = ({ size = 13 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+    <circle cx="12" cy="10" r="3" />
+  </SvgIcon>
+);
+
+// ============================================================================
+// DATA MODELS
+// ============================================================================
 interface VideoItem {
   _id: string;
   caption: string;
@@ -56,17 +239,16 @@ interface CommentItem {
 interface GiftItem {
   id: string;
   name: string;
-  icon: string;
   coins: number;
 }
 
 const GIFTS_LIST: GiftItem[] = [
-  { id: "g1", name: "Rose", icon: "🌹", coins: 10 },
-  { id: "g2", name: "Love Heart", icon: "💖", coins: 50 },
-  { id: "g3", name: "African Drum", icon: "🪘", coins: 100 },
-  { id: "g4", name: "Diamond", icon: "💎", coins: 500 },
-  { id: "g5", name: "Crown", icon: "👑", coins: 1000 },
-  { id: "g6", name: "Safari Lion", icon: "🦁", coins: 2500 },
+  { id: "g1", name: "Rose", coins: 10 },
+  { id: "g2", name: "Love Heart", coins: 50 },
+  { id: "g3", name: "African Drum", coins: 100 },
+  { id: "g4", name: "Diamond", coins: 500 },
+  { id: "g5", name: "Crown", coins: 1000 },
+  { id: "g6", name: "Safari Lion", coins: 2500 },
 ];
 
 export default function Home({
@@ -84,7 +266,6 @@ export default function Home({
   const [currentFilter, setCurrentFilter] = useState<string>("all");
   const [currentReelIndex, setCurrentReelIndex] = useState<number>(0);
   const [language, setLanguage] = useState<string>("English");
-  const [showLanguageDropdown, setShowLanguageDropdown] = useState<boolean>(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState<boolean>(false);
 
   // Content Data
@@ -126,7 +307,7 @@ export default function Home({
   const [playingAudioUrl, setPlayingAudioUrl] = useState<string | null>(null);
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
 
-  // Authentic Tanzanian & Global Commentary
+  // Realistic Comments
   const [commentsMap, setCommentsMap] = useState<{ [videoId: string]: CommentItem[] }>({
     default: [
       { id: "c1", userName: "@jay_bongo", text: "Hii ni kali sana bro! Dar es Salaam stand up! 🔥🇹🇿", time: "2m ago" },
@@ -224,7 +405,7 @@ export default function Home({
   // Toast Notification helper
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    setTimeout(() => setToastMessage(null), 2500);
   };
 
   const handleLogout = () => {
@@ -243,7 +424,7 @@ export default function Home({
     }
   };
 
-  // Quick Filter Logic
+  // Clean Filter Logic
   const filteredVideos = useMemo(() => {
     let list = videos;
     if (currentFilter === "tanzania") {
@@ -322,7 +503,6 @@ export default function Home({
     if (target.duration && !isNaN(target.duration)) {
       const pct = (target.currentTime / target.duration) * 100;
       setProgressPercent(Math.min(100, Math.max(0, pct)));
-      // Auto-advance safely if video reaches within 0.25s of duration
       if (isAutoScroll && target.duration > 1 && target.duration - target.currentTime < 0.25) {
         handleNextReel();
       }
@@ -354,12 +534,11 @@ export default function Home({
     touchStartY.current = null;
     touchStartX.current = null;
 
-    // Check for vertical swipe (scroll reel)
     if (Math.abs(diffY) > 40 && Math.abs(diffY) > Math.abs(diffX)) {
       if (diffY > 0) {
-        handleNextReel(); // Swiped up -> next reel
+        handleNextReel();
       } else {
-        handlePrevReel(); // Swiped down -> prev reel
+        handlePrevReel();
       }
     }
   };
@@ -368,7 +547,6 @@ export default function Home({
   const handleSurfaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const now = Date.now();
     if (now - lastTapTime.current < 300) {
-      // Double tap detected: trigger like with floating heart animation
       if (activeVideo) {
         if (!likedReelIds[activeVideo._id]) {
           handleLike(activeVideo._id);
@@ -400,7 +578,7 @@ export default function Home({
     const currentCount = reelLikesCount[id] !== undefined ? reelLikesCount[id] : activeVideo?.totalLikes || 0;
     setLikedReelIds((prev) => ({ ...prev, [id]: !wasLiked }));
     setReelLikesCount((prev) => ({ ...prev, [id]: wasLiked ? Math.max(0, currentCount - 1) : currentCount + 1 }));
-    showToast(wasLiked ? "Removed like" : "❤️ Liked reel!");
+    showToast(wasLiked ? "Unliked" : "Liked reel");
   };
 
   const handleShare = (video: VideoItem, e?: React.MouseEvent) => {
@@ -416,14 +594,14 @@ export default function Home({
           .catch(() => {});
       } else {
         navigator.clipboard?.writeText(url);
-        showToast("🔗 Reel link copied to clipboard!");
+        showToast("Link copied to clipboard");
       }
     }
   };
 
   const handleSendGift = (gift: GiftItem) => {
     setShowGiftModal(false);
-    showToast(`🎁 Sent ${gift.icon} ${gift.name} (${gift.coins} coins) to ${activeVideo?.name || "Creator"}!`);
+    showToast(`Sent ${gift.name} (${gift.coins} coins) to ${activeVideo?.name || "Creator"}`);
   };
 
   const handleAddComment = (e: React.FormEvent) => {
@@ -440,7 +618,7 @@ export default function Home({
     };
     setCommentsMap({ ...commentsMap, [vidId]: [newComment, ...currentList] });
     setCommentInput("");
-    showToast("💬 Comment posted!");
+    showToast("Comment posted");
   };
 
   const handleToggleMusic = (songUrl?: string) => {
@@ -461,10 +639,10 @@ export default function Home({
   return (
     <>
       <Head>
-        <title>{projectName} - African Rhythm & Global Talent Discovery</title>
+        <title>{projectName} — Watch & Discover Short Videos</title>
         <meta
           name="description"
-          content="Experience vibrant Tanzanian street dance, Bongo Flava, Singeli 300BPM, Serengeti wildlife safari, and global creative reels on WUDAU."
+          content="Discover trending Tanzanian street dance, Bongo Flava, Singeli 300BPM, Serengeti wildlife, and global creative reels on WUDAU."
         />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <link rel="icon" href="/favicon.ico" />
@@ -490,60 +668,58 @@ export default function Home({
             {/* Slide-over menu hamburger button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`hamburger-btn ${isMenuOpen ? "active" : ""}`}
+              className={`menu-trigger-btn ${isMenuOpen ? "active" : ""}`}
               aria-label="Toggle navigation menu"
               title="Menu"
             >
-              <div className="hamburger-bars">
-                <span className="bar top"></span>
-                <span className="bar mid"></span>
-                <span className="bar bot"></span>
+              <div className="hamburger-box">
+                <span className="ham-line top"></span>
+                <span className="ham-line mid"></span>
+                <span className="ham-line bot"></span>
               </div>
             </button>
 
             {/* Brand Logo */}
-            <Link href="/" className="brand-logo">
-              <div className="brand-badge">W</div>
-              <div className="brand-text-block">
-                <span className="brand-title">WUDAU</span>
-                <span className="brand-tagline">RHYTHM & TALENT</span>
-              </div>
+            <Link href="/" className="brand-link">
+              <div className="brand-logo-mark">W</div>
+              <span className="brand-name">WUDAU</span>
             </Link>
           </div>
 
-          {/* Quick Filter Categories Carousel */}
+          {/* Clean Category Tabs (NO Childish Emojis) */}
           <div className="header-center">
-            <nav className="filter-nav">
+            <nav className="category-tabs-track">
               {[
-                { id: "all", label: "🔥 For You" },
-                { id: "tanzania", label: "🇹🇿 Tanzania" },
-                { id: "serengeti", label: "🦁 Serengeti" },
-                { id: "singeli", label: "⚡ Singeli & Bongo" },
-                { id: "zanzibar", label: "🌴 Zanzibar" },
-                { id: "global", label: "🌍 Global" },
-              ].map((chip) => (
+                { id: "all", label: "For You" },
+                { id: "tanzania", label: "Tanzania" },
+                { id: "serengeti", label: "Serengeti" },
+                { id: "singeli", label: "Singeli & Bongo" },
+                { id: "zanzibar", label: "Zanzibar" },
+                { id: "global", label: "Global" },
+              ].map((tab) => (
                 <button
-                  key={chip.id}
+                  key={tab.id}
                   onClick={() => {
-                    setCurrentFilter(chip.id);
+                    setCurrentFilter(tab.id);
                     setCurrentReelIndex(0);
                   }}
-                  className={`filter-tab ${currentFilter === chip.id ? "active" : ""}`}
+                  className={`category-tab-btn ${currentFilter === tab.id ? "active" : ""}`}
                 >
-                  {chip.label}
+                  {tab.label}
+                  {currentFilter === tab.id && <span className="tab-active-indicator" />}
                 </button>
               ))}
             </nav>
           </div>
 
-          {/* Header Right Tools: Search, Auto-Scroll, Auth/Profile */}
+          {/* Header Right Tools */}
           <div className="header-right">
             {/* Desktop Search Bar */}
-            <div className="search-bar-desktop">
-              <span className="search-glass">🔍</span>
+            <div className="header-search-bar">
+              <IconSearch size={16} />
               <input
                 type="text"
-                placeholder="Search reels, artists, #tags..."
+                placeholder="Search reels, sounds, creators..."
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -551,7 +727,7 @@ export default function Home({
                 }}
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className="search-clear">
+                <button onClick={() => setSearchQuery("")} className="search-clear-btn" aria-label="Clear search">
                   ✕
                 </button>
               )}
@@ -560,65 +736,80 @@ export default function Home({
             {/* Mobile Search Icon Toggle */}
             <button
               onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-              className="mobile-search-btn"
+              className="icon-action-btn mobile-only"
               aria-label="Search"
+              title="Search"
             >
-              🔍
+              <IconSearch size={18} />
             </button>
 
-            {/* Auto-Scroll Toggle */}
+            {/* Auto-advance Icon Button (CLEAN ICON SWITCH, NO BOLD 'AUTO: ON' TEXT) */}
             <button
               onClick={() => {
                 setIsAutoScroll(!isAutoScroll);
-                showToast(!isAutoScroll ? "🔄 Auto-Scroll: ON (Next reel on finish)" : "🔁 Auto-Scroll: OFF (Video loops)");
+                showToast(!isAutoScroll ? "Continuous Play Enabled" : "Loop Mode Enabled");
               }}
-              className={`auto-scroll-pill ${isAutoScroll ? "active" : ""}`}
-              title={isAutoScroll ? "Auto-Scroll: Enabled (Advances automatically)" : "Auto-Scroll: Disabled (Click to advance automatically)"}
+              className={`icon-action-btn ${isAutoScroll ? "active-glow" : ""}`}
+              aria-label="Toggle auto-play next video"
+              title={isAutoScroll ? "Continuous Play: ON (Advances automatically)" : "Continuous Play: OFF (Loops video)"}
             >
-              <span className={`scroll-dot ${isAutoScroll ? "active" : ""}`}></span>
-              <span className="scroll-label">Auto: {isAutoScroll ? "ON" : "OFF"}</span>
+              <IconRepeat size={18} />
             </button>
 
-            {/* User Session Profile / Login CTA */}
+            {/* Create / Upload Shortcut */}
+            <button
+              onClick={() => {
+                if (isAuth) {
+                  showToast("Opening upload studio...");
+                } else {
+                  setAuthModalTitle("Upload Reel");
+                  setShowAuthModal(true);
+                }
+              }}
+              className="create-shortcut-btn"
+              title="Create new reel"
+            >
+              <IconPlus size={16} />
+              <span className="btn-label">Create</span>
+            </button>
+
+            {/* User Profile / Login Link */}
             {isAuth ? (
-              <div className="user-profile-pill">
+              <div className="header-profile-cluster">
                 <button
                   onClick={() => setCurrentTab("profile")}
-                  className="user-avatar-btn"
-                  title="My Account"
+                  className="profile-avatar-trigger"
+                  title="Profile & Settings"
                 >
                   {currentUser?.image ? (
-                    <img src={resolveMedia(currentUser.image)} alt="User" className="user-avatar-img" />
+                    <img src={resolveMedia(currentUser.image)} alt="User" className="user-thumb" />
                   ) : (
-                    <span className="user-avatar-initial">
-                      {currentUser?.name ? currentUser.name[0].toUpperCase() : "👤"}
+                    <span className="user-initial">
+                      {currentUser?.name ? currentUser.name[0].toUpperCase() : "U"}
                     </span>
                   )}
-                  <span className="user-display-name">{currentUser?.name || "Account"}</span>
-                </button>
-                <button onClick={handleLogout} className="logout-icon-btn" title="Log Out">
-                  🚪
                 </button>
               </div>
             ) : (
-              <div className="auth-buttons-group">
-                <Link href="/login" className="login-link-btn">
-                  Log In
+              <div className="guest-auth-actions">
+                <Link href="/login" className="nav-login-btn">
+                  Log in
                 </Link>
-                <Link href="/Registration" className="signup-link-btn">
-                  Sign Up
+                <Link href="/Registration" className="nav-signup-btn">
+                  Sign up
                 </Link>
               </div>
             )}
           </div>
         </header>
 
-        {/* Mobile Expandable Search Row */}
+        {/* Mobile Search Expandable Bar */}
         {mobileSearchOpen && (
-          <div className="mobile-search-row">
+          <div className="mobile-search-overlay">
+            <IconSearch size={16} />
             <input
               type="text"
-              placeholder="Search reels, artists, #tags..."
+              placeholder="Search reels, sounds, creators..."
               value={searchQuery}
               autoFocus
               onChange={(e) => {
@@ -626,90 +817,72 @@ export default function Home({
                 setCurrentReelIndex(0);
               }}
             />
-            <button onClick={() => setMobileSearchOpen(false)} className="mobile-search-close">
+            <button onClick={() => setMobileSearchOpen(false)} className="search-close-btn">
               ✕
             </button>
           </div>
         )}
 
         {/* ==================================================================== */}
-        {/* SLIDE-OVER NAVIGATION DRAWER                                         */}
+        {/* SLIDE-OVER NAVIGATION DRAWER (CLEAN, SPACIOUS, ZERO OVERLAPS)        */}
         {/* ==================================================================== */}
         {isMenuOpen && (
           <div className="drawer-overlay" onClick={() => setIsMenuOpen(false)}>
             <aside className="nav-drawer" onClick={(e) => e.stopPropagation()}>
-              <div className="drawer-header">
-                <div className="drawer-brand">
-                  <div className="brand-badge mini">W</div>
-                  <div>
-                    <h3 className="drawer-title">{projectName}</h3>
-                    <p className="drawer-tagline">Where Rhythm Meets Potential</p>
-                  </div>
-                </div>
-                <button onClick={() => setIsMenuOpen(false)} className="drawer-close" aria-label="Close Menu">
+              <div className="drawer-top-bar">
+                <Link href="/" className="drawer-brand" onClick={() => setIsMenuOpen(false)}>
+                  <div className="brand-logo-mark mini">W</div>
+                  <span className="brand-name">WUDAU</span>
+                </Link>
+                <button onClick={() => setIsMenuOpen(false)} className="drawer-close-btn" aria-label="Close menu">
                   ✕
                 </button>
               </div>
 
-              {/* User Session Profile Card */}
-              <div className="drawer-user-card">
-                <div className="drawer-user-info">
-                  <div className="user-avatar-circle">
-                    {currentUser?.image ? (
-                      <img src={resolveMedia(currentUser.image)} alt="Avatar" className="drawer-avatar-img" />
-                    ) : isAuth ? (
-                      "👑"
-                    ) : (
-                      "🌍"
-                    )}
-                  </div>
-                  <div>
-                    <h4 className="user-name">{currentUser?.name || (isAuth ? "Authenticated Creator" : "Welcome to WUDAU")}</h4>
-                    <p className="user-status">{currentUser?.userName || (isAuth ? "Creator Account" : "Guest Explorer • Tanzania & Global")}</p>
-                  </div>
-                </div>
+              {/* User Account Snippet */}
+              <div className="drawer-user-box">
                 {isAuth ? (
-                  <div className="drawer-user-quick-actions">
-                    <button
-                      onClick={() => {
-                        setCurrentTab("profile");
-                        setIsMenuOpen(false);
-                      }}
-                      className="drawer-quick-btn"
-                    >
-                      View Profile
-                    </button>
-                    {userRole === "admin" && (
-                      <Link href="/dashboard" className="drawer-quick-btn admin-link" onClick={() => setIsMenuOpen(false)}>
-                        Admin Portal
-                      </Link>
-                    )}
-                    <button onClick={handleLogout} className="drawer-quick-btn logout-text">
-                      Log Out
-                    </button>
+                  <div className="user-logged-in-row">
+                    <div className="user-avatar-wrap">
+                      {currentUser?.image ? (
+                        <img src={resolveMedia(currentUser.image)} alt="Avatar" className="user-avatar-img" />
+                      ) : (
+                        <span className="user-avatar-fallback">
+                          {currentUser?.name ? currentUser.name[0].toUpperCase() : "U"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="user-meta-column">
+                      <span className="user-profile-name">{currentUser?.name || "Creator"}</span>
+                      <span className="user-profile-handle">{currentUser?.userName || "@creator"}</span>
+                    </div>
                   </div>
                 ) : (
-                  <div className="drawer-auth-actions">
-                    <Link href="/login" onClick={() => setIsMenuOpen(false)} className="drawer-auth-btn login">
-                      Sign In
-                    </Link>
-                    <Link href="/Registration" onClick={() => setIsMenuOpen(false)} className="drawer-auth-btn register">
-                      Create Account
-                    </Link>
+                  <div className="drawer-guest-prompt">
+                    <p className="guest-prompt-title">Sign in to WUDAU</p>
+                    <p className="guest-prompt-sub">Follow creators, like reels, and share your talent.</p>
+                    <div className="drawer-guest-btn-row">
+                      <Link href="/login" onClick={() => setIsMenuOpen(false)} className="drawer-btn primary">
+                        Log in
+                      </Link>
+                      <Link href="/Registration" onClick={() => setIsMenuOpen(false)} className="drawer-btn secondary">
+                        Sign up
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Primary Content Feeds */}
-              <div className="drawer-section">
-                <span className="drawer-section-title">CONTENT DISCOVERY</span>
-                <nav className="drawer-nav-list">
+              {/* Primary Content Feeds (CLEAN TITLES, NO CRAMMED SUBTITLES) */}
+              <div className="drawer-nav-group">
+                <span className="drawer-group-label">EXPLORE</span>
+                <nav className="drawer-nav-items">
                   {[
-                    { id: "reels", label: "🎬 Reels & Shorts", desc: "Tanzanian & African Video Feed" },
-                    { id: "live", label: "🔴 Live Stages", desc: "Coco Beach & Stone Town Broadcasts" },
-                    { id: "social", label: "🤍 Community Feed", desc: "Creator Photos & Stories" },
-                    { id: "music", label: "🎵 Sounds & Audio", desc: "Bongo Flava, Singeli, Serengeti" },
-                    { id: "explore", label: "🦁 Discover Tanzania", desc: "#TanzaniaUnforgettable" },
+                    { id: "reels", label: "Reels", icon: <IconReels size={18} /> },
+                    { id: "live", label: "Live Streams", icon: <IconLive size={18} /> },
+                    { id: "social", label: "Community Feed", icon: <IconCommunity size={18} /> },
+                    { id: "music", label: "Sounds & Music", icon: <IconMusic size={18} /> },
+                    { id: "explore", label: "Discover Tanzania", icon: <IconCompass size={18} /> },
                   ].map((item) => (
                     <button
                       key={item.id}
@@ -717,28 +890,25 @@ export default function Home({
                         setCurrentTab(item.id as any);
                         setIsMenuOpen(false);
                       }}
-                      className={`drawer-nav-item ${currentTab === item.id ? "active" : ""}`}
+                      className={`drawer-link-btn ${currentTab === item.id ? "active" : ""}`}
                     >
-                      <div className="nav-item-content">
-                        <span className="nav-item-label">{item.label}</span>
-                        <span className="nav-item-desc">{item.desc}</span>
-                      </div>
-                      <span className="nav-item-arrow">→</span>
+                      <span className="drawer-link-icon">{item.icon}</span>
+                      <span className="drawer-link-text">{item.label}</span>
                     </button>
                   ))}
                 </nav>
               </div>
 
-              {/* Cultural Channels */}
-              <div className="drawer-section">
-                <span className="drawer-section-title">CULTURAL CHANNELS 🇹🇿</span>
-                <div className="channel-pills-grid">
+              {/* Cultural Channels (CLEAN LIST WITH REGION PILLS, NO EMOJIS) */}
+              <div className="drawer-nav-group">
+                <span className="drawer-group-label">CULTURAL HIGHLIGHTS</span>
+                <div className="cultural-channels-list">
                   {[
-                    { tag: "tanzania", name: "🇹🇿 Dar Street Dance", count: "Kinondoni" },
-                    { tag: "singeli", name: "⚡ Singeli 300BPM", count: "Mbagala" },
-                    { tag: "serengeti", name: "🦁 Serengeti Safari", count: "Mara" },
-                    { tag: "zanzibar", name: "🌴 Zanzibar Taarab", count: "Stone Town" },
-                    { tag: "global", name: "🇯🇵 Tokyo & Paris Loops", count: "World Beats" },
+                    { tag: "tanzania", name: "Dar es Salaam Dance", region: "Kinondoni" },
+                    { tag: "singeli", name: "Singeli 300BPM", region: "Mbagala" },
+                    { tag: "serengeti", name: "Serengeti Safari", region: "Mara" },
+                    { tag: "zanzibar", name: "Zanzibar Taarab", region: "Stone Town" },
+                    { tag: "global", name: "Global Rhythms", region: "World" },
                   ].map((chan) => (
                     <button
                       key={chan.tag}
@@ -748,27 +918,27 @@ export default function Home({
                         setCurrentReelIndex(0);
                         setIsMenuOpen(false);
                       }}
-                      className="channel-pill-card"
+                      className="cultural-channel-row"
                     >
-                      <span className="chan-name">{chan.name}</span>
-                      <span className="chan-count">{chan.count}</span>
+                      <span className="channel-title">{chan.name}</span>
+                      <span className="channel-region-pill">{chan.region}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
               {/* Language Selection */}
-              <div className="drawer-section">
-                <span className="drawer-section-title">LANGUAGE</span>
-                <div className="drawer-lang-selector">
-                  {["English", "Swahili (Kiswahili) 🇹🇿", "Français", "中文"].map((lang) => (
+              <div className="drawer-nav-group">
+                <span className="drawer-group-label">LANGUAGE</span>
+                <div className="language-selector-pills">
+                  {["English", "Kiswahili", "Français", "中文"].map((lang) => (
                     <button
                       key={lang}
                       onClick={() => {
-                        setLanguage(lang.split(" ")[0]);
-                        showToast(`Language set to ${lang.split(" ")[0]}`);
+                        setLanguage(lang);
+                        showToast(`Language set to ${lang}`);
                       }}
-                      className={`drawer-lang-chip ${language === lang.split(" ")[0] ? "active" : ""}`}
+                      className={`lang-pill ${language === lang ? "active" : ""}`}
                     >
                       {lang}
                     </button>
@@ -776,42 +946,56 @@ export default function Home({
                 </div>
               </div>
 
-              {/* Footer Links */}
-              <div className="drawer-footer">
-                <p className="drawer-copyright">© 2026 WUDAU Technologies • African Rhythm & Global Creators</p>
+              {/* Drawer Bottom Actions */}
+              {isAuth && (
+                <div className="drawer-bottom-actions">
+                  {userRole === "admin" && (
+                    <Link href="/dashboard" className="drawer-admin-portal-link" onClick={() => setIsMenuOpen(false)}>
+                      Admin Portal
+                    </Link>
+                  )}
+                  <button onClick={handleLogout} className="drawer-logout-row">
+                    <IconLogOut size={16} />
+                    <span>Log Out</span>
+                  </button>
+                </div>
+              )}
+
+              <div className="drawer-footer-note">
+                <p>© 2026 WUDAU Technologies • Made for African & Global Creators</p>
               </div>
             </aside>
           </div>
         )}
 
         {/* ==================================================================== */}
-        {/* MAIN BODY: FLUID RESPONSIVE FEED & CONTENT STAGE                     */}
+        {/* MAIN BODY: FLUID FEED & PLAYER STAGE                                 */}
         {/* ==================================================================== */}
         <main className="content-stage">
-          {/* TAB 1: REELS EXPERIENCE (CLEAN, FLUID, NO HARDCODED FRAMES) */}
+          {/* TAB 1: REELS EXPERIENCE (REAL FLUID REELS, NO MOCKUP BEZELS) */}
           {currentTab === "reels" && (
-            <div className="reels-viewport">
+            <div className="reels-stage">
               {filteredVideos.length === 0 ? (
                 <div className="empty-state-card">
-                  <span style={{ fontSize: "44px" }}>🔍</span>
-                  <h3>No reels found for this category</h3>
-                  <p>Try clearing your filter or searching for another artist or hashtag.</p>
+                  <IconSearch size={40} />
+                  <h3>No reels found</h3>
+                  <p>Try resetting the category filter or searching for another creator or sound.</p>
                   <button
                     onClick={() => {
                       setCurrentFilter("all");
                       setSearchQuery("");
                     }}
-                    className="primary-gradient-btn"
+                    className="action-accent-btn"
                   >
                     View All Reels
                   </button>
                 </div>
               ) : (
                 activeVideo && (
-                  <div className="reel-main-layout">
-                    {/* Centered Reel Card (Fluid on Mobile, Focused on Desktop) */}
+                  <div className="player-presentation-layout">
+                    {/* Centered Video Player Card */}
                     <div
-                      className="reel-card-container"
+                      className="video-player-card"
                       onClick={handleSurfaceClick}
                       onWheel={handleWheel}
                       onTouchStart={handleTouchStart}
@@ -833,13 +1017,13 @@ export default function Home({
                         onPlaying={() => setIsBuffering(false)}
                         onEnded={handleVideoEnded}
                         onTimeUpdate={handleTimeUpdate}
-                        className="reel-video"
+                        className="main-reel-video"
                       />
 
                       {/* Buffering Spinner */}
                       {isBuffering && (
-                        <div className="buffering-spinner-wrap">
-                          <div className="buffering-ring"></div>
+                        <div className="buffering-overlay">
+                          <div className="buffering-spinner" />
                         </div>
                       )}
 
@@ -847,10 +1031,10 @@ export default function Home({
                       {floatingHearts.map((heart) => (
                         <div
                           key={heart.id}
-                          className="double-tap-heart"
-                          style={{ left: `${heart.x - 28}px`, top: `${heart.y - 28}px` }}
+                          className="floating-tap-heart"
+                          style={{ left: `${heart.x - 24}px`, top: `${heart.y - 24}px` }}
                         >
-                          ❤️
+                          <IconHeart filled size={48} />
                         </div>
                       ))}
 
@@ -859,33 +1043,35 @@ export default function Home({
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsMuted(!isMuted);
-                          showToast(isMuted ? "🔊 Sound Enabled" : "🔇 Muted");
+                          showToast(isMuted ? "Sound Enabled" : "Muted");
                         }}
-                        className="reel-sound-toggle"
+                        className="player-sound-btn"
                         aria-label="Toggle Sound"
                       >
-                        {isMuted ? "🔇" : "🔊"}
+                        {isMuted ? <IconVolumeX size={18} /> : <IconVolume size={18} />}
                       </button>
 
-                      {/* Play / Pause Indicator */}
+                      {/* Pause / Play Fade Indicator */}
                       {!isPlaying && (
-                        <div className="reel-paused-indicator">
-                          <div className="play-icon-glow">▶</div>
+                        <div className="player-pause-indicator">
+                          <div className="pause-icon-pill">
+                            <polygon points="5 3 19 12 5 21 5 3" fill="#ffffff" />
+                          </div>
                         </div>
                       )}
 
-                      {/* Right Floating Actions Bar */}
-                      <div className="reel-actions-rail" onClick={(e) => e.stopPropagation()}>
+                      {/* Floating Right Actions Column */}
+                      <div className="player-actions-column" onClick={(e) => e.stopPropagation()}>
                         {/* Creator Avatar with follow + badge */}
-                        <div className="action-avatar-wrap">
+                        <div className="creator-avatar-wrap">
                           <img
                             src={resolveMedia(activeVideo.userImage)}
                             alt={activeVideo.name}
-                            className="action-creator-avatar"
+                            className="creator-avatar-img"
                           />
                           <button
-                            onClick={() => showToast(`Followed ${activeVideo.name}!`)}
-                            className="avatar-follow-badge"
+                            onClick={() => showToast(`Followed ${activeVideo.name}`)}
+                            className="follow-plus-badge"
                             title="Follow Creator"
                           >
                             +
@@ -895,11 +1081,11 @@ export default function Home({
                         {/* Like Button */}
                         <button
                           onClick={(e) => handleLike(activeVideo._id, e)}
-                          className={`action-btn-bubble ${likedReelIds[activeVideo._id] ? "liked" : ""}`}
-                          title="Like Reel"
+                          className={`action-icon-pill ${likedReelIds[activeVideo._id] ? "liked" : ""}`}
+                          title="Like"
                         >
-                          <span className="bubble-icon">❤️</span>
-                          <span className="bubble-count">
+                          <IconHeart filled={likedReelIds[activeVideo._id]} size={22} />
+                          <span className="action-pill-count">
                             {reelLikesCount[activeVideo._id] !== undefined
                               ? reelLikesCount[activeVideo._id]
                               : activeVideo.totalLikes || 0}
@@ -909,11 +1095,11 @@ export default function Home({
                         {/* Comments Button */}
                         <button
                           onClick={() => setShowCommentsDrawer(true)}
-                          className="action-btn-bubble"
-                          title="View Comments"
+                          className="action-icon-pill"
+                          title="Comments"
                         >
-                          <span className="bubble-icon">💬</span>
-                          <span className="bubble-count">
+                          <IconMessage size={22} />
+                          <span className="action-pill-count">
                             {(commentsMap[activeVideo._id] || commentsMap["default"] || []).length}
                           </span>
                         </button>
@@ -921,67 +1107,68 @@ export default function Home({
                         {/* Gift Button */}
                         <button
                           onClick={() => setShowGiftModal(true)}
-                          className="action-btn-bubble gift-bubble"
+                          className="action-icon-pill"
                           title="Send Gift"
                         >
-                          <span className="bubble-icon">🎁</span>
-                          <span className="bubble-count">Gift</span>
+                          <IconGift size={22} />
+                          <span className="action-pill-count">Gift</span>
                         </button>
 
                         {/* Share Button */}
                         <button
                           onClick={(e) => handleShare(activeVideo, e)}
-                          className="action-btn-bubble"
-                          title="Share Reel"
+                          className="action-icon-pill"
+                          title="Share"
                         >
-                          <span className="bubble-icon">↗️</span>
-                          <span className="bubble-count">{activeVideo.shareCount || 0}</span>
+                          <IconShare size={22} />
+                          <span className="action-pill-count">{activeVideo.shareCount || 0}</span>
                         </button>
 
-                        {/* Auto-Scroll Toggle */}
+                        {/* Auto-Scroll Toggle Bubble */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setIsAutoScroll(!isAutoScroll);
-                            showToast(!isAutoScroll ? "🔄 Auto-Scroll: ON" : "🔁 Auto-Scroll: OFF (Loop Mode)");
+                            showToast(!isAutoScroll ? "Continuous Play ON" : "Loop Mode ON");
                           }}
-                          className={`action-btn-bubble auto-bubble ${isAutoScroll ? "active" : ""}`}
-                          title={isAutoScroll ? "Auto-Scroll: ON (Click for loop mode)" : "Auto-Scroll: OFF (Click for auto-scroll)"}
+                          className={`action-icon-pill ${isAutoScroll ? "active-repeat" : ""}`}
+                          title={isAutoScroll ? "Auto-play next reel: ON" : "Loop current reel: ON"}
                         >
-                          <span className="bubble-icon">{isAutoScroll ? "🔄" : "🔁"}</span>
-                          <span className="bubble-count">{isAutoScroll ? "Auto" : "Loop"}</span>
+                          <IconRepeat size={20} />
                         </button>
 
                         {/* Rotating Vinyl Soundtrack Disc */}
                         <div
                           onClick={() => handleToggleMusic(activeVideo.songLink)}
-                          className={`spinning-record ${isPlaying ? "spinning" : ""}`}
-                          title={activeVideo.songTitle || "Original Soundtrack"}
+                          className={`vinyl-sound-disc ${isPlaying ? "spinning" : ""}`}
+                          title={activeVideo.songTitle || "Original Audio"}
                         >
-                          <div className="record-center">🎵</div>
+                          <div className="disc-groove">
+                            <IconMusic size={14} />
+                          </div>
                         </div>
                       </div>
 
-                      {/* Bottom Vignette Overlay (Metadata, Caption, Sound) */}
-                      <div className="reel-metadata-vignette" onClick={(e) => e.stopPropagation()}>
-                        <div className="creator-meta-row">
-                          <span className="creator-display-name">{activeVideo.name}</span>
-                          {activeVideo.isVerified && <span className="verified-badge">✓</span>}
-                          <span className="creator-handle">{activeVideo.userName}</span>
+                      {/* Bottom Overlay Vignette */}
+                      <div className="player-bottom-vignette" onClick={(e) => e.stopPropagation()}>
+                        <div className="creator-details-row">
+                          <span className="creator-full-name">{activeVideo.name}</span>
+                          {activeVideo.isVerified && <span className="verified-check">✓</span>}
+                          <span className="creator-handle-text">{activeVideo.userName}</span>
                         </div>
 
                         {activeVideo.location && (
-                          <div className="location-pin-row">
-                            <span>📍</span>
+                          <div className="location-tag-row">
+                            <IconMapPin size={12} />
                             <span>{activeVideo.location}</span>
                           </div>
                         )}
 
-                        <p className="reel-caption-text">{activeVideo.caption}</p>
+                        <p className="caption-text">{activeVideo.caption}</p>
 
-                        <div className="sound-ticker-row">
-                          <span className="ticker-icon">🎵</span>
-                          <div className="ticker-marquee">
+                        <div className="audio-sound-pill">
+                          <IconMusic size={12} />
+                          <div className="audio-marquee-track">
                             <span>
                               {activeVideo.songTitle || "Original Sound"} • {activeVideo.singerName || activeVideo.name}
                             </span>
@@ -989,108 +1176,88 @@ export default function Home({
                         </div>
                       </div>
 
-                      {/* Progress Track at Bottom */}
-                      <div className="reel-progress-track">
+                      {/* Subtle Playback Progress Bar */}
+                      <div className="playback-progress-track">
                         <div
-                          className={`reel-progress-bar ${isAutoScroll ? "auto-active" : ""}`}
+                          className={`playback-progress-fill ${isAutoScroll ? "auto-mode" : ""}`}
                           style={{ width: `${progressPercent}%` }}
                         />
                       </div>
                     </div>
 
-                    {/* Desktop Companion Controls (Displayed beside the player on desktop) */}
-                    <aside className="desktop-companion-panel">
-                      {/* Up/Down Reel Navigation */}
-                      <div className="reel-nav-card">
-                        <span className="nav-card-title">REEL NAVIGATION</span>
-                        <div className="nav-arrow-group">
+                    {/* Desktop Companion Controls (Clean, Minimalist, No Clutter) */}
+                    <aside className="desktop-companion-rail">
+                      {/* Playlist Switcher */}
+                      <div className="companion-box nav-switcher-box">
+                        <span className="companion-box-label">UP NEXT</span>
+                        <div className="nav-arrow-pair">
                           <button
                             onClick={handlePrevReel}
-                            className="arrow-nav-btn"
-                            title="Previous Reel (Arrow Up)"
+                            className="arrow-button"
+                            title="Previous (Arrow Up)"
                           >
-                            ▲
+                            <IconChevronUp size={18} />
                           </button>
-                          <div className="reel-counter-badge">
+                          <div className="counter-tag">
                             {currentReelIndex + 1} / {filteredVideos.length}
                           </div>
                           <button
                             onClick={handleNextReel}
-                            className="arrow-nav-btn"
-                            title="Next Reel (Arrow Down)"
+                            className="arrow-button"
+                            title="Next (Arrow Down)"
                           >
-                            ▼
+                            <IconChevronDown size={18} />
                           </button>
                         </div>
-                        <p className="nav-hint-text">Use ↑ and ↓ arrows or spacebar to play/pause</p>
+                        <span className="companion-subtext">Use ↑ and ↓ arrows or spacebar to control</span>
                       </div>
 
-                      {/* Auto-Scroll Setting Card */}
-                      <div className="companion-setting-card">
-                        <div className="setting-card-text">
-                          <span className="setting-card-title">{isAutoScroll ? "🔄 Auto-Scroll" : "🔁 Video Looping"}</span>
-                          <span className="setting-card-sub">
-                            {isAutoScroll ? "Advances to next reel automatically" : "Repeats current video"}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setIsAutoScroll(!isAutoScroll);
-                            showToast(!isAutoScroll ? "🔄 Auto-Scroll: ON" : "🔁 Auto-Scroll: OFF (Loop Mode)");
-                          }}
-                          className={`comp-toggle-switch ${isAutoScroll ? "active" : ""}`}
-                          aria-label="Toggle Auto-Scroll"
-                        >
-                          <span className="comp-switch-slider"></span>
-                        </button>
-                      </div>
-
-                      {/* Creator Profile Spotlight */}
-                      <div className="companion-creator-card">
-                        <div className="comp-creator-row">
+                      {/* Creator Spotlight */}
+                      <div className="companion-box creator-spotlight-box">
+                        <div className="spotlight-author-row">
                           <img
                             src={resolveMedia(activeVideo.userImage)}
                             alt={activeVideo.name}
-                            className="comp-avatar"
+                            className="spotlight-avatar"
                           />
-                          <div>
-                            <h4 className="comp-name">{activeVideo.name}</h4>
-                            <p className="comp-handle">{activeVideo.userName}</p>
+                          <div className="spotlight-text">
+                            <h4>{activeVideo.name}</h4>
+                            <p>{activeVideo.userName}</p>
                           </div>
                         </div>
-                        <div className="comp-stats-grid">
-                          <div className="comp-stat">
+                        <div className="spotlight-stats-row">
+                          <div className="spotlight-stat">
                             <strong>{activeVideo.totalLikes || 1420}</strong>
                             <span>Likes</span>
                           </div>
-                          <div className="comp-stat">
+                          <div className="spotlight-stat">
                             <strong>{activeVideo.shareCount || 389}</strong>
                             <span>Shares</span>
                           </div>
                         </div>
                         <button
-                          onClick={() => showToast(`Followed ${activeVideo.name}!`)}
-                          className="comp-follow-btn"
+                          onClick={() => showToast(`Followed ${activeVideo.name}`)}
+                          className="spotlight-follow-btn"
                         >
-                          + Follow Artist
+                          Follow Artist
                         </button>
                       </div>
 
-                      {/* Soundtrack Preview Card */}
+                      {/* Sound Track Card */}
                       {activeVideo.songTitle && (
-                        <div className="companion-sound-card">
-                          <div className="sound-card-header">
-                            <span>🎵</span>
+                        <div className="companion-box soundtrack-box">
+                          <div className="soundtrack-head">
+                            <IconMusic size={16} />
                             <div>
                               <h5>{activeVideo.songTitle}</h5>
-                              <p>{activeVideo.singerName || "WUDAU Sound"}</p>
+                              <p>{activeVideo.singerName || "WUDAU Audio"}</p>
                             </div>
                           </div>
                           <button
                             onClick={() => handleToggleMusic(activeVideo.songLink)}
-                            className="sound-play-preview-btn"
+                            className="soundtrack-preview-btn"
                           >
-                            {playingAudioUrl === resolveMedia(activeVideo.songLink) ? "⏸ Stop Audio" : "▶ Play Audio"}
+                            {playingAudioUrl === resolveMedia(activeVideo.songLink) ? "Pause Audio" : "Play Soundtrack"}
                           </button>
                         </div>
                       )}
@@ -1103,10 +1270,10 @@ export default function Home({
 
           {/* TAB 2: LIVE BROADCASTS */}
           {currentTab === "live" && (
-            <div className="tab-page-container">
-              <div className="tab-header-banner">
-                <h2>🔴 WUDAU Live Stages</h2>
-                <p>Real-time interactive streams, coastal music sessions, and street dance competitions.</p>
+            <div className="tab-surface-page">
+              <div className="page-header-row">
+                <h2>Live Stages</h2>
+                <p>Real-time interactive video broadcasts from creators across Tanzania and the world.</p>
               </div>
               <div className="live-streams-grid">
                 {[
@@ -1116,7 +1283,7 @@ export default function Home({
                     host: "Kassim Mwambao (Dar es Salaam)",
                     viewers: "2.8k",
                     image: "storage/thumb2.jpg",
-                    tag: "DANCE LIVE",
+                    tag: "LIVE",
                   },
                   {
                     id: "l2",
@@ -1124,7 +1291,7 @@ export default function Home({
                     host: "Zuhura Bakari (Zanzibar)",
                     viewers: "1.9k",
                     image: "storage/thumb4.jpg",
-                    tag: "MUSIC LIVE",
+                    tag: "LIVE",
                   },
                   {
                     id: "l3",
@@ -1132,7 +1299,7 @@ export default function Home({
                     host: "Rehema Mushi (Serengeti)",
                     viewers: "4.5k",
                     image: "storage/thumb1.jpg",
-                    tag: "SAFARI LIVE",
+                    tag: "LIVE",
                   },
                   {
                     id: "l4",
@@ -1140,21 +1307,21 @@ export default function Home({
                     host: "Amani Juma (Mbagala)",
                     viewers: "3.2k",
                     image: "storage/thumb3.jpg",
-                    tag: "BEAT LIVE",
+                    tag: "LIVE",
                   },
                 ].map((stream) => (
                   <div
                     key={stream.id}
                     onClick={() => {
                       setCurrentTab("reels");
-                      showToast(`Entering live broadcast: ${stream.title}`);
+                      showToast(`Entering broadcast: ${stream.title}`);
                     }}
-                    className="live-card-item"
+                    className="live-stream-card"
                   >
-                    <img src={resolveMedia(stream.image)} alt={stream.title} className="live-card-img" />
-                    <div className="live-badge-overlay">🔴 {stream.tag}</div>
-                    <div className="live-viewers-count">👁️ {stream.viewers}</div>
-                    <div className="live-card-details">
+                    <img src={resolveMedia(stream.image)} alt={stream.title} className="stream-cover-img" />
+                    <div className="stream-badge-live">{stream.tag}</div>
+                    <div className="stream-viewers-pill">{stream.viewers} watching</div>
+                    <div className="stream-info-overlay">
                       <h4>{stream.title}</h4>
                       <p>Hosted by {stream.host}</p>
                     </div>
@@ -1166,49 +1333,43 @@ export default function Home({
 
           {/* TAB 3: COMMUNITY SOCIAL FEED */}
           {currentTab === "social" && (
-            <div className="tab-page-container">
-              <div className="tab-header-banner">
-                <h2>🤍 Community Social Feed</h2>
-                <p>Authentic creator photography, behind-the-scenes culture, and community moments.</p>
+            <div className="tab-surface-page">
+              <div className="page-header-row">
+                <h2>Community Feed</h2>
+                <p>Behind the scenes moments, creative photography, and culture updates.</p>
               </div>
-              <div className="social-feed-grid">
+              <div className="community-posts-grid">
                 {posts.map((post) => (
-                  <article key={post._id} className="social-post-card">
-                    <div className="post-author-row">
+                  <article key={post._id} className="community-post-card">
+                    <div className="post-header-row">
                       <img
                         src={resolveMedia(post.userImage)}
                         alt={post.name}
-                        className="post-author-avatar"
+                        className="post-user-avatar"
                       />
-                      <div className="post-author-text">
-                        <span className="author-name">{post.name}</span>
-                        <span className="author-location">{post.location || post.userName}</span>
+                      <div className="post-user-info">
+                        <span className="post-user-name">{post.name}</span>
+                        <span className="post-user-handle">{post.location || post.userName}</span>
                       </div>
-                      <span className="post-time-badge">{post.time || "Recently"}</span>
+                      <span className="post-timestamp">{post.time || "Recently"}</span>
                     </div>
-                    <div className="post-photo-frame">
+                    <div className="post-media-box">
                       <img
                         src={resolveMedia(post.postImage?.[0] || post.mainPostImage)}
                         alt="Community Post"
-                        className="post-image-element"
+                        className="post-main-img"
                       />
                     </div>
-                    <div className="post-body">
-                      <p className="post-caption">{post.caption}</p>
-                      <div className="post-action-bar">
-                        <button
-                          onClick={() => showToast("Liked community post!")}
-                          className="post-heart-btn"
-                        >
-                          ❤️ {post.totalLikes || 18} Likes
+                    <div className="post-body-content">
+                      <p className="post-caption-text">{post.caption}</p>
+                      <div className="post-action-buttons">
+                        <button onClick={() => showToast("Liked post")} className="post-action-btn">
+                          <IconHeart size={16} />
+                          <span>{post.totalLikes || 18} Likes</span>
                         </button>
-                        <button
-                          onClick={() => {
-                            setShowCommentsDrawer(true);
-                          }}
-                          className="post-comment-btn"
-                        >
-                          💬 Comments
+                        <button onClick={() => setShowCommentsDrawer(true)} className="post-action-btn">
+                          <IconMessage size={16} />
+                          <span>Comments</span>
                         </button>
                       </div>
                     </div>
@@ -1220,12 +1381,12 @@ export default function Home({
 
           {/* TAB 4: SOUNDS & MUSIC LIBRARY */}
           {currentTab === "music" && (
-            <div className="tab-page-container">
-              <div className="tab-header-banner">
-                <h2>🎵 WUDAU Sounds & Audio Tracks</h2>
-                <p>Discover original African rhythms, Bongo Flava, Singeli, and global collaborations.</p>
+            <div className="tab-surface-page">
+              <div className="page-header-row">
+                <h2>Soundtracks & Music</h2>
+                <p>Explore original African rhythms, Bongo Flava, Singeli, and global collaborations.</p>
               </div>
-              <div className="music-tracks-list">
+              <div className="music-tracks-grid">
                 {[
                   {
                     title: "Mapenzi ya Bongo",
@@ -1276,20 +1437,20 @@ export default function Home({
                     image: "storage/category_global.jpg",
                   },
                 ].map((track, idx) => (
-                  <div key={idx} className="music-track-card">
-                    <img src={resolveMedia(track.image)} alt={track.title} className="track-cover-art" />
-                    <div className="track-text">
+                  <div key={idx} className="track-listing-item">
+                    <img src={resolveMedia(track.image)} alt={track.title} className="track-thumb" />
+                    <div className="track-details">
                       <h4>{track.title}</h4>
                       <p>
-                        {track.singer} • <span className="genre-tag">{track.genre}</span>
+                        {track.singer} • <span className="genre-label">{track.genre}</span>
                       </p>
                     </div>
-                    <span className="track-duration">{track.time}</span>
+                    <span className="track-time-tag">{track.time}</span>
                     <button
                       onClick={() => handleToggleMusic(track.link)}
-                      className="track-play-btn"
+                      className="track-play-action"
                     >
-                      {playingAudioUrl === resolveMedia(track.link) ? "⏸ Pause" : "▶ Play"}
+                      {playingAudioUrl === resolveMedia(track.link) ? "Pause" : "Play"}
                     </button>
                   </div>
                 ))}
@@ -1299,26 +1460,26 @@ export default function Home({
 
           {/* TAB 5: DISCOVER TANZANIA SHOWCASE */}
           {currentTab === "explore" && (
-            <div className="tab-page-container">
-              <div className="tab-header-banner">
-                <h2>🦁 Discover Tanzania Unforgettable</h2>
-                <p>Explore the natural beauty, cultural rhythm, and untamed spirit of Tanzania.</p>
+            <div className="tab-surface-page">
+              <div className="page-header-row">
+                <h2>Discover Tanzania</h2>
+                <p>Natural beauty, cultural rhythm, and untamed spirit across Africa&apos;s leading destinations.</p>
               </div>
-              <div className="explore-destinations-grid">
+              <div className="destinations-showcase-grid">
                 {[
                   {
                     name: "Serengeti National Park",
                     subtitle: "Great Migration & Lion Prides",
                     desc: "Witness the greatest wildlife spectacle on Earth across the endless savanna plains.",
                     image: "storage/thumb1.jpg",
-                    tag: "#SerengetiMagic",
+                    tag: "#Serengeti",
                   },
                   {
                     name: "Stone Town, Zanzibar",
                     subtitle: "Spice Island & Swahili Soul",
                     desc: "Labyrinthine alleys, acoustic coastal melodies, and sunset dhow sails on turquoise waters.",
                     image: "storage/post4.jpg",
-                    tag: "#ZanzibarVibes",
+                    tag: "#Zanzibar",
                   },
                   {
                     name: "Mount Kilimanjaro & Meru",
@@ -1335,12 +1496,12 @@ export default function Home({
                     tag: "#DarEsSalaam",
                   },
                 ].map((item, i) => (
-                  <div key={i} className="explore-card">
-                    <div className="explore-card-img-wrap">
+                  <div key={i} className="destination-feature-card">
+                    <div className="destination-media-wrap">
                       <img src={resolveMedia(item.image)} alt={item.name} />
-                      <span className="explore-tag-chip">{item.tag}</span>
+                      <span className="destination-tag-badge">{item.tag}</span>
                     </div>
-                    <div className="explore-card-info">
+                    <div className="destination-content">
                       <h3>{item.name}</h3>
                       <h4>{item.subtitle}</h4>
                       <p>{item.desc}</p>
@@ -1349,9 +1510,9 @@ export default function Home({
                           setCurrentFilter("tanzania");
                           setCurrentTab("reels");
                         }}
-                        className="explore-view-reels-btn"
+                        className="destination-view-btn"
                       >
-                        Watch Reels From Here →
+                        Watch Reels from Here →
                       </button>
                     </div>
                   </div>
@@ -1360,60 +1521,68 @@ export default function Home({
             </div>
           )}
 
-          {/* TAB 6: PROFILE & WALLET */}
+          {/* TAB 6: USER PROFILE & WALLET */}
           {currentTab === "profile" && (
-            <div className="tab-page-container">
-              <div className="profile-dashboard-card">
-                <div className="profile-banner-top">
-                  <div className="profile-avatar-large">
+            <div className="tab-surface-page">
+              <div className="profile-surface-card">
+                <div className="profile-banner-band">
+                  <div className="profile-avatar-center">
                     {currentUser?.image ? (
-                      <img src={resolveMedia(currentUser.image)} alt="User Avatar" className="profile-avatar-img" />
+                      <img src={resolveMedia(currentUser.image)} alt="Avatar" className="profile-hero-img" />
                     ) : isAuth ? (
                       "👑"
                     ) : (
-                      "🌍"
+                      "👤"
                     )}
                   </div>
                 </div>
-                <div className="profile-info-body">
-                  <h3>{currentUser?.name || (isAuth ? "Authenticated Creator" : "Guest Explorer")}</h3>
-                  <p className="profile-handle">{currentUser?.userName || (isAuth ? "@wudau_creator" : "Guest Mode")}</p>
-                  <p className="profile-email">{currentUser?.email || "Connect with creators, send gifts, and share reels."}</p>
+                <div className="profile-card-body">
+                  <h3 className="profile-full-name">
+                    {currentUser?.name || (isAuth ? "Creator Account" : "Guest Explorer")}
+                  </h3>
+                  <p className="profile-user-handle">
+                    {currentUser?.userName || (isAuth ? "@wudau_creator" : "Guest")}
+                  </p>
+                  <p className="profile-user-email">
+                    {currentUser?.email || "Connect with creators, send gifts, and share your talent."}
+                  </p>
 
-                  <div className="wallet-balance-card">
-                    <div className="wallet-left">
-                      <span>💎 WUDAU COINS BALANCE</span>
-                      <h2>{currentUser?.coin !== undefined ? currentUser.coin.toLocaleString() : "1,000"} Coins</h2>
+                  <div className="coins-balance-box">
+                    <div>
+                      <span className="balance-label">COINS BALANCE</span>
+                      <h2 className="balance-value">
+                        {currentUser?.coin !== undefined ? currentUser.coin.toLocaleString() : "1,000"} Coins
+                      </h2>
                     </div>
                     <button
-                      onClick={() => showToast("Coins recharge package ready")}
-                      className="primary-gradient-btn"
+                      onClick={() => showToast("Coins package ready")}
+                      className="topup-btn"
                     >
-                      + Top Up Coins
+                      Top Up
                     </button>
                   </div>
 
-                  <div className="profile-cta-actions">
+                  <div className="profile-action-stack">
                     {isAuth ? (
                       <>
                         {userRole === "admin" && (
-                          <Link href="/dashboard" className="full-width-btn mb-2">
-                            Open Admin Management Portal
+                          <Link href="/dashboard" className="action-accent-btn full">
+                            Open Admin Portal
                           </Link>
                         )}
-                        <button onClick={handleLogout} className="secondary-outline-btn full-width">
-                          Log Out of Account
+                        <button onClick={handleLogout} className="action-hollow-btn full">
+                          Log Out
                         </button>
                       </>
                     ) : (
-                      <div className="profile-auth-buttons">
-                        <Link href="/login" className="full-width-btn mb-2">
-                          Sign In to Your Account
+                      <>
+                        <Link href="/login" className="action-accent-btn full">
+                          Sign In
                         </Link>
-                        <Link href="/Registration" className="secondary-outline-btn full-width">
-                          Create Free Creator Account
+                        <Link href="/Registration" className="action-hollow-btn full">
+                          Create Account
                         </Link>
-                      </div>
+                      </>
                     )}
                   </div>
                 </div>
@@ -1423,23 +1592,23 @@ export default function Home({
         </main>
 
         {/* ==================================================================== */}
-        {/* MOBILE BOTTOM NAVIGATION BAR (FIXED AT SCREEN BOTTOM)                */}
+        {/* MOBILE BOTTOM NAVIGATION BAR                                         */}
         {/* ==================================================================== */}
-        <nav className="mobile-bottom-nav">
+        <nav className="mobile-tab-nav">
           <button
             onClick={() => setCurrentTab("reels")}
-            className={`bottom-nav-item ${currentTab === "reels" ? "active" : ""}`}
+            className={`tab-nav-btn ${currentTab === "reels" ? "active" : ""}`}
           >
-            <span className="nav-icon">🎬</span>
-            <span className="nav-label">Reels</span>
+            <IconReels size={20} />
+            <span className="tab-title">Reels</span>
           </button>
 
           <button
             onClick={() => setCurrentTab("live")}
-            className={`bottom-nav-item ${currentTab === "live" ? "active" : ""}`}
+            className={`tab-nav-btn ${currentTab === "live" ? "active" : ""}`}
           >
-            <span className="nav-icon">🔴</span>
-            <span className="nav-label">Live</span>
+            <IconLive size={20} />
+            <span className="tab-title">Live</span>
           </button>
 
           <button
@@ -1451,69 +1620,71 @@ export default function Home({
                 setShowAuthModal(true);
               }
             }}
-            className="bottom-nav-item create-center-btn"
+            className="tab-nav-btn create-tab-btn"
             title="Create Reel"
           >
-            <span className="plus-symbol">➕</span>
+            <div className="create-bubble-icon">
+              <IconPlus size={18} />
+            </div>
           </button>
 
           <button
             onClick={() => setCurrentTab("social")}
-            className={`bottom-nav-item ${currentTab === "social" ? "active" : ""}`}
+            className={`tab-nav-btn ${currentTab === "social" ? "active" : ""}`}
           >
-            <span className="nav-icon">🤍</span>
-            <span className="nav-label">Feed</span>
+            <IconCommunity size={20} />
+            <span className="tab-title">Feed</span>
           </button>
 
           <button
             onClick={() => setCurrentTab("profile")}
-            className={`bottom-nav-item ${currentTab === "profile" ? "active" : ""}`}
+            className={`tab-nav-btn ${currentTab === "profile" ? "active" : ""}`}
           >
-            <span className="nav-icon">👤</span>
-            <span className="nav-label">Profile</span>
+            <IconUser size={20} />
+            <span className="tab-title">Profile</span>
           </button>
         </nav>
 
         {/* ==================================================================== */}
-        {/* SLIDE-OVER COMMENTS DRAWER                                           */}
+        {/* COMMENTS BOTTOM SHEET DRAWER                                         */}
         {/* ==================================================================== */}
         {showCommentsDrawer && activeVideo && (
-          <div className="comments-drawer-backdrop" onClick={() => setShowCommentsDrawer(false)}>
-            <div className="comments-sheet-container" onClick={(e) => e.stopPropagation()}>
-              <div className="sheet-handle-bar"></div>
-              <div className="sheet-header-row">
+          <div className="drawer-overlay" onClick={() => setShowCommentsDrawer(false)}>
+            <div className="bottom-comments-sheet" onClick={(e) => e.stopPropagation()}>
+              <div className="sheet-drag-handle" />
+              <div className="sheet-title-row">
                 <h3>Comments ({(commentsMap[activeVideo._id] || commentsMap["default"] || []).length})</h3>
-                <button onClick={() => setShowCommentsDrawer(false)} className="sheet-close-btn">
+                <button onClick={() => setShowCommentsDrawer(false)} className="sheet-close-cross">
                   ✕
                 </button>
               </div>
 
-              <div className="comments-list-scroll">
+              <div className="sheet-comments-scroll">
                 {(commentsMap[activeVideo._id] || commentsMap["default"] || []).map((c) => (
-                  <div key={c.id} className="comment-bubble-item">
-                    <div className="comment-avatar-bubble">
+                  <div key={c.id} className="comment-thread-item">
+                    <div className="comment-initial-badge">
                       {c.userName.slice(1, 3).toUpperCase()}
                     </div>
-                    <div className="comment-text-wrap">
-                      <div className="comment-author-row">
-                        <span className="c-author">{c.userName}</span>
-                        <span className="c-time">{c.time}</span>
+                    <div className="comment-body-bubble">
+                      <div className="comment-author-line">
+                        <span className="comment-author-name">{c.userName}</span>
+                        <span className="comment-time-ago">{c.time}</span>
                       </div>
-                      <p className="c-text">{c.text}</p>
+                      <p className="comment-message-text">{c.text}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <form onSubmit={handleAddComment} className="comment-input-form">
+              <form onSubmit={handleAddComment} className="comment-submit-form">
                 <input
                   type="text"
-                  placeholder="Add an authentic comment... (e.g. Kali sana! 🔥)"
+                  placeholder="Add a comment..."
                   value={commentInput}
                   onChange={(e) => setCommentInput(e.target.value)}
-                  className="comment-text-input"
+                  className="comment-type-input"
                 />
-                <button type="submit" className="comment-send-btn">
+                <button type="submit" className="comment-post-btn">
                   Send
                 </button>
               </form>
@@ -1522,28 +1693,28 @@ export default function Home({
         )}
 
         {/* ==================================================================== */}
-        {/* GIFT TRAY MODAL                                                      */}
+        {/* GIFT SELECTION TRAY MODAL                                            */}
         {/* ==================================================================== */}
         {showGiftModal && (
-          <div className="modal-backdrop" onClick={() => setShowGiftModal(false)}>
-            <div className="gift-tray-card" onClick={(e) => e.stopPropagation()}>
-              <div className="gift-tray-header">
-                <h3>🎁 Send Creator Gift</h3>
-                <button onClick={() => setShowGiftModal(false)} className="sheet-close-btn">
+          <div className="drawer-overlay" onClick={() => setShowGiftModal(false)}>
+            <div className="modal-content-card" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header-line">
+                <h3>Send Creator Gift</h3>
+                <button onClick={() => setShowGiftModal(false)} className="sheet-close-cross">
                   ✕
                 </button>
               </div>
-              <p className="gift-subhead">Support {activeVideo?.name} with virtual tokens & gifts!</p>
-              <div className="gifts-grid">
+              <p className="modal-subtitle">Support {activeVideo?.name} with virtual creator gifts</p>
+              <div className="gifts-selection-grid">
                 {GIFTS_LIST.map((g) => (
                   <button
                     key={g.id}
                     onClick={() => handleSendGift(g)}
-                    className="gift-option-card"
+                    className="gift-select-item"
                   >
-                    <span className="gift-icon">{g.icon}</span>
-                    <span className="gift-name">{g.name}</span>
-                    <span className="gift-price">{g.coins} Coins</span>
+                    <IconGift size={24} />
+                    <span className="gift-title">{g.name}</span>
+                    <span className="gift-cost">{g.coins} Coins</span>
                   </button>
                 ))}
               </div>
@@ -1552,30 +1723,30 @@ export default function Home({
         )}
 
         {/* ==================================================================== */}
-        {/* QUICK AUTH MODAL                                                     */}
+        {/* AUTH PROMPT MODAL                                                    */}
         {/* ==================================================================== */}
         {showAuthModal && (
-          <div className="modal-backdrop" onClick={() => setShowAuthModal(false)}>
-            <div className="auth-modal-card" onClick={(e) => e.stopPropagation()}>
-              <div className="auth-header">
+          <div className="drawer-overlay" onClick={() => setShowAuthModal(false)}>
+            <div className="modal-content-card" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header-line">
                 <h3>{authModalTitle}</h3>
-                <button onClick={() => setShowAuthModal(false)} className="sheet-close-btn">
+                <button onClick={() => setShowAuthModal(false)} className="sheet-close-cross">
                   ✕
                 </button>
               </div>
-              <p className="auth-sub">Sign in or create a creator profile to upload videos and interact.</p>
-              <div className="auth-actions-group">
+              <p className="modal-subtitle">Sign in or create an account to upload videos and interact.</p>
+              <div className="modal-actions-list">
                 <Link
                   href="/login"
                   onClick={() => setShowAuthModal(false)}
-                  className="primary-gradient-btn full-width"
+                  className="action-accent-btn full"
                 >
                   Log In to WUDAU
                 </Link>
                 <Link
                   href="/Registration"
                   onClick={() => setShowAuthModal(false)}
-                  className="secondary-outline-btn full-width"
+                  className="action-hollow-btn full"
                 >
                   Create Free Account
                 </Link>
@@ -1586,25 +1757,29 @@ export default function Home({
       </div>
 
       {/* ==================================================================== */}
-      {/* MODERN RESPONSIVE STYLES (CLEAN, FLUID, NO FAKE MOCKUPS)             */}
+      {/* WORLD-CLASS SOCIAL MEDIA STYLES (OBSIDIAN DARK, SLEEK, REFINED)      */}
       {/* ==================================================================== */}
       <style jsx global>{`
         :root {
-          --brand-orange: #ff4b1f;
-          --brand-gold: #ff9f00;
-          --brand-gradient: linear-gradient(135deg, #ff4b1f 0%, #ff9f00 100%);
-          --bg-dark: #090e17;
-          --bg-surface: #111827;
-          --text-main: #1f2937;
-          --text-muted: #6b7280;
-          --border-color: #e5e7eb;
+          --brand-primary: #ff5722;
+          --brand-secondary: #ff9800;
+          --brand-accent: linear-gradient(135deg, #ff5722 0%, #ff9800 100%);
+          --bg-root: #090a0f;
+          --bg-header: rgba(12, 13, 18, 0.92);
+          --bg-card: #14161f;
+          --bg-subtle: rgba(255, 255, 255, 0.05);
+          --border-subtle: rgba(255, 255, 255, 0.09);
+          --border-active: rgba(255, 87, 34, 0.5);
+          --text-primary: #ffffff;
+          --text-secondary: #94a3b8;
+          --text-muted: #64748b;
         }
 
         * {
           box-sizing: border-box;
           margin: 0;
           padding: 0;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
           -webkit-tap-highlight-color: transparent;
         }
 
@@ -1612,9 +1787,11 @@ export default function Home({
         html {
           width: 100%;
           height: 100%;
+          background-color: var(--bg-root);
+          color: var(--text-primary);
           overflow-x: hidden;
-          background-color: #0f172a;
-          color: #ffffff;
+          font-size: 14px;
+          line-height: 1.5;
         }
 
         .app-shell {
@@ -1622,8 +1799,7 @@ export default function Home({
           flex-direction: column;
           min-height: 100vh;
           width: 100vw;
-          overflow-x: hidden;
-          background-color: #0b1120;
+          background-color: var(--bg-root);
           position: relative;
         }
 
@@ -1634,16 +1810,16 @@ export default function Home({
           position: sticky;
           top: 0;
           z-index: 100;
-          height: 60px;
+          height: 56px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 16px;
-          background: rgba(15, 23, 42, 0.94);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          gap: 12px;
+          padding: 0 18px;
+          background: var(--bg-header);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-bottom: 1px solid var(--border-subtle);
+          gap: 16px;
         }
 
         .header-left {
@@ -1653,145 +1829,140 @@ export default function Home({
           flex-shrink: 0;
         }
 
-        .hamburger-btn {
+        .menu-trigger-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-subtle);
+          color: var(--text-primary);
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 36px;
-          height: 36px;
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          border-radius: 10px;
           cursor: pointer;
-          transition: background 0.2s ease;
+          transition: background 0.15s ease;
         }
 
-        .hamburger-btn:hover {
-          background: rgba(255, 255, 255, 0.16);
+        .menu-trigger-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
         }
 
-        .hamburger-bars {
-          width: 18px;
-          height: 14px;
+        .hamburger-box {
+          width: 16px;
+          height: 12px;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
         }
 
-        .bar {
+        .ham-line {
           width: 100%;
-          height: 2px;
+          height: 1.75px;
           background: #ffffff;
           border-radius: 2px;
-          transition: transform 0.25s ease, opacity 0.25s ease;
+          transition: transform 0.2s ease, opacity 0.2s ease;
         }
 
-        .hamburger-btn.active .bar.top {
-          transform: translateY(6px) rotate(45deg);
+        .menu-trigger-btn.active .ham-line.top {
+          transform: translateY(5px) rotate(45deg);
         }
-        .hamburger-btn.active .bar.mid {
+        .menu-trigger-btn.active .ham-line.mid {
           opacity: 0;
         }
-        .hamburger-btn.active .bar.bot {
-          transform: translateY(-6px) rotate(-45deg);
+        .menu-trigger-btn.active .ham-line.bot {
+          transform: translateY(-5px) rotate(-45deg);
         }
 
-        .brand-logo {
+        .brand-link {
           display: flex;
           align-items: center;
-          gap: 9px;
+          gap: 8px;
           text-decoration: none;
         }
 
-        .brand-badge {
-          width: 34px;
-          height: 34px;
-          border-radius: 10px;
-          background: var(--brand-gradient);
-          color: #fff;
+        .brand-logo-mark {
+          width: 30px;
+          height: 30px;
+          border-radius: 8px;
+          background: var(--brand-accent);
+          color: #ffffff;
           font-weight: 900;
-          font-size: 18px;
+          font-size: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 4px 10px rgba(255, 75, 31, 0.4);
+          box-shadow: 0 2px 8px rgba(255, 87, 34, 0.35);
         }
 
-        .brand-badge.mini {
-          width: 28px;
-          height: 28px;
-          font-size: 15px;
+        .brand-logo-mark.mini {
+          width: 26px;
+          height: 26px;
+          font-size: 14px;
         }
 
-        .brand-text-block {
-          display: flex;
-          flex-direction: column;
-          line-height: 1.1;
+        .brand-name {
+          font-size: 17px;
+          font-weight: 800;
+          letter-spacing: 0.5px;
+          color: #ffffff;
         }
 
-        .brand-title {
-          font-size: 18px;
-          font-weight: 900;
-          letter-spacing: -0.5px;
-          background: var(--brand-gradient);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .brand-tagline {
-          font-size: 8px;
-          font-weight: 700;
-          letter-spacing: 1px;
-          color: #94a3b8;
-        }
-
-        /* Filter Carousel */
+        /* Clean Header Category Tabs */
         .header-center {
           flex: 1;
           display: flex;
           justify-content: center;
           overflow: hidden;
-          padding: 0 8px;
+          padding: 0 4px;
         }
 
-        .filter-nav {
+        .category-tabs-track {
           display: flex;
-          gap: 6px;
+          align-items: center;
+          gap: 2px;
           overflow-x: auto;
           scrollbar-width: none;
           -ms-overflow-style: none;
-          padding: 4px 0;
+          padding: 2px 0;
         }
 
-        .filter-nav::-webkit-scrollbar {
+        .category-tabs-track::-webkit-scrollbar {
           display: none;
         }
 
-        .filter-tab {
-          padding: 6px 14px;
-          border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.05);
-          color: #cbd5e1;
-          font-size: 12px;
-          font-weight: 700;
+        .category-tab-btn {
+          position: relative;
+          padding: 8px 14px;
+          border: none;
+          background: transparent;
+          color: var(--text-secondary);
+          font-size: 13px;
+          font-weight: 600;
           cursor: pointer;
           white-space: nowrap;
-          transition: all 0.2s ease;
+          transition: color 0.15s ease;
         }
 
-        .filter-tab:hover {
-          background: rgba(255, 255, 255, 0.12);
-          color: #ffffff;
+        .category-tab-btn:hover {
+          color: var(--text-primary);
         }
 
-        .filter-tab.active {
-          background: var(--brand-gradient);
-          border-color: transparent;
-          color: #ffffff;
-          box-shadow: 0 2px 8px rgba(255, 75, 31, 0.3);
+        .category-tab-btn.active {
+          color: var(--text-primary);
+          font-weight: 700;
         }
 
+        .tab-active-indicator {
+          position: absolute;
+          bottom: 0;
+          left: 14px;
+          right: 14px;
+          height: 2.5px;
+          border-radius: 2px;
+          background: var(--brand-primary);
+        }
+
+        /* Header Right Controls */
         .header-right {
           display: flex;
           align-items: center;
@@ -1799,18 +1970,25 @@ export default function Home({
           flex-shrink: 0;
         }
 
-        .search-bar-desktop {
+        .header-search-bar {
           display: flex;
           align-items: center;
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          gap: 8px;
+          background: var(--bg-subtle);
+          border: 1px solid var(--border-subtle);
           border-radius: 20px;
           padding: 6px 12px;
-          gap: 6px;
-          width: 200px;
+          width: 220px;
+          color: var(--text-muted);
+          transition: border-color 0.15s ease;
         }
 
-        .search-bar-desktop input {
+        .header-search-bar:focus-within {
+          border-color: rgba(255, 255, 255, 0.25);
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        .header-search-bar input {
           border: none;
           background: transparent;
           outline: none;
@@ -1819,193 +1997,152 @@ export default function Home({
           width: 100%;
         }
 
-        .search-bar-desktop input::placeholder {
-          color: #94a3b8;
+        .header-search-bar input::placeholder {
+          color: var(--text-muted);
         }
 
-        .search-clear {
+        .search-clear-btn {
           border: none;
           background: transparent;
-          color: #94a3b8;
+          color: var(--text-muted);
           cursor: pointer;
           font-size: 11px;
         }
 
-        .mobile-search-btn {
-          display: none;
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.12);
+        .icon-action-btn {
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
-          width: 34px;
-          height: 34px;
-          color: #ffffff;
-          cursor: pointer;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-subtle);
+          color: var(--text-secondary);
+          display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.15s ease;
         }
 
-        .mobile-search-row {
+        .icon-action-btn:hover {
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .icon-action-btn.active-glow {
+          color: var(--brand-primary);
+          background: rgba(255, 87, 34, 0.12);
+          border-color: rgba(255, 87, 34, 0.4);
+        }
+
+        .icon-action-btn.mobile-only {
+          display: none;
+        }
+
+        .create-shortcut-btn {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          background: #1e293b;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          animation: slideDown 0.2s ease-out;
+          gap: 6px;
+          padding: 6px 14px;
+          border-radius: 18px;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-subtle);
+          color: #ffffff;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 0.15s ease;
         }
 
-        .mobile-search-row input {
-          flex: 1;
-          padding: 8px 12px;
-          border-radius: 12px;
-          background: rgba(255, 255, 255, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          color: #fff;
-          outline: none;
-          font-size: 13px;
+        .create-shortcut-btn:hover {
+          background: rgba(255, 255, 255, 0.12);
         }
 
-        .mobile-search-close {
+        .header-profile-cluster {
+          display: flex;
+          align-items: center;
+        }
+
+        .profile-avatar-trigger {
           border: none;
           background: transparent;
-          color: #94a3b8;
-          font-size: 16px;
-          padding: 6px;
           cursor: pointer;
-        }
-
-        /* Auto-scroll toggle pill */
-        .auto-scroll-pill {
           display: flex;
           align-items: center;
-          gap: 6px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          border-radius: 20px;
-          padding: 5px 12px;
-          font-size: 11px;
-          font-weight: 700;
-          color: #94a3b8;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          white-space: nowrap;
         }
 
-        .auto-scroll-pill.active {
-          background: rgba(16, 185, 129, 0.15);
-          border-color: rgba(16, 185, 129, 0.4);
-          color: #10b981;
-        }
-
-        .scroll-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: #64748b;
-        }
-
-        .scroll-dot.active {
-          background: #10b981;
-          box-shadow: 0 0 6px #10b981;
-        }
-
-        /* Auth and User profile badges */
-        .user-profile-pill {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .user-avatar-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          border-radius: 20px;
-          padding: 4px 10px;
-          cursor: pointer;
-          color: #ffffff;
-        }
-
-        .user-avatar-img {
-          width: 22px;
-          height: 22px;
+        .user-thumb {
+          width: 32px;
+          height: 32px;
           border-radius: 50%;
           object-fit: cover;
+          border: 1.5px solid var(--brand-primary);
         }
 
-        .user-avatar-initial {
-          width: 22px;
-          height: 22px;
+        .user-initial {
+          width: 32px;
+          height: 32px;
           border-radius: 50%;
-          background: var(--brand-orange);
-          color: #ffffff;
-          font-size: 11px;
+          background: var(--brand-primary);
+          color: #fff;
+          font-size: 13px;
           font-weight: 800;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
-        .user-display-name {
-          font-size: 12px;
-          font-weight: 700;
-          max-width: 90px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .logout-icon-btn {
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          font-size: 14px;
-          padding: 4px;
-          opacity: 0.8;
-        }
-
-        .logout-icon-btn:hover {
-          opacity: 1;
-        }
-
-        .auth-buttons-group {
+        .guest-auth-actions {
           display: flex;
           align-items: center;
           gap: 8px;
         }
 
-        .login-link-btn {
+        .nav-login-btn {
           font-size: 12px;
           font-weight: 700;
           color: #ffffff;
           text-decoration: none;
           padding: 6px 12px;
-          border-radius: 20px;
-          background: rgba(255, 255, 255, 0.08);
-          transition: background 0.15s ease;
+          border-radius: 18px;
+          transition: opacity 0.15s ease;
         }
 
-        .login-link-btn:hover {
-          background: rgba(255, 255, 255, 0.16);
-        }
-
-        .signup-link-btn {
+        .nav-signup-btn {
           font-size: 12px;
           font-weight: 700;
           color: #ffffff;
           text-decoration: none;
           padding: 6px 14px;
-          border-radius: 20px;
-          background: var(--brand-gradient);
-          box-shadow: 0 2px 8px rgba(255, 75, 31, 0.35);
-          transition: transform 0.15s ease;
+          border-radius: 18px;
+          background: var(--brand-accent);
+          box-shadow: 0 2px 6px rgba(255, 87, 34, 0.3);
         }
 
-        .signup-link-btn:hover {
-          transform: translateY(-1px);
+        .mobile-search-overlay {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          background: #12141c;
+          border-bottom: 1px solid var(--border-subtle);
+          color: var(--text-muted);
+        }
+
+        .mobile-search-overlay input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          outline: none;
+          color: #ffffff;
+          font-size: 13px;
+        }
+
+        .search-close-btn {
+          border: none;
+          background: transparent;
+          color: var(--text-muted);
+          font-size: 16px;
+          cursor: pointer;
         }
 
         /* ------------------------------------------------------------------ */
@@ -2015,295 +2152,321 @@ export default function Home({
           position: fixed;
           inset: 0;
           background: rgba(0, 0, 0, 0.7);
-          backdrop-filter: blur(6px);
-          -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           z-index: 200;
           display: flex;
-          animation: fadeIn 0.2s ease-out;
+          animation: fadeIn 0.15s ease-out;
         }
 
         .nav-drawer {
-          width: 320px;
+          width: 300px;
           max-width: 85vw;
           height: 100%;
-          background: #111827;
-          border-right: 1px solid rgba(255, 255, 255, 0.1);
+          background: #0f1016;
+          border-right: 1px solid var(--border-subtle);
           box-shadow: 6px 0 35px rgba(0, 0, 0, 0.5);
           display: flex;
           flex-direction: column;
           overflow-y: auto;
-          padding: 20px 16px;
-          animation: slideRight 0.25s ease-out;
+          padding: 18px 16px;
+          animation: slideRight 0.2s ease-out;
         }
 
-        .drawer-header {
+        .drawer-top-bar {
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding-bottom: 14px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          border-bottom: 1px solid var(--border-subtle);
         }
 
         .drawer-brand {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
+          text-decoration: none;
         }
 
-        .drawer-title {
-          font-size: 17px;
-          font-weight: 900;
-          color: #ffffff;
-        }
-
-        .drawer-tagline {
-          font-size: 10px;
-          color: #94a3b8;
-        }
-
-        .drawer-close {
-          width: 32px;
-          height: 32px;
+        .drawer-close-btn {
+          width: 30px;
+          height: 30px;
           border-radius: 50%;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          background: rgba(255, 255, 255, 0.08);
-          color: #ffffff;
-          font-size: 15px;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-subtle);
+          color: var(--text-primary);
+          font-size: 13px;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
         }
 
-        .drawer-user-card {
+        .drawer-user-box {
           margin-top: 14px;
           padding: 14px;
           border-radius: 12px;
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: var(--bg-card);
+          border: 1px solid var(--border-subtle);
         }
 
-        .drawer-user-info {
+        .user-logged-in-row {
           display: flex;
           align-items: center;
           gap: 10px;
         }
 
-        .user-avatar-circle {
-          width: 38px;
-          height: 38px;
+        .user-avatar-wrap {
+          width: 40px;
+          height: 40px;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.1);
+          overflow: hidden;
+          background: #1e293b;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 18px;
-          overflow: hidden;
         }
 
-        .drawer-avatar-img {
+        .user-avatar-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
         }
 
-        .user-name {
+        .user-avatar-fallback {
+          font-size: 16px;
+          font-weight: 800;
+          color: #ffffff;
+        }
+
+        .user-meta-column {
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        .user-profile-name {
           font-size: 13px;
           font-weight: 700;
           color: #ffffff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
-        .user-status {
+        .user-profile-handle {
           font-size: 11px;
-          color: #94a3b8;
+          color: var(--text-secondary);
         }
 
-        .drawer-user-quick-actions {
-          display: flex;
-          gap: 8px;
-          margin-top: 10px;
-        }
-
-        .drawer-quick-btn {
-          flex: 1;
-          padding: 6px 10px;
-          border-radius: 8px;
-          font-size: 11px;
-          font-weight: 700;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          background: rgba(255, 255, 255, 0.08);
-          color: #ffffff;
-          cursor: pointer;
-          text-align: center;
-          text-decoration: none;
-        }
-
-        .drawer-quick-btn.admin-link {
-          background: var(--brand-gradient);
-          border: none;
-        }
-
-        .drawer-quick-btn.logout-text {
-          color: #ef4444;
-          border-color: rgba(239, 68, 68, 0.3);
-        }
-
-        .drawer-auth-actions {
-          display: flex;
-          gap: 8px;
-          margin-top: 10px;
-        }
-
-        .drawer-auth-btn {
-          flex: 1;
-          padding: 8px;
-          border-radius: 8px;
-          text-align: center;
-          font-size: 12px;
-          font-weight: 700;
-          text-decoration: none;
-        }
-
-        .drawer-auth-btn.login {
-          background: rgba(255, 255, 255, 0.1);
-          color: #ffffff;
-        }
-
-        .drawer-auth-btn.register {
-          background: var(--brand-gradient);
-          color: #ffffff;
-        }
-
-        .drawer-section {
-          margin-top: 18px;
-        }
-
-        .drawer-section-title {
-          display: block;
-          font-size: 10px;
-          font-weight: 800;
-          color: #64748b;
-          letter-spacing: 0.8px;
-          margin-bottom: 8px;
-        }
-
-        .drawer-nav-list {
+        .drawer-guest-prompt {
           display: flex;
           flex-direction: column;
           gap: 4px;
         }
 
-        .drawer-nav-item {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 9px 12px;
-          border-radius: 10px;
-          border: none;
-          background: transparent;
-          text-align: left;
-          cursor: pointer;
-          transition: background 0.15s ease;
-        }
-
-        .drawer-nav-item:hover {
-          background: rgba(255, 255, 255, 0.06);
-        }
-
-        .drawer-nav-item.active {
-          background: rgba(255, 75, 31, 0.15);
-        }
-
-        .drawer-nav-item.active .nav-item-label {
-          color: var(--brand-orange);
-          font-weight: 800;
-        }
-
-        .nav-item-label {
-          display: block;
-          font-size: 13px;
-          font-weight: 600;
+        .guest-prompt-title {
+          font-size: 14px;
+          font-weight: 700;
           color: #ffffff;
         }
 
-        .nav-item-desc {
+        .guest-prompt-sub {
+          font-size: 11px;
+          color: var(--text-muted);
+          line-height: 1.4;
+          margin-bottom: 8px;
+        }
+
+        .drawer-guest-btn-row {
+          display: flex;
+          gap: 8px;
+        }
+
+        .drawer-btn {
+          flex: 1;
+          padding: 7px;
+          border-radius: 8px;
+          text-align: center;
+          font-size: 12px;
+          font-weight: 700;
+          text-decoration: none;
+        }
+
+        .drawer-btn.primary {
+          background: var(--brand-accent);
+          color: #ffffff;
+        }
+
+        .drawer-btn.secondary {
+          background: var(--bg-subtle);
+          color: #ffffff;
+          border: 1px solid var(--border-subtle);
+        }
+
+        .drawer-nav-group {
+          margin-top: 18px;
+        }
+
+        .drawer-group-label {
           display: block;
           font-size: 10px;
-          color: #94a3b8;
+          font-weight: 800;
+          color: var(--text-muted);
+          letter-spacing: 0.8px;
+          margin-bottom: 8px;
+          text-transform: uppercase;
         }
 
-        .nav-item-arrow {
-          color: #475569;
-          font-size: 13px;
-        }
-
-        .channel-pills-grid {
+        .drawer-nav-items {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 2px;
         }
 
-        .channel-pill-card {
+        /* Clean Sidebar Navigation Links (NO multi-line subtitle overlaps) */
+        .drawer-link-btn {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 12px;
+          border-radius: 10px;
+          border: none;
+          background: transparent;
+          color: var(--text-secondary);
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          text-align: left;
+          width: 100%;
+          transition: all 0.15s ease;
+        }
+
+        .drawer-link-btn:hover {
+          background: var(--bg-subtle);
+          color: var(--text-primary);
+        }
+
+        .drawer-link-btn.active {
+          background: rgba(255, 87, 34, 0.15);
+          color: var(--brand-primary);
+          font-weight: 700;
+        }
+
+        .drawer-link-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .drawer-link-text {
+          white-space: nowrap;
+        }
+
+        /* Cultural Highlights List */
+        .cultural-channels-list {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .cultural-channel-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 8px 12px;
           border-radius: 8px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(255, 255, 255, 0.03);
-          cursor: pointer;
-          font-size: 12px;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-subtle);
           color: #e2e8f0;
+          font-size: 12px;
           font-weight: 600;
+          cursor: pointer;
           text-align: left;
+          transition: background 0.15s ease;
         }
 
-        .channel-pill-card:hover {
-          background: rgba(255, 255, 255, 0.08);
+        .cultural-channel-row:hover {
+          background: rgba(255, 255, 255, 0.1);
         }
 
-        .chan-count {
+        .channel-region-pill {
           font-size: 10px;
-          color: #64748b;
+          color: var(--text-muted);
+          background: rgba(255, 255, 255, 0.05);
+          padding: 2px 6px;
+          border-radius: 6px;
         }
 
-        .drawer-lang-selector {
+        .language-selector-pills {
           display: flex;
           flex-wrap: wrap;
           gap: 6px;
         }
 
-        .drawer-lang-chip {
+        .lang-pill {
           padding: 5px 10px;
           border-radius: 6px;
           font-size: 11px;
           font-weight: 600;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #cbd5e1;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-subtle);
+          color: var(--text-secondary);
           cursor: pointer;
         }
 
-        .drawer-lang-chip.active {
-          background: var(--brand-gradient);
+        .lang-pill.active {
+          background: var(--brand-accent);
           color: #ffffff;
           border-color: transparent;
         }
 
-        .drawer-footer {
-          margin-top: auto;
-          padding-top: 18px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        .drawer-bottom-actions {
+          margin-top: 18px;
+          padding-top: 14px;
+          border-top: 1px solid var(--border-subtle);
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
         }
 
-        .drawer-copyright {
+        .drawer-admin-portal-link {
+          display: block;
+          padding: 8px 12px;
+          border-radius: 8px;
+          background: var(--brand-accent);
+          color: #ffffff;
+          font-size: 12px;
+          font-weight: 700;
+          text-align: center;
+          text-decoration: none;
+        }
+
+        .drawer-logout-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          border-radius: 8px;
+          border: 1px solid rgba(239, 68, 68, 0.25);
+          background: transparent;
+          color: #ef4444;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .drawer-footer-note {
+          margin-top: auto;
+          padding-top: 16px;
+          border-top: 1px solid var(--border-subtle);
           font-size: 10px;
-          color: #64748b;
+          color: var(--text-muted);
           line-height: 1.4;
         }
 
         /* ------------------------------------------------------------------ */
-        /* MAIN BODY & REEL PLAYER                                            */
+        /* MAIN REEL PLAYER STAGE                                             */
         /* ------------------------------------------------------------------ */
         .content-stage {
           flex: 1;
@@ -2312,11 +2475,11 @@ export default function Home({
           align-items: center;
           position: relative;
           width: 100%;
-          min-height: calc(100vh - 60px);
+          min-height: calc(100vh - 56px);
           overflow: hidden;
         }
 
-        .reels-viewport {
+        .reels-stage {
           width: 100%;
           height: 100%;
           display: flex;
@@ -2324,7 +2487,7 @@ export default function Home({
           align-items: center;
         }
 
-        .reel-main-layout {
+        .player-presentation-layout {
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2334,133 +2497,129 @@ export default function Home({
           padding: 16px;
         }
 
-        /* Real Responsive Reel Player Card (NO Fake Phone Bezels) */
-        .reel-card-container {
+        /* Fluid Video Card (NO Fake Phone Bezels or Notches) */
+        .video-player-card {
           position: relative;
           width: 440px;
           max-width: 100%;
-          height: calc(100vh - 96px);
+          height: calc(100vh - 88px);
           max-height: 820px;
           background: #000000;
-          border-radius: 20px;
-          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+          border-radius: 16px;
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
           overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid var(--border-subtle);
         }
 
-        .reel-video {
+        .main-reel-video {
           width: 100%;
           height: 100%;
           object-fit: cover;
           display: block;
         }
 
-        .buffering-spinner-wrap {
-          position: absolute;
-          inset: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(0, 0, 0, 0.3);
-          z-index: 25;
-          pointer-events: none;
-        }
-
-        .buffering-ring {
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
-          border: 3px solid rgba(255, 255, 255, 0.2);
-          border-top-color: var(--brand-orange);
-          animation: spin 0.8s linear infinite;
-        }
-
-        .double-tap-heart {
-          position: absolute;
-          font-size: 56px;
-          pointer-events: none;
-          z-index: 50;
-          animation: heartBurst 0.75s ease-out forwards;
-        }
-
-        @keyframes heartBurst {
-          0% { transform: scale(0.2); opacity: 0; }
-          40% { transform: scale(1.3); opacity: 1; }
-          70% { transform: scale(1); opacity: 0.9; }
-          100% { transform: scale(1.4) translateY(-30px); opacity: 0; }
-        }
-
-        .reel-sound-toggle {
-          position: absolute;
-          top: 16px;
-          right: 16px;
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: rgba(0, 0, 0, 0.55);
-          backdrop-filter: blur(6px);
-          -webkit-backdrop-filter: blur(6px);
-          border: 1px solid rgba(255, 255, 255, 0.25);
-          color: #ffffff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 14px;
-          cursor: pointer;
-          z-index: 30;
-          transition: transform 0.15s ease;
-        }
-
-        .reel-sound-toggle:hover {
-          transform: scale(1.08);
-        }
-
-        .reel-paused-indicator {
+        .buffering-overlay {
           position: absolute;
           inset: 0;
           display: flex;
           align-items: center;
           justify-content: center;
           background: rgba(0, 0, 0, 0.25);
+          z-index: 25;
+          pointer-events: none;
+        }
+
+        .buffering-spinner {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          border: 3px solid rgba(255, 255, 255, 0.2);
+          border-top-color: var(--brand-primary);
+          animation: spin 0.8s linear infinite;
+        }
+
+        .floating-tap-heart {
+          position: absolute;
+          pointer-events: none;
+          z-index: 50;
+          animation: heartPop 0.75s ease-out forwards;
+        }
+
+        @keyframes heartPop {
+          0% { transform: scale(0.2); opacity: 0; }
+          40% { transform: scale(1.3); opacity: 1; }
+          70% { transform: scale(1); opacity: 0.9; }
+          100% { transform: scale(1.4) translateY(-30px); opacity: 0; }
+        }
+
+        .player-sound-btn {
+          position: absolute;
+          top: 14px;
+          right: 14px;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.55);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 30;
+          transition: transform 0.15s ease;
+        }
+
+        .player-sound-btn:hover {
+          transform: scale(1.08);
+        }
+
+        .player-pause-indicator {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0, 0, 0, 0.2);
           z-index: 24;
           pointer-events: none;
         }
 
-        .play-icon-glow {
+        .pause-icon-pill {
           width: 60px;
           height: 60px;
           border-radius: 50%;
-          background: rgba(0, 0, 0, 0.65);
-          border: 2px solid rgba(255, 255, 255, 0.4);
+          background: rgba(0, 0, 0, 0.6);
+          border: 2px solid rgba(255, 255, 255, 0.3);
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #ffffff;
-          font-size: 24px;
         }
 
-        /* Right Floating Action Rail */
-        .reel-actions-rail {
+        /* Floating Right Actions Rail */
+        .player-actions-column {
           position: absolute;
-          right: 12px;
-          bottom: 90px;
+          right: 10px;
+          bottom: 84px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 14px;
+          gap: 12px;
           z-index: 35;
         }
 
-        .action-avatar-wrap {
+        .creator-avatar-wrap {
           position: relative;
           margin-bottom: 4px;
         }
 
-        .action-creator-avatar {
+        .creator-avatar-img {
           width: 44px;
           height: 44px;
           border-radius: 50%;
@@ -2469,7 +2628,7 @@ export default function Home({
           box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
         }
 
-        .avatar-follow-badge {
+        .follow-plus-badge {
           position: absolute;
           bottom: -4px;
           left: 50%;
@@ -2477,7 +2636,7 @@ export default function Home({
           width: 18px;
           height: 18px;
           border-radius: 50%;
-          background: var(--brand-orange);
+          background: var(--brand-primary);
           color: #ffffff;
           border: 1.5px solid #ffffff;
           font-size: 12px;
@@ -2488,362 +2647,296 @@ export default function Home({
           cursor: pointer;
         }
 
-        .action-btn-bubble {
+        .action-icon-pill {
           display: flex;
           flex-direction: column;
           align-items: center;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          color: #ffffff;
-          gap: 2px;
-        }
-
-        .bubble-icon {
-          width: 40px;
-          height: 40px;
+          background: rgba(0, 0, 0, 0.45);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border: 1px solid rgba(255, 255, 255, 0.16);
           border-radius: 50%;
-          background: rgba(0, 0, 0, 0.55);
-          backdrop-filter: blur(6px);
-          -webkit-backdrop-filter: blur(6px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          display: flex;
-          align-items: center;
+          width: 42px;
+          height: 42px;
           justify-content: center;
-          font-size: 18px;
-          transition: transform 0.15s ease;
+          color: #ffffff;
+          cursor: pointer;
+          transition: transform 0.15s ease, background 0.15s ease;
+          position: relative;
         }
 
-        .action-btn-bubble:hover .bubble-icon {
-          transform: scale(1.1);
+        .action-icon-pill:hover {
+          transform: scale(1.08);
+          background: rgba(0, 0, 0, 0.6);
         }
 
-        .action-btn-bubble.liked .bubble-icon {
-          background: rgba(239, 68, 68, 0.3);
-          border-color: #ef4444;
+        .action-icon-pill.liked {
+          color: #ff2d55;
+          border-color: rgba(255, 45, 85, 0.4);
         }
 
-        .action-btn-bubble.gift-bubble .bubble-icon {
-          background: rgba(255, 159, 0, 0.3);
-          border-color: #ff9f00;
+        .action-icon-pill.active-repeat {
+          color: var(--brand-primary);
+          border-color: var(--border-active);
+          background: rgba(255, 87, 34, 0.2);
         }
 
-        .action-btn-bubble.auto-bubble.active .bubble-icon {
-          background: rgba(16, 185, 129, 0.35);
-          border-color: #10b981;
-        }
-
-        .bubble-count {
-          font-size: 10px;
+        .action-pill-count {
+          position: absolute;
+          bottom: -14px;
+          font-size: 9px;
           font-weight: 700;
-          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+          color: #ffffff;
+          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+          white-space: nowrap;
         }
 
-        .spinning-record {
+        .vinyl-sound-disc {
           width: 40px;
           height: 40px;
           border-radius: 50%;
-          background: #111827;
-          border: 2px solid #374151;
+          background: #12131a;
+          border: 2px solid #2a2c38;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-          margin-top: 4px;
+          margin-top: 14px;
         }
 
-        .spinning-record.spinning {
-          animation: spin 3.5s linear infinite;
+        .vinyl-sound-disc.spinning {
+          animation: spin 4s linear infinite;
         }
 
-        .record-center {
-          font-size: 14px;
+        .disc-groove {
+          color: var(--brand-secondary);
         }
 
-        /* Bottom Metadata Overlay */
-        .reel-metadata-vignette {
+        /* Bottom Vignette Overlay */
+        .player-bottom-vignette {
           position: absolute;
           left: 0;
-          right: 70px;
+          right: 64px;
           bottom: 0;
-          padding: 20px 16px 20px 16px;
-          background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 70%, transparent 100%);
+          padding: 20px 14px 18px 14px;
+          background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
           z-index: 30;
           pointer-events: auto;
         }
 
-        .creator-meta-row {
+        .creator-details-row {
           display: flex;
           align-items: center;
           gap: 6px;
-          margin-bottom: 4px;
+          margin-bottom: 2px;
         }
 
-        .creator-display-name {
-          font-size: 15px;
+        .creator-full-name {
+          font-size: 14px;
           font-weight: 800;
           color: #ffffff;
         }
 
-        .verified-badge {
+        .verified-check {
           background: #3b82f6;
           color: #fff;
-          font-size: 9px;
-          width: 14px;
-          height: 14px;
+          font-size: 8px;
+          width: 13px;
+          height: 13px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
-        .creator-handle {
+        .creator-handle-text {
           font-size: 12px;
-          color: #94a3b8;
+          color: var(--text-secondary);
         }
 
-        .location-pin-row {
+        .location-tag-row {
           display: flex;
           align-items: center;
           gap: 4px;
           font-size: 11px;
           font-weight: 600;
-          color: #ff9f00;
+          color: var(--brand-secondary);
           margin-bottom: 4px;
         }
 
-        .reel-caption-text {
+        .caption-text {
           font-size: 13px;
           color: #f1f5f9;
           line-height: 1.35;
           margin-bottom: 8px;
           display: -webkit-box;
-          -webkit-line-clamp: 3;
+          -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
 
-        .sound-ticker-row {
+        .audio-sound-pill {
           display: flex;
           align-items: center;
           gap: 6px;
           font-size: 11px;
           color: #e2e8f0;
-          background: rgba(255, 255, 255, 0.1);
-          padding: 4px 8px;
+          background: rgba(255, 255, 255, 0.08);
+          padding: 3px 8px;
           border-radius: 12px;
           width: fit-content;
           max-width: 90%;
         }
 
-        .ticker-marquee {
+        .audio-marquee-track {
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
         }
 
-        /* Progress Bar */
-        .reel-progress-track {
+        /* Playback Progress */
+        .playback-progress-track {
           position: absolute;
           left: 0;
           right: 0;
           bottom: 0;
-          height: 3px;
+          height: 2.5px;
           background: rgba(255, 255, 255, 0.2);
           z-index: 40;
         }
 
-        .reel-progress-bar {
+        .playback-progress-fill {
           height: 100%;
-          background: var(--brand-gradient);
+          background: var(--brand-accent);
           transition: width 0.15s linear;
         }
 
-        .reel-progress-bar.auto-active {
-          background: linear-gradient(90deg, #ff4b1f 0%, #10b981 100%);
+        .playback-progress-fill.auto-mode {
+          background: linear-gradient(90deg, #ff5722 0%, #10b981 100%);
         }
 
         /* ------------------------------------------------------------------ */
-        /* DESKTOP COMPANION PANEL (SIDE CONTROLS BESIDE PLAYER)               */
+        /* DESKTOP COMPANION RAIL                                             */
         /* ------------------------------------------------------------------ */
-        .desktop-companion-panel {
-          width: 280px;
+        .desktop-companion-rail {
+          width: 270px;
           display: flex;
           flex-direction: column;
           gap: 14px;
         }
 
-        .reel-nav-card {
-          background: #1e293b;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
+        .companion-box {
+          background: var(--bg-card);
+          border-radius: 14px;
+          border: 1px solid var(--border-subtle);
           padding: 14px;
         }
 
-        .nav-card-title {
+        .companion-box-label {
           display: block;
           font-size: 10px;
           font-weight: 800;
-          color: #94a3b8;
+          color: var(--text-muted);
           letter-spacing: 0.8px;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
         }
 
-        .nav-arrow-group {
+        .nav-arrow-pair {
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 10px;
         }
 
-        .arrow-nav-btn {
+        .arrow-button {
           flex: 1;
           height: 38px;
-          border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          background: rgba(255, 255, 255, 0.08);
+          border-radius: 8px;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-subtle);
           color: #ffffff;
-          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           cursor: pointer;
           transition: background 0.15s ease;
         }
 
-        .arrow-nav-btn:hover {
-          background: rgba(255, 255, 255, 0.18);
+        .arrow-button:hover {
+          background: rgba(255, 255, 255, 0.12);
         }
 
-        .reel-counter-badge {
+        .counter-tag {
           font-size: 12px;
-          font-weight: 800;
-          color: #cbd5e1;
-          padding: 0 4px;
+          font-weight: 700;
+          color: var(--text-secondary);
         }
 
-        .nav-hint-text {
+        .companion-subtext {
+          display: block;
           font-size: 10px;
-          color: #64748b;
+          color: var(--text-muted);
           margin-top: 8px;
           text-align: center;
         }
 
-        .companion-setting-card {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background: #1e293b;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          padding: 12px 14px;
-        }
-
-        .setting-card-title {
-          display: block;
-          font-size: 12px;
-          font-weight: 700;
-          color: #ffffff;
-        }
-
-        .setting-card-sub {
-          display: block;
-          font-size: 10px;
-          color: #94a3b8;
-        }
-
-        .comp-toggle-switch {
-          width: 44px;
-          height: 24px;
-          border-radius: 12px;
-          background: #475569;
-          border: none;
-          position: relative;
-          cursor: pointer;
-          transition: background 0.2s ease;
-          flex-shrink: 0;
-        }
-
-        .comp-toggle-switch.active {
-          background: #10b981;
-        }
-
-        .comp-switch-slider {
-          position: absolute;
-          top: 2px;
-          left: 2px;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: #ffffff;
-          transition: transform 0.2s ease;
-        }
-
-        .comp-toggle-switch.active .comp-switch-slider {
-          transform: translateX(20px);
-        }
-
-        .companion-creator-card {
-          background: #1e293b;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          padding: 14px;
-        }
-
-        .comp-creator-row {
+        .spotlight-author-row {
           display: flex;
           align-items: center;
           gap: 10px;
           margin-bottom: 12px;
         }
 
-        .comp-avatar {
-          width: 44px;
-          height: 44px;
+        .spotlight-avatar {
+          width: 40px;
+          height: 40px;
           border-radius: 50%;
           object-fit: cover;
-          border: 2px solid var(--brand-orange);
+          border: 1.5px solid var(--brand-primary);
         }
 
-        .comp-name {
-          font-size: 14px;
-          font-weight: 800;
+        .spotlight-text h4 {
+          font-size: 13px;
+          font-weight: 700;
           color: #ffffff;
         }
 
-        .comp-handle {
+        .spotlight-text p {
           font-size: 11px;
-          color: #94a3b8;
+          color: var(--text-muted);
         }
 
-        .comp-stats-grid {
+        .spotlight-stats-row {
           display: flex;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          border-top: 1px solid var(--border-subtle);
+          border-bottom: 1px solid var(--border-subtle);
           padding: 8px 0;
           margin-bottom: 12px;
         }
 
-        .comp-stat {
+        .spotlight-stat {
           flex: 1;
           display: flex;
           flex-direction: column;
           align-items: center;
         }
 
-        .comp-stat strong {
+        .spotlight-stat strong {
           font-size: 13px;
           color: #ffffff;
         }
 
-        .comp-stat span {
+        .spotlight-stat span {
           font-size: 10px;
-          color: #94a3b8;
+          color: var(--text-muted);
         }
 
-        .comp-follow-btn {
+        .spotlight-follow-btn {
           width: 100%;
-          padding: 9px;
-          border-radius: 10px;
-          background: var(--brand-gradient);
+          padding: 8px;
+          border-radius: 8px;
+          background: var(--brand-accent);
           color: #ffffff;
           border: none;
           font-size: 12px;
@@ -2851,37 +2944,31 @@ export default function Home({
           cursor: pointer;
         }
 
-        .companion-sound-card {
-          background: #1e293b;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          padding: 14px;
-        }
-
-        .sound-card-header {
+        .soundtrack-head {
           display: flex;
           align-items: center;
           gap: 8px;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
+          color: var(--text-secondary);
         }
 
-        .sound-card-header h5 {
+        .soundtrack-head h5 {
           font-size: 12px;
-          font-weight: 800;
+          font-weight: 700;
           color: #ffffff;
         }
 
-        .sound-card-header p {
+        .soundtrack-head p {
           font-size: 10px;
-          color: #94a3b8;
+          color: var(--text-muted);
         }
 
-        .sound-play-preview-btn {
+        .soundtrack-preview-btn {
           width: 100%;
           padding: 8px;
           border-radius: 8px;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-subtle);
           color: #ffffff;
           font-size: 11px;
           font-weight: 700;
@@ -2889,93 +2976,89 @@ export default function Home({
         }
 
         /* ------------------------------------------------------------------ */
-        /* MOBILE BOTTOM NAVIGATION BAR                                       */
+        /* MOBILE BOTTOM TAB BAR                                              */
         /* ------------------------------------------------------------------ */
-        .mobile-bottom-nav {
+        .mobile-tab-nav {
           display: none;
           position: fixed;
           bottom: 0;
           left: 0;
           right: 0;
-          height: 60px;
-          background: rgba(15, 23, 42, 0.96);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          height: 56px;
+          background: rgba(12, 13, 18, 0.95);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-top: 1px solid var(--border-subtle);
           z-index: 95;
           align-items: center;
           justify-content: space-around;
           padding: 0 4px env(safe-area-inset-bottom, 0px) 4px;
         }
 
-        .bottom-nav-item {
+        .tab-nav-btn {
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           background: transparent;
           border: none;
-          color: #94a3b8;
+          color: var(--text-muted);
           cursor: pointer;
           gap: 2px;
           flex: 1;
+          height: 100%;
         }
 
-        .bottom-nav-item.active {
-          color: var(--brand-orange);
+        .tab-nav-btn.active {
+          color: var(--brand-primary);
         }
 
-        .nav-icon {
-          font-size: 18px;
-        }
-
-        .nav-label {
+        .tab-title {
           font-size: 10px;
-          font-weight: 700;
+          font-weight: 600;
         }
 
-        .bottom-nav-item.create-center-btn {
-          flex: 0 0 46px;
+        .tab-nav-btn.create-tab-btn {
+          flex: 0 0 48px;
         }
 
-        .plus-symbol {
-          width: 44px;
-          height: 32px;
-          border-radius: 12px;
-          background: var(--brand-gradient);
-          color: #fff;
+        .create-bubble-icon {
+          width: 42px;
+          height: 30px;
+          border-radius: 10px;
+          background: var(--brand-accent);
+          color: #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 15px;
-          box-shadow: 0 2px 10px rgba(255, 75, 31, 0.4);
+          box-shadow: 0 2px 8px rgba(255, 87, 34, 0.35);
         }
 
         /* ------------------------------------------------------------------ */
-        /* TAB PAGES (LIVE, SOCIAL, MUSIC, EXPLORE, PROFILE)                  */
+        /* SECONDARY TAB PAGES                                                */
         /* ------------------------------------------------------------------ */
-        .tab-page-container {
-          max-width: 960px;
+        .tab-surface-page {
+          max-width: 980px;
           width: 100%;
           height: 100%;
           overflow-y: auto;
-          padding: 20px 16px 80px 16px;
+          padding: 24px 20px 80px 20px;
         }
 
-        .tab-header-banner {
-          margin-bottom: 20px;
+        .page-header-row {
+          margin-bottom: 24px;
           text-align: left;
         }
 
-        .tab-header-banner h2 {
+        .page-header-row h2 {
           font-size: 22px;
           font-weight: 800;
           color: #ffffff;
         }
 
-        .tab-header-banner p {
+        .page-header-row p {
           font-size: 13px;
-          color: #94a3b8;
+          color: var(--text-secondary);
           margin-top: 4px;
         }
 
@@ -2985,52 +3068,52 @@ export default function Home({
           gap: 16px;
         }
 
-        .live-card-item {
+        .live-stream-card {
           position: relative;
           height: 320px;
-          border-radius: 18px;
+          border-radius: 14px;
           overflow: hidden;
           background: #000;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
           cursor: pointer;
         }
 
-        .live-card-img {
+        .stream-cover-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          transition: transform 0.3s ease;
+          transition: transform 0.25s ease;
         }
 
-        .live-card-item:hover .live-card-img {
-          transform: scale(1.05);
+        .live-stream-card:hover .stream-cover-img {
+          transform: scale(1.04);
         }
 
-        .live-badge-overlay {
+        .stream-badge-live {
           position: absolute;
           top: 12px;
           left: 12px;
           background: #ef4444;
           color: #ffffff;
-          padding: 4px 10px;
-          border-radius: 12px;
+          padding: 3px 8px;
+          border-radius: 6px;
           font-size: 10px;
           font-weight: 800;
         }
 
-        .live-viewers-count {
+        .stream-viewers-pill {
           position: absolute;
           top: 12px;
           right: 12px;
           background: rgba(0, 0, 0, 0.6);
           color: #fff;
           padding: 3px 8px;
-          border-radius: 10px;
+          border-radius: 6px;
           font-size: 10px;
           font-weight: 600;
         }
 
-        .live-card-details {
+        .stream-info-overlay {
           position: absolute;
           bottom: 0;
           left: 0;
@@ -3040,261 +3123,266 @@ export default function Home({
           color: #fff;
         }
 
-        .live-card-details h4 {
+        .stream-info-overlay h4 {
           font-size: 14px;
           font-weight: 700;
         }
 
-        .live-card-details p {
+        .stream-info-overlay p {
           font-size: 11px;
           opacity: 0.8;
           margin-top: 2px;
         }
 
-        /* Social Feed Cards */
-        .social-feed-grid {
+        /* Community Feed */
+        .community-posts-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
           gap: 16px;
         }
 
-        .social-post-card {
-          background: #1e293b;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
+        .community-post-card {
+          background: var(--bg-card);
+          border-radius: 14px;
+          border: 1px solid var(--border-subtle);
           overflow: hidden;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
-        .post-author-row {
+        .post-header-row {
           display: flex;
           align-items: center;
           gap: 10px;
           padding: 12px;
         }
 
-        .post-author-avatar {
+        .post-user-avatar {
           width: 36px;
           height: 36px;
           border-radius: 50%;
           object-fit: cover;
         }
 
-        .post-author-text {
+        .post-user-info {
           flex: 1;
         }
 
-        .author-name {
+        .post-user-name {
           display: block;
           font-size: 13px;
           font-weight: 700;
           color: #ffffff;
         }
 
-        .author-location {
+        .post-user-handle {
           display: block;
           font-size: 11px;
-          color: #94a3b8;
+          color: var(--text-muted);
         }
 
-        .post-time-badge {
+        .post-timestamp {
           font-size: 10px;
-          color: #64748b;
+          color: var(--text-muted);
         }
 
-        .post-photo-frame {
+        .post-media-box {
           width: 100%;
           height: 240px;
           background: #000;
         }
 
-        .post-image-element {
+        .post-main-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
         }
 
-        .post-body {
+        .post-body-content {
           padding: 12px;
         }
 
-        .post-caption {
+        .post-caption-text {
           font-size: 12px;
           color: #cbd5e1;
           line-height: 1.4;
-          margin-bottom: 8px;
+          margin-bottom: 10px;
         }
 
-        .post-action-bar {
+        .post-action-buttons {
           display: flex;
-          gap: 12px;
+          gap: 14px;
         }
 
-        .post-heart-btn,
-        .post-comment-btn {
+        .post-action-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
           border: none;
           background: transparent;
           font-size: 11px;
-          font-weight: 700;
-          color: #94a3b8;
+          font-weight: 600;
+          color: var(--text-muted);
           cursor: pointer;
         }
 
-        /* Music Track Cards */
-        .music-tracks-list {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
+        .post-action-btn:hover {
+          color: var(--text-primary);
         }
 
-        .music-track-card {
+        /* Music Track Listing */
+        .music-tracks-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .track-listing-item {
           display: flex;
           align-items: center;
-          background: #1e293b;
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: var(--bg-card);
+          border-radius: 10px;
+          border: 1px solid var(--border-subtle);
           padding: 10px 14px;
           gap: 12px;
         }
 
-        .track-cover-art {
-          width: 48px;
-          height: 48px;
-          border-radius: 8px;
+        .track-thumb {
+          width: 44px;
+          height: 44px;
+          border-radius: 6px;
           object-fit: cover;
         }
 
-        .track-text {
+        .track-details {
           flex: 1;
         }
 
-        .track-text h4 {
+        .track-details h4 {
           font-size: 13px;
           font-weight: 700;
           color: #ffffff;
         }
 
-        .track-text p {
+        .track-details p {
           font-size: 11px;
-          color: #94a3b8;
+          color: var(--text-muted);
           margin-top: 2px;
         }
 
-        .genre-tag {
-          color: var(--brand-orange);
+        .genre-label {
+          color: var(--brand-primary);
           font-weight: 600;
         }
 
-        .track-duration {
+        .track-time-tag {
           font-size: 11px;
-          color: #64748b;
+          color: var(--text-muted);
         }
 
-        .track-play-btn {
-          padding: 6px 14px;
-          border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          background: rgba(255, 255, 255, 0.08);
+        .track-play-action {
+          padding: 5px 14px;
+          border-radius: 16px;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-subtle);
           font-size: 11px;
           font-weight: 700;
           color: #ffffff;
           cursor: pointer;
         }
 
-        /* Explore Grid */
-        .explore-destinations-grid {
+        /* Destinations */
+        .destinations-showcase-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
           gap: 16px;
         }
 
-        .explore-card {
-          background: #1e293b;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
+        .destination-feature-card {
+          background: var(--bg-card);
+          border-radius: 14px;
+          border: 1px solid var(--border-subtle);
           overflow: hidden;
         }
 
-        .explore-card-img-wrap {
+        .destination-media-wrap {
           position: relative;
           height: 180px;
           background: #000;
         }
 
-        .explore-card-img-wrap img {
+        .destination-media-wrap img {
           width: 100%;
           height: 100%;
           object-fit: cover;
         }
 
-        .explore-tag-chip {
+        .destination-tag-badge {
           position: absolute;
           bottom: 10px;
           left: 10px;
-          background: rgba(0, 0, 0, 0.7);
+          background: rgba(0, 0, 0, 0.75);
           color: #fff;
           font-size: 10px;
-          font-weight: 800;
+          font-weight: 700;
           padding: 3px 8px;
-          border-radius: 8px;
+          border-radius: 6px;
         }
 
-        .explore-card-info {
+        .destination-content {
           padding: 14px;
         }
 
-        .explore-card-info h3 {
+        .destination-content h3 {
           font-size: 15px;
           font-weight: 800;
           color: #ffffff;
         }
 
-        .explore-card-info h4 {
+        .destination-content h4 {
           font-size: 11px;
           font-weight: 700;
-          color: var(--brand-orange);
+          color: var(--brand-primary);
           margin: 2px 0 6px 0;
         }
 
-        .explore-card-info p {
+        .destination-content p {
           font-size: 12px;
-          color: #94a3b8;
+          color: var(--text-secondary);
           line-height: 1.4;
           margin-bottom: 10px;
         }
 
-        .explore-view-reels-btn {
+        .destination-view-btn {
           border: none;
           background: transparent;
-          color: var(--brand-orange);
+          color: var(--brand-primary);
           font-size: 12px;
-          font-weight: 800;
+          font-weight: 700;
           cursor: pointer;
         }
 
-        /* Profile Tab Card */
-        .profile-dashboard-card {
-          background: #1e293b;
-          border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
+        /* Profile Surface Card */
+        .profile-surface-card {
+          background: var(--bg-card);
+          border-radius: 16px;
+          border: 1px solid var(--border-subtle);
           overflow: hidden;
-          max-width: 500px;
+          max-width: 480px;
           margin: 0 auto;
         }
 
-        .profile-banner-top {
-          height: 120px;
-          background: var(--brand-gradient);
+        .profile-banner-band {
+          height: 100px;
+          background: var(--brand-accent);
           position: relative;
           display: flex;
           justify-content: center;
         }
 
-        .profile-avatar-large {
+        .profile-avatar-center {
           position: absolute;
-          bottom: -32px;
-          width: 68px;
-          height: 68px;
+          bottom: -28px;
+          width: 60px;
+          height: 60px;
           border-radius: 50%;
           background: #111827;
           border: 3px solid #111827;
@@ -3302,137 +3390,154 @@ export default function Home({
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 30px;
+          font-size: 24px;
           overflow: hidden;
         }
 
-        .profile-avatar-img {
+        .profile-hero-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
         }
 
-        .profile-info-body {
-          padding: 44px 20px 24px 20px;
+        .profile-card-body {
+          padding: 38px 18px 24px 18px;
           text-align: center;
         }
 
-        .profile-handle {
+        .profile-full-name {
+          font-size: 16px;
+          font-weight: 800;
+          color: #ffffff;
+        }
+
+        .profile-user-handle {
           font-size: 12px;
-          color: var(--brand-orange);
+          color: var(--brand-primary);
           font-weight: 700;
           margin-top: 2px;
         }
 
-        .profile-email {
+        .profile-user-email {
           font-size: 12px;
-          color: #94a3b8;
+          color: var(--text-muted);
           margin-top: 4px;
         }
 
-        .wallet-balance-card {
+        .coins-balance-box {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 14px;
+          background: var(--bg-subtle);
+          border: 1px solid var(--border-subtle);
+          border-radius: 12px;
           padding: 14px;
-          margin: 20px 0;
+          margin: 18px 0;
           text-align: left;
         }
 
-        .wallet-left span {
+        .balance-label {
           display: block;
           font-size: 9px;
           font-weight: 800;
-          color: #94a3b8;
+          color: var(--text-muted);
         }
 
-        .wallet-left h2 {
-          font-size: 20px;
+        .balance-value {
+          font-size: 18px;
           font-weight: 800;
           color: #ffffff;
           margin-top: 2px;
         }
 
-        .profile-cta-actions {
+        .topup-btn {
+          background: var(--brand-accent);
+          color: #ffffff;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 16px;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .profile-action-stack {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 8px;
         }
 
         /* Comments Bottom Sheet */
-        .comments-drawer-backdrop {
+        .bottom-comments-sheet {
           position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.7);
-          z-index: 210;
-          display: flex;
-          align-items: flex-end;
-          justify-content: center;
-        }
-
-        .comments-sheet-container {
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
           width: 100%;
           max-width: 440px;
           max-height: 70vh;
-          background: #1e293b;
-          border-radius: 24px 24px 0 0;
+          background: #14161f;
+          border-radius: 20px 20px 0 0;
           display: flex;
           flex-direction: column;
-          padding: 16px 18px 24px 18px;
-          animation: slideUp 0.25s ease-out;
-          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 14px 18px 20px 18px;
+          animation: slideUp 0.2s ease-out;
+          border-top: 1px solid var(--border-subtle);
+          z-index: 210;
         }
 
-        .sheet-handle-bar {
-          width: 40px;
+        .sheet-drag-handle {
+          width: 36px;
           height: 4px;
           border-radius: 2px;
-          background: #475569;
-          margin: 0 auto 12px auto;
+          background: #334155;
+          margin: 0 auto 10px auto;
         }
 
-        .sheet-header-row {
+        .sheet-title-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 14px;
+          margin-bottom: 12px;
         }
 
-        .sheet-close-btn {
+        .sheet-title-row h3 {
+          font-size: 14px;
+          font-weight: 700;
+        }
+
+        .sheet-close-cross {
           border: none;
-          background: rgba(255, 255, 255, 0.1);
-          width: 28px;
-          height: 28px;
+          background: var(--bg-subtle);
+          width: 26px;
+          height: 26px;
           border-radius: 50%;
           color: #ffffff;
           cursor: pointer;
         }
 
-        .comments-list-scroll {
+        .sheet-comments-scroll {
           flex: 1;
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 10px;
           max-height: 44vh;
           padding-right: 4px;
         }
 
-        .comment-bubble-item {
+        .comment-thread-item {
           display: flex;
-          gap: 10px;
+          gap: 8px;
         }
 
-        .comment-avatar-bubble {
-          width: 32px;
-          height: 32px;
+        .comment-initial-badge {
+          width: 28px;
+          height: 28px;
           border-radius: 50%;
-          background: var(--brand-orange);
+          background: var(--brand-primary);
           color: #fff;
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 700;
           display: flex;
           align-items: center;
@@ -3440,57 +3545,57 @@ export default function Home({
           flex-shrink: 0;
         }
 
-        .comment-text-wrap {
+        .comment-body-bubble {
           flex: 1;
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 12px;
-          padding: 8px 12px;
+          background: var(--bg-subtle);
+          border-radius: 10px;
+          padding: 8px 10px;
         }
 
-        .comment-author-row {
+        .comment-author-line {
           display: flex;
           justify-content: space-between;
           margin-bottom: 2px;
         }
 
-        .c-author {
+        .comment-author-name {
           font-size: 11px;
           font-weight: 700;
           color: #ffffff;
         }
 
-        .c-time {
+        .comment-time-ago {
           font-size: 9px;
-          color: #64748b;
+          color: var(--text-muted);
         }
 
-        .c-text {
+        .comment-message-text {
           font-size: 12px;
           color: #cbd5e1;
           line-height: 1.35;
         }
 
-        .comment-input-form {
+        .comment-submit-form {
           display: flex;
           gap: 8px;
-          margin-top: 14px;
+          margin-top: 12px;
         }
 
-        .comment-text-input {
+        .comment-type-input {
           flex: 1;
-          padding: 10px 14px;
-          border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          background: rgba(255, 255, 255, 0.08);
+          padding: 9px 12px;
+          border-radius: 18px;
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-subtle);
           color: #ffffff;
           outline: none;
           font-size: 12px;
         }
 
-        .comment-send-btn {
-          padding: 8px 18px;
-          border-radius: 20px;
-          background: var(--brand-gradient);
+        .comment-post-btn {
+          padding: 7px 16px;
+          border-radius: 18px;
+          background: var(--brand-accent);
           color: #fff;
           border: none;
           font-size: 12px;
@@ -3498,209 +3603,180 @@ export default function Home({
           cursor: pointer;
         }
 
-        /* Modal Overlays */
-        .modal-backdrop {
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.75);
-          z-index: 220;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 16px;
-        }
-
-        .gift-tray-card,
-        .auth-modal-card {
+        /* Modal Card */
+        .modal-content-card {
           width: 100%;
-          max-width: 400px;
-          background: #1e293b;
-          border-radius: 20px;
-          padding: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          animation: scaleUp 0.2s ease-out;
+          max-width: 380px;
+          background: #14161f;
+          border-radius: 16px;
+          padding: 18px;
+          border: 1px solid var(--border-subtle);
+          margin: auto;
         }
 
-        .gift-tray-header,
-        .auth-header {
+        .modal-header-line {
           display: flex;
           align-items: center;
           justify-content: space-between;
         }
 
-        .gift-subhead,
-        .auth-sub {
-          font-size: 12px;
-          color: #94a3b8;
-          margin: 4px 0 16px 0;
+        .modal-header-line h3 {
+          font-size: 15px;
+          font-weight: 800;
         }
 
-        .gifts-grid {
+        .modal-subtitle {
+          font-size: 12px;
+          color: var(--text-secondary);
+          margin: 4px 0 14px 0;
+        }
+
+        .gifts-selection-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 10px;
+          gap: 8px;
         }
 
-        .gift-option-card {
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 12px;
-          padding: 12px 6px;
+        .gift-select-item {
+          background: var(--bg-subtle);
+          border: 1px solid var(--border-subtle);
+          border-radius: 10px;
+          padding: 10px 4px;
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 4px;
           cursor: pointer;
-          transition: all 0.15s ease;
           color: #ffffff;
+          transition: all 0.15s ease;
         }
 
-        .gift-option-card:hover {
-          border-color: var(--brand-orange);
-          background: rgba(255, 75, 31, 0.15);
-          transform: translateY(-2px);
+        .gift-select-item:hover {
+          border-color: var(--brand-primary);
+          background: rgba(255, 87, 34, 0.12);
         }
 
-        .gift-icon {
-          font-size: 26px;
-        }
-
-        .gift-name {
+        .gift-title {
           font-size: 11px;
           font-weight: 700;
-          color: #ffffff;
         }
 
-        .gift-price {
+        .gift-cost {
           font-size: 10px;
-          color: var(--brand-gold);
-          font-weight: 800;
+          color: var(--brand-secondary);
+          font-weight: 700;
         }
 
-        .auth-actions-group {
+        .modal-actions-list {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 8px;
         }
 
-        /* Buttons & Utility Styles */
-        .primary-gradient-btn {
-          background: var(--brand-gradient);
+        .action-accent-btn {
+          background: var(--brand-accent);
           color: #ffffff;
           border: none;
-          padding: 10px 20px;
-          border-radius: 20px;
-          font-size: 13px;
+          padding: 9px 18px;
+          border-radius: 18px;
+          font-size: 12px;
           font-weight: 700;
           cursor: pointer;
           text-align: center;
           text-decoration: none;
-          box-shadow: 0 4px 12px rgba(255, 75, 31, 0.35);
         }
 
-        .secondary-outline-btn {
+        .action-hollow-btn {
           background: transparent;
           color: #ffffff;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          padding: 10px 20px;
-          border-radius: 20px;
-          font-size: 13px;
+          border: 1px solid var(--border-subtle);
+          padding: 9px 18px;
+          border-radius: 18px;
+          font-size: 12px;
           font-weight: 700;
           cursor: pointer;
           text-align: center;
           text-decoration: none;
         }
 
-        .full-width {
+        .action-accent-btn.full,
+        .action-hollow-btn.full {
           width: 100%;
-        }
-
-        .full-width-btn {
-          display: block;
-          width: 100%;
-          background: var(--brand-gradient);
-          color: #fff;
-          padding: 12px;
-          border-radius: 12px;
-          font-weight: 700;
-          font-size: 13px;
-          text-decoration: none;
-          text-align: center;
         }
 
         .empty-state-card {
           text-align: center;
           padding: 40px 20px;
-          max-width: 400px;
+          max-width: 360px;
           margin: 0 auto;
+          color: var(--text-muted);
         }
 
         .empty-state-card h3 {
-          margin: 14px 0 6px 0;
-          font-size: 18px;
+          margin: 12px 0 6px 0;
+          font-size: 16px;
+          color: #ffffff;
         }
 
         .empty-state-card p {
-          color: #94a3b8;
-          font-size: 13px;
-          margin-bottom: 16px;
+          font-size: 12px;
+          margin-bottom: 14px;
         }
 
-        /* Toast Popup */
         .wudau-toast {
           position: fixed;
-          top: 72px;
+          top: 68px;
           left: 50%;
           transform: translateX(-50%);
-          background: #111827;
-          border: 1px solid rgba(255, 255, 255, 0.15);
+          background: #1e212b;
+          border: 1px solid var(--border-subtle);
           color: #ffffff;
-          padding: 8px 18px;
-          border-radius: 24px;
-          font-size: 12px;
+          padding: 7px 16px;
+          border-radius: 20px;
+          font-size: 11px;
           font-weight: 700;
           z-index: 300;
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-          animation: dropIn 0.25s ease-out;
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+          animation: dropIn 0.2s ease-out;
         }
 
         /* ------------------------------------------------------------------ */
-        /* RESPONSIVE LAYOUT & MOBILE FITNESS                                 */
+        /* RESPONSIVE BREAKPOINTS (MOBILE FITNESS)                            */
         /* ------------------------------------------------------------------ */
         @media (max-width: 768px) {
           .site-header {
-            padding: 0 10px;
-            height: 56px;
+            padding: 0 12px;
+            height: 52px;
           }
 
-          .brand-tagline {
+          .header-search-bar {
             display: none;
           }
 
-          .search-bar-desktop {
-            display: none;
-          }
-
-          .mobile-search-btn {
+          .icon-action-btn.mobile-only {
             display: flex;
           }
 
-          .desktop-companion-panel {
+          .create-shortcut-btn {
+            display: none;
+          }
+
+          .desktop-companion-rail {
             display: none;
           }
 
           .content-stage {
-            min-height: calc(100dvh - 56px - 60px);
-            padding-bottom: 60px;
+            min-height: calc(100dvh - 52px - 56px);
+            padding-bottom: 56px;
           }
 
-          .reel-main-layout {
+          .player-presentation-layout {
             padding: 0;
             width: 100%;
-            height: calc(100dvh - 56px - 60px);
+            height: calc(100dvh - 52px - 56px);
           }
 
-          .reel-card-container {
+          .video-player-card {
             width: 100vw;
             height: 100%;
             max-height: none;
@@ -3709,23 +3785,23 @@ export default function Home({
             box-shadow: none;
           }
 
-          .reel-actions-rail {
-            bottom: 70px;
+          .player-actions-column {
+            bottom: 64px;
             right: 8px;
             gap: 10px;
           }
 
-          .reel-metadata-vignette {
-            right: 64px;
-            padding: 16px 12px 14px 12px;
+          .player-bottom-vignette {
+            right: 58px;
+            padding: 14px 10px 12px 10px;
           }
 
-          .mobile-bottom-nav {
+          .mobile-tab-nav {
             display: flex;
           }
 
-          .tab-page-container {
-            padding: 16px 12px 76px 12px;
+          .tab-surface-page {
+            padding: 16px 12px 72px 12px;
           }
         }
 
@@ -3739,23 +3815,13 @@ export default function Home({
           to { transform: translateX(0); }
         }
 
-        @keyframes slideDown {
-          from { transform: translateY(-10px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-
         @keyframes slideUp {
           from { transform: translateY(100%); }
           to { transform: translateY(0); }
         }
 
-        @keyframes scaleUp {
-          from { transform: scale(0.92); opacity: 0; }
-          to { transform: scale(1); opacity: 1; }
-        }
-
         @keyframes dropIn {
-          from { transform: translate(-50%, -20px); opacity: 0; }
+          from { transform: translate(-50%, -15px); opacity: 0; }
           to { transform: translate(-50%, 0); opacity: 1; }
         }
 
