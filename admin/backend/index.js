@@ -83,8 +83,15 @@ db.on("error", () => {
   console.log("Connection Error: ");
 });
 
-db.once("open", () => {
+const { seedDemoData } = require("./util/seedDemoData");
+
+db.once("open", async () => {
   console.log("Mongo: successfully connected to db");
+  try {
+    await seedDemoData();
+  } catch (err) {
+    console.error("Failed to run demo data migration:", err);
+  }
 });
 
 //set port and listen the request

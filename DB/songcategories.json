@@ -1,0 +1,58 @@
+[
+  {
+    "_id": "6aaac6fbfe16793df24805e4",
+    "name": "Trending Beats",
+    "image": "storage/male.png",
+    "createdAt": "2026-09-16T16:42:35.020Z",
+    "updatedAt": "2026-09-16T16:42:35.020Z"
+  },
+  {
+    "_id": "6aaac6fbfe16793df24805e5",
+    "name": "Pop & Dance",
+    "image": "storage/female.png",
+    "createdAt": "2026-09-16T16:42:35.020Z",
+    "updatedAt": "2026-09-16T16:42:35.020Z"
+  },
+  {
+    "_id": "6aaac6fbfe16793df24805e6",
+    "name": "Acoustic & Chill",
+    "image": "storage/male.png",
+    "createdAt": "2026-09-16T16:42:35.020Z",
+    "updatedAt": "2026-09-16T16:42:35.020Z"
+  },
+  {
+    "_id": "6aaac6fbfe16793df24805e7",
+    "name": "Hip Hop Vibes",
+    "image": "storage/female.png",
+    "createdAt": "2026-09-16T16:42:35.020Z",
+    "updatedAt": "2026-09-16T16:42:35.020Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d2c",
+    "name": "Bongo Flava & Singeli",
+    "image": "storage/category_bongo.jpg",
+    "createdAt": "2026-09-17T16:49:36.874Z",
+    "updatedAt": "2026-09-17T16:49:36.874Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d31",
+    "name": "Serengeti & Coastal Vibes",
+    "image": "storage/category_nature.jpg",
+    "createdAt": "2026-09-17T16:49:36.878Z",
+    "updatedAt": "2026-09-17T16:49:36.878Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d34",
+    "name": "Afrobeats & Amapiano",
+    "image": "storage/category_afrobeats.jpg",
+    "createdAt": "2026-09-17T16:49:36.882Z",
+    "updatedAt": "2026-09-17T16:49:36.882Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d37",
+    "name": "Global Fusion (Tokyo & Paris)",
+    "image": "storage/category_global.jpg",
+    "createdAt": "2026-09-17T16:49:36.885Z",
+    "updatedAt": "2026-09-17T16:49:36.885Z"
+  }
+]

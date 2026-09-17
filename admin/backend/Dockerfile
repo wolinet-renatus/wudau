@@ -19,8 +19,8 @@ RUN npm ci --only=production --legacy-peer-deps || npm install --only=production
 # Copy application source code
 COPY . .
 
-# Ensure storage directory exists for uploaded videos and images
-RUN mkdir -p storage
+# Ensure storage directory exists and maintain permanent copy of seed assets
+RUN mkdir -p storage && cp -r storage seed_storage
 
 # Healthcheck to ensure API is responsive
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \

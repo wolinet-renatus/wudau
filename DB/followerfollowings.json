@@ -1,0 +1,72 @@
+[
+  {
+    "_id": "6aac1a20bb0caea9a20b4d98",
+    "fromUserId": "6aac1a20bb0caea9a20b4d71",
+    "toUserId": "6aac1a20bb0caea9a20b4d75",
+    "createdAt": "2026-09-17T16:49:36.998Z",
+    "updatedAt": "2026-09-17T16:49:36.998Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4d9b",
+    "fromUserId": "6aac1a20bb0caea9a20b4d75",
+    "toUserId": "6aac1a20bb0caea9a20b4d79",
+    "createdAt": "2026-09-17T16:49:37.000Z",
+    "updatedAt": "2026-09-17T16:49:37.000Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4d9e",
+    "fromUserId": "6aac1a20bb0caea9a20b4d79",
+    "toUserId": "6aac1a20bb0caea9a20b4d7d",
+    "createdAt": "2026-09-17T16:49:37.003Z",
+    "updatedAt": "2026-09-17T16:49:37.003Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4da1",
+    "fromUserId": "6aac1a20bb0caea9a20b4d7d",
+    "toUserId": "6aac1a20bb0caea9a20b4d81",
+    "createdAt": "2026-09-17T16:49:37.004Z",
+    "updatedAt": "2026-09-17T16:49:37.004Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4da4",
+    "fromUserId": "6aac1a20bb0caea9a20b4d81",
+    "toUserId": "6aac1a20bb0caea9a20b4d85",
+    "createdAt": "2026-09-17T16:49:37.006Z",
+    "updatedAt": "2026-09-17T16:49:37.006Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4da7",
+    "fromUserId": "6aac1a20bb0caea9a20b4d85",
+    "toUserId": "6aac1a20bb0caea9a20b4d89",
+    "createdAt": "2026-09-17T16:49:37.008Z",
+    "updatedAt": "2026-09-17T16:49:37.008Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4daa",
+    "fromUserId": "6aac1a20bb0caea9a20b4d89",
+    "toUserId": "6aac1a20bb0caea9a20b4d8d",
+    "createdAt": "2026-09-17T16:49:37.010Z",
+    "updatedAt": "2026-09-17T16:49:37.010Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4dad",
+    "fromUserId": "6aac1a20bb0caea9a20b4d8d",
+    "toUserId": "6aac1a20bb0caea9a20b4d91",
+    "createdAt": "2026-09-17T16:49:37.012Z",
+    "updatedAt": "2026-09-17T16:49:37.012Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4db0",
+    "fromUserId": "6aac1a20bb0caea9a20b4d91",
+    "toUserId": "6aac1a20bb0caea9a20b4d95",
+    "createdAt": "2026-09-17T16:49:37.014Z",
+    "updatedAt": "2026-09-17T16:49:37.014Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4db3",
+    "fromUserId": "6aac1a20bb0caea9a20b4d95",
+    "toUserId": "6aac1a20bb0caea9a20b4d71",
+    "createdAt": "2026-09-17T16:49:37.017Z",
+    "updatedAt": "2026-09-17T16:49:37.017Z"
+  }
+]

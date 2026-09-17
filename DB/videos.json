@@ -1,0 +1,314 @@
+[
+  {
+    "_id": "6aaac76689948d480699eade",
+    "uniqueVideoId": "VID_1001",
+    "caption": "Dance battle practice! 🔥 #Trending",
+    "videoTime": 30,
+    "videoUrl": "storage/video1.mp4",
+    "videoImage": "storage/thumb1.jpg",
+    "location": "Miami, FL",
+    "locationCoordinates": {
+      "latitude": "",
+      "longitude": ""
+    },
+    "hashTagId": [
+      "6aaac6fbfe16793df24805d6"
+    ],
+    "songId": null,
+    "userId": "6aaac6fbfe16793df2480606",
+    "shareCount": 154,
+    "isFake": false,
+    "isBanned": false,
+    "createdAt": "2026-09-16T16:44:22.244Z",
+    "updatedAt": "2026-09-16T16:44:22.244Z"
+  },
+  {
+    "_id": "6aaac76689948d480699eadf",
+    "uniqueVideoId": "VID_1002",
+    "caption": "Quick HIIT workout challenge 💪 #FitnessMotivation",
+    "videoTime": 45,
+    "videoUrl": "storage/video2.mp4",
+    "videoImage": "storage/thumb2.jpg",
+    "location": "San Diego, CA",
+    "locationCoordinates": {
+      "latitude": "",
+      "longitude": ""
+    },
+    "hashTagId": [
+      "6aaac6fbfe16793df24805d6"
+    ],
+    "songId": null,
+    "userId": "6aaac6fbfe16793df2480606",
+    "shareCount": 92,
+    "isFake": false,
+    "isBanned": false,
+    "createdAt": "2026-09-16T16:44:22.245Z",
+    "updatedAt": "2026-09-16T16:44:22.245Z"
+  },
+  {
+    "_id": "6aaad8c6b912635c29f7016d",
+    "uniqueVideoId": "VID_1003",
+    "caption": "Hypnotic psychedelic visual loop test 🌀 #Trending #ShortieVibes",
+    "videoTime": 15,
+    "videoUrl": "storage/video3.mp4",
+    "videoImage": "storage/thumb3.jpg",
+    "location": "Los Angeles, CA",
+    "locationCoordinates": {
+      "latitude": "",
+      "longitude": ""
+    },
+    "hashTagId": [
+      "6aaac6fbfe16793df24805d6",
+      "6aaac6fbfe16793df24805d9"
+    ],
+    "songId": null,
+    "userId": "6aaac6fbfe16793df2480608",
+    "shareCount": 218,
+    "isFake": false,
+    "isBanned": false,
+    "createdAt": "2026-09-16T17:58:30.541Z",
+    "updatedAt": "2026-09-16T17:58:30.541Z"
+  },
+  {
+    "_id": "6aaad8c6b912635c29f7016e",
+    "uniqueVideoId": "VID_1004",
+    "caption": "Synthwave sunset vibes 🌆 Let the beat drop! #DanceViral #Trending",
+    "videoTime": 20,
+    "videoUrl": "storage/video4.mp4",
+    "videoImage": "storage/thumb4.jpg",
+    "location": "New York, NY",
+    "locationCoordinates": {
+      "latitude": "",
+      "longitude": ""
+    },
+    "hashTagId": [
+      "6aaac6fbfe16793df24805d7",
+      "6aaac6fbfe16793df24805d6"
+    ],
+    "songId": null,
+    "userId": "6aaac6fbfe16793df2480607",
+    "shareCount": 340,
+    "isFake": false,
+    "isBanned": false,
+    "createdAt": "2026-09-16T17:58:30.541Z",
+    "updatedAt": "2026-09-16T17:58:30.541Z"
+  },
+  {
+    "_id": "6aaae4365fb768f9b53e129b",
+    "uniqueVideoId": "VID_SOFIA",
+    "caption": "Evening rhythm in the city lights 🌆 Chicago vibe #WudauDance #CityRhythm #Trending",
+    "videoTime": 12,
+    "videoUrl": "storage/video1.mp4",
+    "videoImage": "storage/thumb1.jpg",
+    "location": "Chicago, IL",
+    "locationCoordinates": {
+      "latitude": "",
+      "longitude": ""
+    },
+    "hashTagId": [],
+    "songId": null,
+    "userId": "6aaae4365fb768f9b53e129a",
+    "shareCount": 230,
+    "isFake": false,
+    "isBanned": false,
+    "createdAt": "2026-09-16T18:49:53.227Z",
+    "updatedAt": "2026-09-16T18:47:18.147Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4db6",
+    "uniqueVideoId": "t3oyX3eNaqkv",
+    "caption": "Serengeti sunset golden hour with wild zebras running free! Unforgettable Tanzania 🦁🇹🇿 #SerengetiMagic #TanzaniaUnforgettable #NatureTz",
+    "videoTime": 20,
+    "videoUrl": "storage/video1.mp4",
+    "videoImage": "storage/thumb1.jpg",
+    "location": "Serengeti National Park, Tanzania",
+    "locationCoordinates": {
+      "latitude": "-2.3333",
+      "longitude": "34.8333"
+    },
+    "hashTagId": [
+      "6aac1a20bb0caea9a20b4d4f",
+      "6aac1a20bb0caea9a20b4d4c",
+      "6aac1a20bb0caea9a20b4d6d"
+    ],
+    "songId": "6aac1a20bb0caea9a20b4d40",
+    "userId": "6aac1a20bb0caea9a20b4d81",
+    "shareCount": 142,
+    "isFake": false,
+    "isBanned": false,
+    "createdAt": "2026-09-17T16:49:37.021Z",
+    "updatedAt": "2026-09-17T16:49:37.021Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4dbf",
+    "uniqueVideoId": "jVQAUBstxLkA",
+    "caption": "Dar es Salaam street dance battle at Coco Beach! Kinondoni crew representing WUDAU 🔥🇹🇿 #DarEsSalaam #BongoFlava #AfroDance #WudauChallenge",
+    "videoTime": 18,
+    "videoUrl": "storage/video2.mp4",
+    "videoImage": "storage/thumb2.jpg",
+    "location": "Coco Beach, Dar es Salaam, Tanzania",
+    "locationCoordinates": {
+      "latitude": "-6.7725",
+      "longitude": "39.2803"
+    },
+    "hashTagId": [
+      "6aac1a20bb0caea9a20b4d5b",
+      "6aac1a20bb0caea9a20b4d52",
+      "6aac1a20bb0caea9a20b4d61",
+      "6aac1a20bb0caea9a20b4d64"
+    ],
+    "songId": "6aac1a20bb0caea9a20b4d3a",
+    "userId": "6aac1a20bb0caea9a20b4d71",
+    "shareCount": 389,
+    "isFake": false,
+    "isBanned": false,
+    "createdAt": "2026-09-17T16:49:37.027Z",
+    "updatedAt": "2026-09-17T16:49:37.027Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4dca",
+    "uniqueVideoId": "ylUv3PYdBc",
+    "caption": "Singeli fast-feet challenge! Can you keep up with 300 BPM in Mbagala? ⚡👟 #SingeliDance #DarEsSalaam #WudauChallenge",
+    "videoTime": 25,
+    "videoUrl": "storage/video3.mp4",
+    "videoImage": "storage/thumb3.jpg",
+    "location": "Mbagala, Dar es Salaam, Tanzania",
+    "locationCoordinates": {
+      "latitude": "-6.9030",
+      "longitude": "39.2612"
+    },
+    "hashTagId": [
+      "6aac1a20bb0caea9a20b4d55",
+      "6aac1a20bb0caea9a20b4d5b",
+      "6aac1a20bb0caea9a20b4d64"
+    ],
+    "songId": "6aac1a20bb0caea9a20b4d3d",
+    "userId": "6aac1a20bb0caea9a20b4d7d",
+    "shareCount": 512,
+    "isFake": false,
+    "isBanned": false,
+    "createdAt": "2026-09-17T16:49:37.034Z",
+    "updatedAt": "2026-09-17T16:49:37.034Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4dd3",
+    "uniqueVideoId": "is4GJqL62gi",
+    "caption": "Sunset dhow sail in Stone Town Zanzibar with acoustic Swahili tunes ⛵🌅 #ZanzibarVibes #TanzaniaUnforgettable",
+    "videoTime": 22,
+    "videoUrl": "storage/video4.mp4",
+    "videoImage": "storage/thumb4.jpg",
+    "location": "Stone Town, Zanzibar, Tanzania",
+    "locationCoordinates": {
+      "latitude": "-6.1622",
+      "longitude": "39.1878"
+    },
+    "hashTagId": [
+      "6aac1a20bb0caea9a20b4d58",
+      "6aac1a20bb0caea9a20b4d4c"
+    ],
+    "songId": "6aac1a20bb0caea9a20b4d40",
+    "userId": "6aac1a20bb0caea9a20b4d75",
+    "shareCount": 278,
+    "isFake": false,
+    "isBanned": false,
+    "createdAt": "2026-09-17T16:49:37.040Z",
+    "updatedAt": "2026-09-17T16:49:37.040Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4dda",
+    "uniqueVideoId": "7PpcUIBYFL",
+    "caption": "Maasai rhythm and traditional vocal harmony under Mount Meru & Kilimanjaro 🏔️ #Kilimanjaro #TanzaniaUnforgettable #AfroDance",
+    "videoTime": 19,
+    "videoUrl": "storage/video1.mp4",
+    "videoImage": "storage/thumb5.jpg",
+    "location": "Arusha, Mount Meru, Tanzania",
+    "locationCoordinates": {
+      "latitude": "-3.3869",
+      "longitude": "36.6830"
+    },
+    "hashTagId": [
+      "6aac1a20bb0caea9a20b4d5e",
+      "6aac1a20bb0caea9a20b4d4c",
+      "6aac1a20bb0caea9a20b4d61"
+    ],
+    "songId": "6aac1a20bb0caea9a20b4d43",
+    "userId": "6aac1a20bb0caea9a20b4d79",
+    "shareCount": 204,
+    "isFake": false,
+    "isBanned": false,
+    "createdAt": "2026-09-17T16:49:37.044Z",
+    "updatedAt": "2026-09-17T16:49:37.044Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4de3",
+    "uniqueVideoId": "q98X2e0QWwI1",
+    "caption": "Amapiano energy direct from Johannesburg! Connecting with our East African brothers & sisters 🇿🇦❤️🇹🇿 #AfroDance #WudauChallenge",
+    "videoTime": 24,
+    "videoUrl": "storage/video2.mp4",
+    "videoImage": "storage/thumb6.jpg",
+    "location": "Johannesburg, South Africa",
+    "locationCoordinates": {
+      "latitude": "-26.2041",
+      "longitude": "28.0473"
+    },
+    "hashTagId": [
+      "6aac1a20bb0caea9a20b4d61",
+      "6aac1a20bb0caea9a20b4d64"
+    ],
+    "songId": "6aac1a20bb0caea9a20b4d46",
+    "userId": "6aac1a20bb0caea9a20b4d89",
+    "shareCount": 165,
+    "isFake": false,
+    "isBanned": false,
+    "createdAt": "2026-09-17T16:49:37.050Z",
+    "updatedAt": "2026-09-17T16:49:37.050Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4dea",
+    "uniqueVideoId": "FrAK1Ifqga",
+    "caption": "Mixing Tokyo synths with traditional East African percussion in Shibuya crosswalk! 🇯🇵🎧🇹🇿 #TokyoMeetsAfrica #WudauChallenge",
+    "videoTime": 28,
+    "videoUrl": "storage/video3.mp4",
+    "videoImage": "storage/thumb7.jpg",
+    "location": "Shibuya, Tokyo, Japan",
+    "locationCoordinates": {
+      "latitude": "35.6595",
+      "longitude": "139.7004"
+    },
+    "hashTagId": [
+      "6aac1a20bb0caea9a20b4d67",
+      "6aac1a20bb0caea9a20b4d64"
+    ],
+    "songId": "6aac1a20bb0caea9a20b4d49",
+    "userId": "6aac1a20bb0caea9a20b4d91",
+    "shareCount": 198,
+    "isFake": false,
+    "isBanned": false,
+    "createdAt": "2026-09-17T16:49:37.054Z",
+    "updatedAt": "2026-09-17T16:49:37.054Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4df1",
+    "uniqueVideoId": "3EZ4xAIC68Dw",
+    "caption": "Contemporary choreography along the Seine river inspired by Swahili coastal rhythms 🇫🇷💃 #ParisianGroove #AfroDance",
+    "videoTime": 21,
+    "videoUrl": "storage/video4.mp4",
+    "videoImage": "storage/thumb8.jpg",
+    "location": "Paris, France",
+    "locationCoordinates": {
+      "latitude": "48.8566",
+      "longitude": "2.3522"
+    },
+    "hashTagId": [
+      "6aac1a20bb0caea9a20b4d6a",
+      "6aac1a20bb0caea9a20b4d61"
+    ],
+    "songId": "6aac1a20bb0caea9a20b4d3a",
+    "userId": "6aac1a20bb0caea9a20b4d95",
+    "shareCount": 130,
+    "isFake": false,
+    "isBanned": false,
+    "createdAt": "2026-09-17T16:49:37.058Z",
+    "updatedAt": "2026-09-17T16:49:37.058Z"
+  }
+]

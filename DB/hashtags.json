@@ -1,0 +1,138 @@
+[
+  {
+    "_id": "6aaac6fbfe16793df24805d6",
+    "hashTag": "Trending",
+    "hashTagIcon": "storage/male.png",
+    "hashTagBanner": "storage/male.png",
+    "createdAt": "2026-09-16T16:42:35.008Z",
+    "updatedAt": "2026-09-16T16:42:35.008Z"
+  },
+  {
+    "_id": "6aaac6fbfe16793df24805d7",
+    "hashTag": "DanceViral",
+    "hashTagIcon": "storage/female.png",
+    "hashTagBanner": "storage/female.png",
+    "createdAt": "2026-09-16T16:42:35.009Z",
+    "updatedAt": "2026-09-16T16:42:35.009Z"
+  },
+  {
+    "_id": "6aaac6fbfe16793df24805d8",
+    "hashTag": "Comedy",
+    "hashTagIcon": "storage/male.png",
+    "hashTagBanner": "storage/male.png",
+    "createdAt": "2026-09-16T16:42:35.009Z",
+    "updatedAt": "2026-09-16T16:42:35.009Z"
+  },
+  {
+    "_id": "6aaac6fbfe16793df24805d9",
+    "hashTag": "ShortieVibes",
+    "hashTagIcon": "storage/female.png",
+    "hashTagBanner": "storage/female.png",
+    "createdAt": "2026-09-16T16:42:35.009Z",
+    "updatedAt": "2026-09-16T16:42:35.009Z"
+  },
+  {
+    "_id": "6aaac6fbfe16793df24805da",
+    "hashTag": "FitnessMotivation",
+    "hashTagIcon": "storage/male.png",
+    "hashTagBanner": "storage/male.png",
+    "createdAt": "2026-09-16T16:42:35.009Z",
+    "updatedAt": "2026-09-16T16:42:35.009Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d4c",
+    "hashTag": "TanzaniaUnforgettable",
+    "hashTagIcon": "storage/category_nature.jpg",
+    "hashTagBanner": "storage/banner_tz_nature.jpg",
+    "createdAt": "2026-09-17T16:49:36.929Z",
+    "updatedAt": "2026-09-17T16:49:36.929Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d4f",
+    "hashTag": "SerengetiMagic",
+    "hashTagIcon": "storage/category_nature.jpg",
+    "hashTagBanner": "storage/banner_tz_nature.jpg",
+    "createdAt": "2026-09-17T16:49:36.933Z",
+    "updatedAt": "2026-09-17T16:49:36.933Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d52",
+    "hashTag": "BongoFlava",
+    "hashTagIcon": "storage/category_nature.jpg",
+    "hashTagBanner": "storage/banner_tz_nature.jpg",
+    "createdAt": "2026-09-17T16:49:36.936Z",
+    "updatedAt": "2026-09-17T16:49:36.936Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d55",
+    "hashTag": "SingeliDance",
+    "hashTagIcon": "storage/category_nature.jpg",
+    "hashTagBanner": "storage/banner_tz_nature.jpg",
+    "createdAt": "2026-09-17T16:49:36.939Z",
+    "updatedAt": "2026-09-17T16:49:36.939Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d58",
+    "hashTag": "ZanzibarVibes",
+    "hashTagIcon": "storage/category_nature.jpg",
+    "hashTagBanner": "storage/banner_tz_nature.jpg",
+    "createdAt": "2026-09-17T16:49:36.941Z",
+    "updatedAt": "2026-09-17T16:49:36.941Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d5b",
+    "hashTag": "DarEsSalaam",
+    "hashTagIcon": "storage/category_nature.jpg",
+    "hashTagBanner": "storage/banner_tz_nature.jpg",
+    "createdAt": "2026-09-17T16:49:36.943Z",
+    "updatedAt": "2026-09-17T16:49:36.943Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d5e",
+    "hashTag": "Kilimanjaro",
+    "hashTagIcon": "storage/category_nature.jpg",
+    "hashTagBanner": "storage/banner_tz_nature.jpg",
+    "createdAt": "2026-09-17T16:49:36.946Z",
+    "updatedAt": "2026-09-17T16:49:36.946Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d61",
+    "hashTag": "AfroDance",
+    "hashTagIcon": "storage/category_nature.jpg",
+    "hashTagBanner": "storage/banner_tz_nature.jpg",
+    "createdAt": "2026-09-17T16:49:36.948Z",
+    "updatedAt": "2026-09-17T16:49:36.948Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d64",
+    "hashTag": "WudauChallenge",
+    "hashTagIcon": "storage/category_nature.jpg",
+    "hashTagBanner": "storage/banner_tz_nature.jpg",
+    "createdAt": "2026-09-17T16:49:36.951Z",
+    "updatedAt": "2026-09-17T16:49:36.951Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d67",
+    "hashTag": "TokyoMeetsAfrica",
+    "hashTagIcon": "storage/category_nature.jpg",
+    "hashTagBanner": "storage/banner_tz_nature.jpg",
+    "createdAt": "2026-09-17T16:49:36.953Z",
+    "updatedAt": "2026-09-17T16:49:36.953Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d6a",
+    "hashTag": "ParisianGroove",
+    "hashTagIcon": "storage/category_nature.jpg",
+    "hashTagBanner": "storage/banner_tz_nature.jpg",
+    "createdAt": "2026-09-17T16:49:36.955Z",
+    "updatedAt": "2026-09-17T16:49:36.955Z"
+  },
+  {
+    "_id": "6aac1a20bb0caea9a20b4d6d",
+    "hashTag": "NatureTz",
+    "hashTagIcon": "storage/category_nature.jpg",
+    "hashTagBanner": "storage/banner_tz_nature.jpg",
+    "createdAt": "2026-09-17T16:49:36.957Z",
+    "updatedAt": "2026-09-17T16:49:36.957Z"
+  }
+]

@@ -1,0 +1,163 @@
+[
+  {
+    "_id": "6aaac6fbfe16793df248060d",
+    "uniquePostId": "POST_1001",
+    "caption": "Golden hour sunset vibes 🌅 #Trending #ShortieVibes",
+    "mainPostImage": "storage/female.png",
+    "postImage": [
+      "storage/post1.jpg"
+    ],
+    "location": "Los Angeles, CA",
+    "locationCoordinates": {
+      "latitude": "",
+      "longitude": ""
+    },
+    "hashTagId": [
+      "6aaac6fbfe16793df24805d6",
+      "6aaac6fbfe16793df24805d9"
+    ],
+    "userId": "6aaac6fbfe16793df2480606",
+    "shareCount": 42,
+    "isFake": false,
+    "createdAt": "2026-09-16T16:42:35.043Z",
+    "updatedAt": "2026-09-16T16:42:35.043Z"
+  },
+  {
+    "_id": "6aaac6fbfe16793df248060e",
+    "uniquePostId": "POST_1002",
+    "caption": "Studio recording day! New beats dropping soon 🎶 #Trending",
+    "mainPostImage": "storage/male.png",
+    "postImage": [
+      "storage/post2.jpg"
+    ],
+    "location": "Toronto, ON",
+    "locationCoordinates": {
+      "latitude": "",
+      "longitude": ""
+    },
+    "hashTagId": [
+      "6aaac6fbfe16793df24805d6"
+    ],
+    "userId": "6aaac6fbfe16793df2480607",
+    "shareCount": 19,
+    "isFake": false,
+    "createdAt": "2026-09-16T16:42:35.043Z",
+    "updatedAt": "2026-09-16T16:42:35.043Z"
+  },
+  {
+    "_id": "6aaac6fbfe16793df248060f",
+    "uniquePostId": "POST_1003",
+    "caption": "Morning choreography rehearsal 💃 #DanceViral",
+    "mainPostImage": "storage/female.png",
+    "postImage": [
+      "storage/post3.jpg"
+    ],
+    "location": "London, UK",
+    "locationCoordinates": {
+      "latitude": "",
+      "longitude": ""
+    },
+    "hashTagId": [
+      "6aaac6fbfe16793df24805d7"
+    ],
+    "userId": "6aaac6fbfe16793df2480608",
+    "shareCount": 88,
+    "isFake": true,
+    "createdAt": "2026-09-16T16:42:35.043Z",
+    "updatedAt": "2026-09-16T16:42:35.043Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4df8",
+    "uniquePostId": "YNbpn6FSpUx",
+    "caption": "Sunset over Stone Town, Zanzibar. Spice island hospitality and calm ocean waters. Karibuni sana! 🌴🌊🇹🇿 #ZanzibarVibes #TanzaniaUnforgettable",
+    "mainPostImage": "storage/post4.jpg",
+    "postImage": [
+      "storage/post4.jpg",
+      "storage/post1.jpg"
+    ],
+    "location": "Stone Town, Zanzibar, Tanzania",
+    "locationCoordinates": {
+      "latitude": "-6.1622",
+      "longitude": "39.1878"
+    },
+    "hashTagId": [
+      "6aac1a20bb0caea9a20b4d58",
+      "6aac1a20bb0caea9a20b4d4c"
+    ],
+    "userId": "6aac1a20bb0caea9a20b4d75",
+    "shareCount": 88,
+    "isFake": false,
+    "createdAt": "2026-09-17T16:49:37.063Z",
+    "updatedAt": "2026-09-17T16:49:37.063Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4dff",
+    "uniquePostId": "jhjTKvHzZk",
+    "caption": "Early morning game drive in Ngorongoro Crater. Pure breathtaking wonder of African wildlife. 🦁🐘🇹🇿 #NatureTz #SerengetiMagic",
+    "mainPostImage": "storage/post5.jpg",
+    "postImage": [
+      "storage/post5.jpg",
+      "storage/post2.jpg"
+    ],
+    "location": "Ngorongoro Conservation Area, Tanzania",
+    "locationCoordinates": {
+      "latitude": "-3.2433",
+      "longitude": "35.4878"
+    },
+    "hashTagId": [
+      "6aac1a20bb0caea9a20b4d6d",
+      "6aac1a20bb0caea9a20b4d4f"
+    ],
+    "userId": "6aac1a20bb0caea9a20b4d81",
+    "shareCount": 145,
+    "isFake": false,
+    "createdAt": "2026-09-17T16:49:37.068Z",
+    "updatedAt": "2026-09-17T16:49:37.068Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4e06",
+    "uniquePostId": "9c58msxjIXrX",
+    "caption": "Kinondoni night market dance practice with the team! Big moves coming to WUDAU this weekend 🔥🇹🇿 #DarEsSalaam #WudauChallenge",
+    "mainPostImage": "storage/post6.jpg",
+    "postImage": [
+      "storage/post6.jpg",
+      "storage/post3.jpg"
+    ],
+    "location": "Kinondoni, Dar es Salaam, Tanzania",
+    "locationCoordinates": {
+      "latitude": "-6.7825",
+      "longitude": "39.2603"
+    },
+    "hashTagId": [
+      "6aac1a20bb0caea9a20b4d5b",
+      "6aac1a20bb0caea9a20b4d64"
+    ],
+    "userId": "6aac1a20bb0caea9a20b4d71",
+    "shareCount": 97,
+    "isFake": false,
+    "createdAt": "2026-09-17T16:49:37.073Z",
+    "updatedAt": "2026-09-17T16:49:37.073Z"
+  },
+  {
+    "_id": "6aac1a21bb0caea9a20b4e0d",
+    "uniquePostId": "fThDFc2wxvZj",
+    "caption": "Collaboration sessions across continents! Listening to Tanzanian Singeli beats in Shibuya studio 🇯🇵🎧 #TokyoMeetsAfrica",
+    "mainPostImage": "storage/post2.jpg",
+    "postImage": [
+      "storage/post2.jpg"
+    ],
+    "location": "Shibuya, Tokyo, Japan",
+    "locationCoordinates": {
+      "latitude": "35.6595",
+      "longitude": "139.7004"
+    },
+    "hashTagId": [
+      "6aac1a20bb0caea9a20b4d67"
+    ],
+    "userId": "6aac1a20bb0caea9a20b4d91",
+    "shareCount": 54,
+    "isFake": false,
+    "createdAt": "2026-09-17T16:49:37.078Z",
+    "updatedAt": "2026-09-17T16:49:37.078Z"
+  }
+]

@@ -44,8 +44,12 @@ next-env.d.ts
 !.env.example
 !.env.production.example
 
-# Backend Upload Storage (Preserve directory structure, ignore user uploads)
+# Backend Upload Storage (Keep seed & demo assets in repository)
 admin/backend/storage/*
+!admin/backend/storage/*.png
+!admin/backend/storage/*.jpg
+!admin/backend/storage/*.mp3
+!admin/backend/storage/*.mp4
 !admin/backend/storage/.gitkeep
 
 # Flutter Mobile App Build & Cache
