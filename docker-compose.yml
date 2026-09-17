@@ -8,21 +8,13 @@ services:
       dockerfile: Dockerfile
     container_name: wudau-gateway
     restart: unless-stopped
-    ports:
-      - "${GATEWAY_PORT:-80}:80"
+    expose:
+      - "80"
     depends_on:
       - frontend
       - backend
     networks:
       - wudau-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.wudao.rule=Host(`wudao.wolinet.com`)"
-      - "traefik.http.routers.wudao.entrypoints=websecure"
-      - "traefik.http.routers.wudao.tls=true"
-      - "traefik.http.routers.wudao.tls.certresolver=letsencrypt"
-      - "traefik.http.services.wudao.loadbalancer.server.port=80"
-      - "traefik.http.middlewares.wudao-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
 
   # ----------------------------------------------------------------------------
   # Next.js Web Application & Admin Portal
