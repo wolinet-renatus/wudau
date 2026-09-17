@@ -581,7 +581,7 @@ export default function Home({
 
   // Dynamic Categories from MongoDB hashtags
   const dynamicCategories = useMemo(() => {
-    const base = [{ id: "all", label: "For You" }];
+    const base = [{ id: "all", label: "✦ For You" }];
     const tagList = (hashtags && hashtags.length > 0 ? hashtags : []).map((h) => ({
       id: h.hashTag.toLowerCase(),
       label: `#${h.hashTag}`,
@@ -589,6 +589,27 @@ export default function Home({
     }));
     return [...base, ...tagList];
   }, [hashtags]);
+
+  // Feed Category Filter Options (Top 6 visible + Load More Option)
+  const [showAllCategories, setShowAllCategories] = useState<boolean>(false);
+  const VISIBLE_CATEGORY_LIMIT = 6;
+
+  const visibleCategories = useMemo(() => {
+    if (showAllCategories) return dynamicCategories;
+    const slice = dynamicCategories.slice(0, VISIBLE_CATEGORY_LIMIT);
+    // Ensure active category is always visible in the chips row
+    if (currentFilter !== "all" && !slice.some((c) => c.id === currentFilter)) {
+      const activeCat = dynamicCategories.find((c) => c.id === currentFilter);
+      if (activeCat) {
+        slice.push(activeCat);
+      }
+    }
+    return slice;
+  }, [dynamicCategories, showAllCategories, currentFilter]);
+
+  const remainingCategoryCount = useMemo(() => {
+    return Math.max(0, dynamicCategories.length - VISIBLE_CATEGORY_LIMIT);
+  }, [dynamicCategories]);
 
   // Dynamic Explore Destinations derived from real MongoDB posts & hashtags
   const dynamicExploreCards = useMemo(() => {
@@ -1159,25 +1180,64 @@ export default function Home({
             </Link>
           </div>
 
-          {/* Dynamic Category Tabs from MongoDB */}
+          {/* Primary Navigation Tabs */}
           <div className="header-center">
-            <nav className="category-tabs-track">
-              {dynamicCategories.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setCurrentFilter(tab.id);
-                    setCurrentReelIndex(0);
-                    if (currentTab !== "social" && currentTab !== "reels") {
-                      setCurrentTab("social");
-                    }
-                  }}
-                  className={`category-tab-btn ${currentFilter === tab.id ? "active" : ""}`}
-                >
-                  {tab.label}
-                  {currentFilter === tab.id && <span className="tab-active-indicator" />}
-                </button>
-              ))}
+            <nav className="header-main-nav">
+              <button
+                onClick={() => {
+                  setCurrentTab("social");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`header-nav-tab ${currentTab === "social" ? "active" : ""}`}
+                title="Community Feed"
+              >
+                <IconCommunity size={16} />
+                <span>Feed</span>
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentTab("reels");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`header-nav-tab ${currentTab === "reels" ? "active" : ""}`}
+                title="Vertical Reels"
+              >
+                <IconReels size={16} />
+                <span>Reels</span>
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentTab("explore");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`header-nav-tab ${currentTab === "explore" ? "active" : ""}`}
+                title="Explore Topics"
+              >
+                <IconCompass size={16} />
+                <span>Explore</span>
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentTab("live");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`header-nav-tab ${currentTab === "live" ? "active" : ""}`}
+                title="Live Broadcasts"
+              >
+                <IconLive size={16} />
+                <span>Live</span>
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentTab("music");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`header-nav-tab ${currentTab === "music" ? "active" : ""}`}
+                title="Soundtracks & Music"
+              >
+                <IconMusic size={16} />
+                <span>Music</span>
+              </button>
             </nav>
           </div>
 
@@ -1802,18 +1862,40 @@ export default function Home({
 
               {/* Feed Category Filter Chips Bar */}
               <div className="feed-category-chips-bar">
-                <div className="chips-scroll-track">
-                  {dynamicCategories.map((cat) => (
+                <div className={`chips-scroll-track ${showAllCategories ? "expanded" : ""}`}>
+                  {visibleCategories.map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => {
                         setCurrentFilter(cat.id);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                       className={`feed-category-chip ${currentFilter === cat.id ? "active" : ""}`}
                     >
                       {cat.label}
                     </button>
                   ))}
+                  {remainingCategoryCount > 0 && (
+                    <button
+                      onClick={() => setShowAllCategories((prev) => !prev)}
+                      className="feed-category-more-btn"
+                      title={showAllCategories ? "Show fewer categories" : "Load more topic options"}
+                    >
+                      {showAllCategories ? "Show Less ▴" : `+ More Topics (${remainingCategoryCount}) ▾`}
+                    </button>
+                  )}
+                  {currentFilter !== "all" && (
+                    <button
+                      onClick={() => {
+                        setCurrentFilter("all");
+                        setSearchQuery("");
+                      }}
+                      className="feed-category-reset-chip"
+                      title="Clear active filter"
+                    >
+                      ✕ All Posts
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -2835,59 +2917,52 @@ export default function Home({
           color: #ffffff;
         }
 
-        /* Clean Header Category Tabs */
+        /* Primary Header Navigation Bar */
         .header-center {
           flex: 1;
           display: flex;
           justify-content: center;
-          overflow: hidden;
-          padding: 0 4px;
+          align-items: center;
+          padding: 0 12px;
+          min-width: 0;
         }
 
-        .category-tabs-track {
+        .header-main-nav {
           display: flex;
           align-items: center;
-          gap: 2px;
-          overflow-x: auto;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          padding: 2px 0;
+          gap: 4px;
+          background: rgba(255, 255, 255, 0.03);
+          padding: 4px 6px;
+          border-radius: 24px;
+          border: 1px solid rgba(255, 255, 255, 0.07);
         }
 
-        .category-tabs-track::-webkit-scrollbar {
-          display: none;
-        }
-
-        .category-tab-btn {
-          position: relative;
-          padding: 8px 14px;
+        .header-nav-tab {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 14px;
           border: none;
           background: transparent;
           color: var(--text-secondary);
           font-size: 13px;
           font-weight: 600;
           cursor: pointer;
+          border-radius: 18px;
           white-space: nowrap;
-          transition: color 0.15s ease;
+          transition: all 0.18s ease;
         }
 
-        .category-tab-btn:hover {
-          color: var(--text-primary);
+        .header-nav-tab:hover {
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.07);
         }
 
-        .category-tab-btn.active {
-          color: var(--text-primary);
+        .header-nav-tab.active {
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.14);
           font-weight: 700;
-        }
-
-        .tab-active-indicator {
-          position: absolute;
-          bottom: 0;
-          left: 14px;
-          right: 14px;
-          height: 2.5px;
-          border-radius: 2px;
-          background: var(--brand-primary);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         /* Header Right Controls */
@@ -4061,18 +4136,24 @@ export default function Home({
         /* Feed Category Filter Chips Bar */
         .feed-category-chips-bar {
           width: 100%;
-          overflow-x: auto;
           margin-bottom: 18px;
-          scrollbar-width: none;
-          padding-bottom: 8px;
-        }
-        .feed-category-chips-bar::-webkit-scrollbar {
-          display: none;
         }
         .chips-scroll-track {
           display: flex;
           gap: 8px;
           align-items: center;
+          overflow-x: auto;
+          scrollbar-width: none;
+          padding: 2px 2px 8px 2px;
+          transition: all 0.25s ease;
+        }
+        .chips-scroll-track::-webkit-scrollbar {
+          display: none;
+        }
+        .chips-scroll-track.expanded {
+          flex-wrap: wrap;
+          overflow-x: visible;
+          padding-bottom: 4px;
         }
         .feed-category-chip {
           padding: 6px 14px;
@@ -4096,6 +4177,44 @@ export default function Home({
           border-color: #ff2d55;
           color: #ffffff;
           box-shadow: 0 4px 14px rgba(255, 45, 85, 0.4);
+        }
+        .feed-category-more-btn {
+          padding: 6px 14px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 700;
+          border: 1px dashed rgba(255, 255, 255, 0.28);
+          background: rgba(255, 255, 255, 0.06);
+          color: #e2e8f0;
+          cursor: pointer;
+          white-space: nowrap;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          transition: all 0.18s ease;
+        }
+        .feed-category-more-btn:hover {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.45);
+          color: #ffffff;
+          transform: translateY(-1px);
+        }
+        .feed-category-reset-chip {
+          padding: 6px 13px;
+          border-radius: 20px;
+          font-size: 11.5px;
+          font-weight: 600;
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          background: rgba(239, 68, 68, 0.1);
+          color: #f87171;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.18s ease;
+        }
+        .feed-category-reset-chip:hover {
+          background: rgba(239, 68, 68, 0.2);
+          border-color: #ef4444;
+          color: #ffffff;
         }
 
         /* Main Social Timeline Stream */
@@ -5819,6 +5938,10 @@ export default function Home({
           .site-header {
             padding: 0 12px;
             height: 52px;
+          }
+
+          .header-center {
+            display: none;
           }
 
           .header-search-bar {
