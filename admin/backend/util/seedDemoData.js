@@ -22,10 +22,33 @@ const Currency = require("../models/currency.model");
 const { generateUniqueId } = require("./generateUniqueId");
 const { generateUniqueVideoOrPostId } = require("./generateUniqueVideoOrPostId");
 
+const Admin = require("../models/admin.model");
+const Cryptr = require("cryptr");
+const cryptr = new Cryptr("myTotallySecretKey");
+
 const fs = require("fs");
 
 async function seedDemoData(force = false) {
   try {
+    // Ensure default admin accounts exist
+    const defaultAdmins = [
+      { email: "admin@wudau.com", name: "WUDAU Admin" },
+      { email: "admin@shortie.com", name: "Administrator" },
+    ];
+    for (const adm of defaultAdmins) {
+      const existing = await Admin.findOne({ email: adm.email });
+      if (!existing) {
+        await Admin.create({
+          name: adm.name,
+          email: adm.email,
+          password: cryptr.encrypt("admin123"),
+          image: "storage/male.png",
+          flag: true,
+        });
+        console.log(`    + Default admin account ensured: ${adm.email}`);
+      }
+    }
+
     // 0. Ensure demo assets exist in storage (e.g. if running in Docker with persistent volume)
     const seedStorageDir = path.join(__dirname, "../seed_storage");
     const targetStorageDir = path.join(__dirname, "../storage");
