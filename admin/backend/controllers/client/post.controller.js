@@ -57,6 +57,7 @@ exports.uploadPost = async (req, res, next) => {
 
     post.userId = user._id;
     post.caption = req?.body?.caption ? req.body.caption : "";
+    post.location = req?.body?.location ? req.body.location : "";
 
     if (req?.body?.hashTagId) {
       const multipleHashTag = req?.body?.hashTagId.toString().split(",");

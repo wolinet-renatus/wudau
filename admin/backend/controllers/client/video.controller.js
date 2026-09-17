@@ -106,6 +106,15 @@ exports.uploadvideo = async (req, res, next) => {
 
     if (req?.files?.videoUrl) {
       video.videoUrl = req.files.videoUrl[0].path;
+      // Auto-optimize uploaded MP4 for instantaneous web streaming (faststart)
+      try {
+        const { exec } = require("child_process");
+        const path = require("path");
+        const faststartScript = path.join(__dirname, "../../util/faststart.py");
+        exec(`python3 "${faststartScript}" "${req.files.videoUrl[0].path}"`, (err) => {
+          if (err) console.warn("Faststart processing note:", err.message);
+        });
+      } catch (e) {}
     }
 
     video.uniqueVideoId = uniqueVideoId;
@@ -115,28 +124,28 @@ exports.uploadvideo = async (req, res, next) => {
 
     const videoUrl = process?.env?.baseURL + req?.files?.videoUrl[0]?.path;
 
-    var sightengine = require("sightengine")(settingJSON.sightengineUser, settingJSON.sightengineSecret);
-
     const checks = [];
-    if (settingJSON.videoBanned.includes("1")) checks.push("nudity-2.1");
-    if (settingJSON.videoBanned.includes("2")) checks.push("offensive");
-    if (settingJSON.videoBanned.includes("3")) checks.push("violence");
-    if (settingJSON.videoBanned.includes("4")) checks.push("gore-2.0");
-    if (settingJSON.videoBanned.includes("5")) checks.push("weapon");
-    if (settingJSON.videoBanned.includes("6")) checks.push("tobacco");
-    if (settingJSON.videoBanned.includes("7")) checks.push("recreational_drug,medical");
-    if (settingJSON.videoBanned.includes("8")) checks.push("gambling");
-    if (settingJSON.videoBanned.includes("9")) checks.push("alcohol");
-    if (settingJSON.videoBanned.includes("10")) checks.push("money");
-    if (settingJSON.videoBanned.includes("11")) checks.push("self-harm");
+    if (settingJSON?.videoBanned?.includes("1")) checks.push("nudity-2.1");
+    if (settingJSON?.videoBanned?.includes("2")) checks.push("offensive");
+    if (settingJSON?.videoBanned?.includes("3")) checks.push("violence");
+    if (settingJSON?.videoBanned?.includes("4")) checks.push("gore-2.0");
+    if (settingJSON?.videoBanned?.includes("5")) checks.push("weapon");
+    if (settingJSON?.videoBanned?.includes("6")) checks.push("tobacco");
+    if (settingJSON?.videoBanned?.includes("7")) checks.push("recreational_drug,medical");
+    if (settingJSON?.videoBanned?.includes("8")) checks.push("gambling");
+    if (settingJSON?.videoBanned?.includes("9")) checks.push("alcohol");
+    if (settingJSON?.videoBanned?.includes("10")) checks.push("money");
+    if (settingJSON?.videoBanned?.includes("11")) checks.push("self-harm");
 
     console.log("checks ", checks);
 
-    if (checks.length > 0 && videoUrl) {
-      sightengine
-        .check(checks)
-        .video_sync(videoUrl)
-        .then(async function (result) {
+    if (settingJSON?.sightengineUser && settingJSON?.sightengineSecret && checks.length > 0 && videoUrl) {
+      try {
+        var sightengine = require("sightengine")(settingJSON.sightengineUser, settingJSON.sightengineSecret);
+        sightengine
+          .check(checks)
+          .video_sync(videoUrl)
+          .then(async function (result) {
           // console.log("result ", result);
 
           if (result.status === "success") {
@@ -399,6 +408,9 @@ exports.uploadvideo = async (req, res, next) => {
         .catch(function (err) {
           console.log(err);
         });
+      } catch (err) {
+        console.warn("Sightengine error:", err.message);
+      }
     } else {
       console.log("No checks selected or no video URL provided.");
     }

@@ -158,6 +158,14 @@ const IconPlus = ({ size = 18 }: { size?: number }) => (
   </SvgIcon>
 );
 
+const IconUpload = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="17 8 12 3 7 8" />
+    <line x1="12" y1="3" x2="12" y2="15" />
+  </SvgIcon>
+);
+
 const IconChevronUp = ({ size = 18 }: { size?: number }) => (
   <SvgIcon size={size}>
     <polyline points="18 15 12 9 6 15" />
@@ -434,6 +442,303 @@ export default function Home({
   // Real Comments from MongoDB
   const [commentsMap, setCommentsMap] = useState<{ [videoId: string]: CommentItem[] }>({});
 
+  // Creator Upload Studio State & Handlers
+  const [showUploadStudio, setShowUploadStudio] = useState<boolean>(false);
+  const [uploadType, setUploadType] = useState<"reel" | "post">("reel");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadFilePreview, setUploadFilePreview] = useState<string | null>(null);
+  const [postImages, setPostImages] = useState<File[]>([]);
+  const [postImagePreviews, setPostImagePreviews] = useState<string[]>([]);
+  const [uploadCaption, setUploadCaption] = useState<string>("");
+  const [uploadLocation, setUploadLocation] = useState<string>("Dar es Salaam, Tanzania");
+  const [uploadSelectedSongId, setUploadSelectedSongId] = useState<string>("");
+  const [uploadDuration, setUploadDuration] = useState<number>(15);
+  const [uploadThumbnailFile, setUploadThumbnailFile] = useState<File | null>(null);
+  const [uploadThumbnailPreview, setUploadThumbnailPreview] = useState<string | null>(null);
+  const [uploadSelectedHashtags, setUploadSelectedHashtags] = useState<string[]>(["WudauCreatives"]);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadStatusText, setUploadStatusText] = useState<string>("");
+  const [studioCreatorId, setStudioCreatorId] = useState<string>("");
+
+  const reelFileInputRef = useRef<HTMLInputElement | null>(null);
+  const postFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Available creator profiles for web publishing
+  const availableCreators = useMemo(() => {
+    const list: { _id: string; name: string; userName: string; image: string }[] = [];
+    const seen = new Set<string>();
+    if (currentUser && currentUser._id) {
+      list.push({
+        _id: currentUser._id,
+        name: currentUser.name || "Me",
+        userName: currentUser.userName || "@me",
+        image: currentUser.image || "storage/male.png",
+      });
+      seen.add(currentUser._id);
+    }
+    posts.forEach((p) => {
+      if (p.userId && !seen.has(p.userId)) {
+        seen.add(p.userId);
+        list.push({
+          _id: p.userId,
+          name: p.name || "Creator",
+          userName: p.userName || "@creator",
+          image: p.userImage || "storage/male.png",
+        });
+      }
+    });
+    videos.forEach((v) => {
+      if (v.userId && !seen.has(v.userId)) {
+        seen.add(v.userId);
+        list.push({
+          _id: v.userId,
+          name: v.name || "Creator",
+          userName: v.userName || "@creator",
+          image: v.userImage || "storage/male.png",
+        });
+      }
+    });
+    return list;
+  }, [currentUser, posts, videos]);
+
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadFile(file);
+    const url = URL.createObjectURL(file);
+    setUploadFilePreview(url);
+
+    try {
+      const tempVid = document.createElement("video");
+      tempVid.src = url;
+      tempVid.muted = true;
+      tempVid.playsInline = true;
+      tempVid.currentTime = 0.5;
+      tempVid.onloadeddata = () => {
+        const dur = Math.round(tempVid.duration);
+        if (dur > 0) setUploadDuration(dur);
+      };
+      tempVid.onseeked = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = tempVid.videoWidth || 640;
+          canvas.height = tempVid.videoHeight || 1138;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(tempVid, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const thumb = new File([blob], "thumbnail.jpg", { type: "image/jpeg" });
+                setUploadThumbnailFile(thumb);
+                setUploadThumbnailPreview(canvas.toDataURL("image/jpeg"));
+              }
+            }, "image/jpeg", 0.85);
+          }
+        } catch (cvErr) {
+          console.warn("Canvas capture note:", cvErr);
+        }
+      };
+    } catch (err) {
+      console.warn("Video thumbnail extract error:", err);
+    }
+  };
+
+  const handlePostImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files).slice(0, 5);
+    setPostImages(files);
+    const previews = files.map((f) => URL.createObjectURL(f));
+    setPostImagePreviews(previews);
+  };
+
+  const resetStudioForm = () => {
+    setUploadFile(null);
+    setUploadFilePreview(null);
+    setPostImages([]);
+    setPostImagePreviews([]);
+    setUploadCaption("");
+    setUploadSelectedSongId("");
+    setUploadThumbnailFile(null);
+    setUploadThumbnailPreview(null);
+    setUploadProgress(0);
+    setUploadStatusText("");
+  };
+
+  const handleUploadReel = async () => {
+    if (!uploadFile) {
+      showToast("Please select a video file for your reel.");
+      return;
+    }
+    const creatorId = currentUser?._id || studioCreatorId || availableCreators[0]?._id;
+    if (!creatorId) {
+      showToast("Please select a creator profile.");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(10);
+    setUploadStatusText("Preparing video file & thumbnail...");
+
+    try {
+      const formData = new FormData();
+      formData.append("videoUrl", uploadFile);
+
+      if (uploadThumbnailFile) {
+        formData.append("videoImage", uploadThumbnailFile);
+      } else {
+        formData.append("videoImage", uploadFile);
+      }
+
+      formData.append("caption", uploadCaption);
+      formData.append("videoTime", String(uploadDuration || 15));
+      if (uploadSelectedSongId) {
+        formData.append("songId", uploadSelectedSongId);
+      }
+      if (uploadSelectedHashtags.length > 0) {
+        const matchingIds = hashtags
+          .filter((h) => uploadSelectedHashtags.includes(h.hashTag) || uploadSelectedHashtags.includes(`#${h.hashTag}`))
+          .map((h) => h._id);
+        if (matchingIds.length > 0) {
+          formData.append("hashTagId", matchingIds.join(","));
+        }
+      }
+
+      setUploadStatusText("Uploading video stream to WUDAU servers...");
+      const res = await axios.post(
+        `${baseURL}client/video/uploadvideo?userId=${creatorId}`,
+        formData,
+        {
+          headers: {
+            key: secretKey,
+            "Content-Type": "multipart/form-data",
+          },
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setUploadProgress(Math.min(95, percentCompleted));
+            }
+          },
+        }
+      );
+
+      if (res.data?.status && res.data.data) {
+        setUploadProgress(100);
+        setUploadStatusText("Reel successfully published!");
+        const newReel = res.data.data;
+        const creatorObj = availableCreators.find((c) => c._id === creatorId);
+        const enrichedReel: VideoItem = {
+          ...newReel,
+          name: creatorObj?.name || "Creator",
+          userName: creatorObj?.userName || "@creator",
+          userImage: creatorObj?.image || "storage/male.png",
+          isVerified: true,
+          isLike: false,
+          isFollow: false,
+          totalLikes: 0,
+          totalComments: 0,
+        };
+        setVideos((prev) => [enrichedReel, ...prev]);
+        setCurrentReelIndex(0);
+        setCurrentTab("reels");
+        showToast("🎉 Reel published to WUDAU successfully!");
+        resetStudioForm();
+        setShowUploadStudio(false);
+      } else {
+        showToast(res.data?.message || "Failed to upload reel.");
+      }
+    } catch (err: any) {
+      console.error("Upload reel error:", err);
+      showToast(err.response?.data?.message || err.message || "Upload failed. Please check network connection.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleUploadPost = async () => {
+    if (postImages.length === 0) {
+      showToast("Please select at least one photo for your post.");
+      return;
+    }
+    const creatorId = currentUser?._id || studioCreatorId || availableCreators[0]?._id;
+    if (!creatorId) {
+      showToast("Please select a creator profile.");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(15);
+    setUploadStatusText("Optimizing photos for community feed...");
+
+    try {
+      const formData = new FormData();
+      postImages.forEach((file) => {
+        formData.append("postImage", file);
+      });
+      formData.append("caption", uploadCaption);
+      formData.append("location", uploadLocation);
+      if (uploadSelectedHashtags.length > 0) {
+        const matchingIds = hashtags
+          .filter((h) => uploadSelectedHashtags.includes(h.hashTag) || uploadSelectedHashtags.includes(`#${h.hashTag}`))
+          .map((h) => h._id);
+        if (matchingIds.length > 0) {
+          formData.append("hashTagId", matchingIds.join(","));
+        }
+      }
+
+      setUploadStatusText("Publishing to community feed...");
+      const res = await axios.post(
+        `${baseURL}client/post/uploadPost?userId=${creatorId}`,
+        formData,
+        {
+          headers: {
+            key: secretKey,
+            "Content-Type": "multipart/form-data",
+          },
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setUploadProgress(Math.min(95, percentCompleted));
+            }
+          },
+        }
+      );
+
+      if (res.data?.status && res.data.post) {
+        setUploadProgress(100);
+        setUploadStatusText("Post published!");
+        const newPostData = res.data.post;
+        const creatorObj = availableCreators.find((c) => c._id === creatorId);
+        const enrichedPost: PostItem = {
+          ...newPostData,
+          name: creatorObj?.name || "Creator",
+          userName: creatorObj?.userName || "@creator",
+          userImage: creatorObj?.image || "storage/male.png",
+          isVerified: true,
+          isLike: false,
+          isFollow: false,
+          totalLikes: 0,
+          totalComments: 0,
+          time: "Just now",
+          hashTag: uploadSelectedHashtags,
+        };
+        setPosts((prev) => [enrichedPost, ...prev]);
+        setCurrentTab("social");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        showToast("🎉 Post published to community feed!");
+        resetStudioForm();
+        setShowUploadStudio(false);
+      } else {
+        showToast(res.data?.message || "Failed to upload post.");
+      }
+    } catch (err: any) {
+      console.error("Upload post error:", err);
+      showToast(err.response?.data?.message || err.message || "Failed to upload post.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   // Client-side authentication & user state check
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -508,6 +813,7 @@ export default function Home({
         setShowCommentsDrawer(false);
         setShowGiftModal(false);
         setShowAuthModal(false);
+        setShowUploadStudio(false);
         setMobileSearchOpen(false);
         setSelectedPost(null);
       }
@@ -518,7 +824,7 @@ export default function Home({
           setSelectedPostPhotoIndex((prev) => (prev < selectedPost.postImage.length - 1 ? prev + 1 : 0));
         }
       }
-      if (currentTab === "reels" && !showCommentsDrawer && !showGiftModal && !showAuthModal && !selectedPost) {
+      if (currentTab === "reels" && !showCommentsDrawer && !showGiftModal && !showAuthModal && !selectedPost && !showUploadStudio) {
         if (e.key === "ArrowDown") {
           handleNextReel();
         } else if (e.key === "ArrowUp") {
@@ -1296,15 +1602,10 @@ export default function Home({
             {/* Create / Upload Shortcut */}
             <button
               onClick={() => {
-                if (isAuth) {
-                  showToast("Opening upload studio...");
-                } else {
-                  setAuthModalTitle("Upload Reel");
-                  setShowAuthModal(true);
-                }
+                setShowUploadStudio(true);
               }}
               className="create-shortcut-btn"
-              title="Create new reel"
+              title="Create new reel or post"
             >
               <IconPlus size={16} />
               <span className="btn-label">Create</span>
@@ -1542,7 +1843,7 @@ export default function Home({
                         loop={!isAutoScroll}
                         muted={isMuted}
                         playsInline
-                        preload="metadata"
+                        preload="auto"
                         onWaiting={() => setIsBuffering(true)}
                         onCanPlay={() => setIsBuffering(false)}
                         onPlaying={() => setIsBuffering(false)}
@@ -1550,6 +1851,17 @@ export default function Home({
                         onTimeUpdate={handleTimeUpdate}
                         className="main-reel-video"
                       />
+
+                      {/* Instant Next Reel Preloader */}
+                      {filteredVideos.length > 1 && (
+                        <video
+                          src={resolveMedia(filteredVideos[(currentReelIndex + 1) % filteredVideos.length]?.videoUrl)}
+                          preload="auto"
+                          muted
+                          playsInline
+                          style={{ display: "none" }}
+                        />
+                      )}
 
                       {/* Buffering Spinner */}
                       {isBuffering && (
@@ -2333,15 +2645,10 @@ export default function Home({
 
           <button
             onClick={() => {
-              if (isAuth) {
-                showToast("Opening Reel Creator Studio...");
-              } else {
-                setAuthModalTitle("Create Reel");
-                setShowAuthModal(true);
-              }
+              setShowUploadStudio(true);
             }}
             className="tab-nav-btn create-tab-btn"
-            title="Create Reel"
+            title="Create Reel or Post"
           >
             <div className="create-bubble-icon">
               <IconPlus size={18} />
@@ -2735,6 +3042,346 @@ export default function Home({
                     <span className="gift-cost">{g.coin || g.coins || 10} Coins</span>
                   </button>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================================== */}
+        {/* CREATOR UPLOAD STUDIO MODAL                                          */}
+        {/* ==================================================================== */}
+        {showUploadStudio && (
+          <div
+            className="studio-modal-overlay"
+            onClick={() => {
+              if (!isUploading) setShowUploadStudio(false);
+            }}
+          >
+            <div className="studio-modal-container" onClick={(e) => e.stopPropagation()}>
+              {/* Studio Header */}
+              <div className="studio-header">
+                <div className="studio-title-cluster">
+                  <div className="studio-title-badge">
+                    <IconUpload size={18} />
+                  </div>
+                  <span className="studio-title-text">Creator Studio</span>
+                </div>
+
+                <div className="studio-type-toggle">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isUploading) setUploadType("reel");
+                    }}
+                    className={`studio-type-btn ${uploadType === "reel" ? "active" : ""}`}
+                  >
+                    <IconReels size={15} />
+                    <span>Reel (Video)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isUploading) setUploadType("post");
+                    }}
+                    className={`studio-type-btn ${uploadType === "post" ? "active" : ""}`}
+                  >
+                    <IconCommunity size={15} />
+                    <span>Post (Photos)</span>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isUploading) setShowUploadStudio(false);
+                  }}
+                  className="sheet-close-cross"
+                  disabled={isUploading}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Studio Body */}
+              <div className="studio-body">
+                {/* Left Column: Media Drag/Drop & Live Preview */}
+                <div className="studio-media-col">
+                  {uploadType === "reel" ? (
+                    uploadFilePreview ? (
+                      <div className="studio-preview-wrapper">
+                        <video
+                          src={uploadFilePreview}
+                          className="studio-video-preview"
+                          controls
+                          autoPlay
+                          muted
+                          loop
+                        />
+                        <div className="studio-preview-badge">
+                          {uploadDuration > 0 ? `00:${uploadDuration < 10 ? "0" : ""}${uploadDuration}` : "Reel Preview"}
+                        </div>
+                        <button
+                          type="button"
+                          className="studio-change-media-btn"
+                          onClick={() => reelFileInputRef.current?.click()}
+                          disabled={isUploading}
+                        >
+                          Change Video
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        className="studio-dropzone"
+                        onClick={() => reelFileInputRef.current?.click()}
+                      >
+                        <div className="studio-dropzone-icon">
+                          <IconUpload size={30} />
+                        </div>
+                        <h4 className="studio-dropzone-title">Select Reel Video</h4>
+                        <p className="studio-dropzone-subtitle">
+                          Drag & drop MP4, WebM or MOV video.<br />
+                          Vertical 9:16 aspect ratio recommended.
+                        </p>
+                        <button type="button" className="studio-browse-btn">
+                          Browse Computer
+                        </button>
+                      </div>
+                    )
+                  ) : postImagePreviews.length > 0 ? (
+                    <div className="studio-preview-wrapper">
+                      <img
+                        src={postImagePreviews[0]}
+                        alt="Post Preview"
+                        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                      />
+                      <div className="studio-preview-badge">
+                        {postImages.length} Photo{postImages.length > 1 ? "s" : ""}
+                      </div>
+                      <button
+                        type="button"
+                        className="studio-change-media-btn"
+                        onClick={() => postFileInputRef.current?.click()}
+                        disabled={isUploading}
+                      >
+                        Change Photos
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      className="studio-dropzone"
+                      onClick={() => postFileInputRef.current?.click()}
+                    >
+                      <div className="studio-dropzone-icon">
+                        <IconCommunity size={30} />
+                      </div>
+                      <h4 className="studio-dropzone-title">Select Photos to Share</h4>
+                      <p className="studio-dropzone-subtitle">
+                        Upload up to 5 photos (JPEG, PNG, WebP) for the community social feed.
+                      </p>
+                      <button type="button" className="studio-browse-btn">
+                        Browse Photos
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Hidden native file inputs */}
+                  <input
+                    ref={reelFileInputRef}
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime"
+                    style={{ display: "none" }}
+                    onChange={handleVideoFileChange}
+                  />
+                  <input
+                    ref={postFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ display: "none" }}
+                    onChange={handlePostImagesChange}
+                  />
+                </div>
+
+                {/* Right Column: Metadata & Details */}
+                <div className="studio-form-col">
+                  {/* Creator Selection Row */}
+                  <div className="studio-creator-bar">
+                    <div className="studio-creator-info">
+                      <img
+                        src={resolveMedia(
+                          availableCreators.find((c) => c._id === (currentUser?._id || studioCreatorId))?.image ||
+                          currentUser?.image ||
+                          availableCreators[0]?.image ||
+                          "storage/male.png"
+                        )}
+                        alt="Creator Avatar"
+                        className="studio-creator-avatar"
+                      />
+                      <div>
+                        <div className="studio-creator-name">
+                          {availableCreators.find((c) => c._id === (currentUser?._id || studioCreatorId))?.name ||
+                            currentUser?.name ||
+                            availableCreators[0]?.name ||
+                            "WUDAU Creator"}
+                        </div>
+                        <div className="studio-creator-handle">
+                          {availableCreators.find((c) => c._id === (currentUser?._id || studioCreatorId))?.userName ||
+                            currentUser?.userName ||
+                            availableCreators[0]?.userName ||
+                            "@creator"}
+                        </div>
+                      </div>
+                    </div>
+
+                    <select
+                      className="studio-creator-select"
+                      value={currentUser?._id || studioCreatorId || availableCreators[0]?._id}
+                      onChange={(e) => setStudioCreatorId(e.target.value)}
+                      disabled={isUploading}
+                    >
+                      {availableCreators.map((creator) => (
+                        <option key={creator._id} value={creator._id}>
+                          Post as {creator.name} ({creator.userName})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Caption Input */}
+                  <div>
+                    <label className="studio-field-label">
+                      <span>Caption</span>
+                      <span style={{ color: "var(--text-muted)", fontWeight: 500 }}>
+                        {uploadCaption.length} / 500
+                      </span>
+                    </label>
+                    <textarea
+                      className="studio-caption-textarea"
+                      placeholder="Write an engaging caption, story, or description..."
+                      value={uploadCaption}
+                      maxLength={500}
+                      onChange={(e) => setUploadCaption(e.target.value)}
+                      disabled={isUploading}
+                    />
+                  </div>
+
+                  {/* Hashtags Quick Cloud */}
+                  <div>
+                    <label className="studio-field-label">Trending Hashtags (Click to add)</label>
+                    <div className="studio-hashtags-box">
+                      {[
+                        "WudauCreatives",
+                        "NatureTz",
+                        "SingeliDance",
+                        "ZanzibarVibes",
+                        "BongoFlava",
+                        "Kilimanjaro",
+                        "AfroDance",
+                        "SerengetiMagic",
+                      ].map((tag) => {
+                        const isSelected = uploadSelectedHashtags.includes(tag);
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            className={`studio-hashtag-chip ${isSelected ? "selected" : ""}`}
+                            onClick={() => {
+                              if (isSelected) {
+                                setUploadSelectedHashtags((prev) => prev.filter((t) => t !== tag));
+                              } else {
+                                setUploadSelectedHashtags((prev) => [...prev, tag]);
+                                if (!uploadCaption.includes(`#${tag}`)) {
+                                  setUploadCaption((prev) => (prev ? `${prev} #${tag}` : `#${tag}`));
+                                }
+                              }
+                            }}
+                            disabled={isUploading}
+                          >
+                            #{tag}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Location Field */}
+                  <div>
+                    <label className="studio-field-label">Location</label>
+                    <input
+                      type="text"
+                      className="studio-input-field"
+                      placeholder="e.g. Dar es Salaam, Tanzania"
+                      value={uploadLocation}
+                      onChange={(e) => setUploadLocation(e.target.value)}
+                      disabled={isUploading}
+                    />
+                  </div>
+
+                  {/* Audio Track Selector (for Reels) */}
+                  {uploadType === "reel" && (
+                    <div>
+                      <label className="studio-field-label">Soundtrack / Music</label>
+                      <select
+                        className="studio-input-field"
+                        value={uploadSelectedSongId}
+                        onChange={(e) => setUploadSelectedSongId(e.target.value)}
+                        disabled={isUploading}
+                      >
+                        <option value="">Original Audio (Embedded in video)</option>
+                        {songs.map((song) => (
+                          <option key={song._id} value={song._id}>
+                            🎵 {song.songTitle} - {song.singerName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Upload Progress Display */}
+                  {isUploading && (
+                    <div className="studio-progress-card">
+                      <div className="studio-progress-status">
+                        <span>{uploadStatusText || "Uploading..."}</span>
+                        <span>{uploadProgress}%</span>
+                      </div>
+                      <div className="studio-progress-bar">
+                        <div
+                          className="studio-progress-fill"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Footer Actions */}
+                  <div className="studio-footer-actions">
+                    <button
+                      type="button"
+                      className="action-hollow-btn"
+                      onClick={() => {
+                        if (!isUploading) {
+                          resetStudioForm();
+                          setShowUploadStudio(false);
+                        }
+                      }}
+                      disabled={isUploading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="action-accent-btn"
+                      onClick={uploadType === "reel" ? handleUploadReel : handleUploadPost}
+                      disabled={isUploading || (uploadType === "reel" ? !uploadFile : postImages.length === 0)}
+                    >
+                      {isUploading
+                        ? "Publishing..."
+                        : uploadType === "reel"
+                        ? "Publish Reel"
+                        : "Share Post"}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -6042,6 +6689,398 @@ export default function Home({
         @keyframes dropIn {
           from { transform: translate(-50%, -15px); opacity: 0; }
           to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        /* ==================================================================== */
+        /* CREATOR UPLOAD STUDIO STYLING                                        */
+        /* ==================================================================== */
+        .studio-modal-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 3000;
+          background: rgba(4, 6, 12, 0.84);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 16px;
+        }
+
+        .studio-modal-container {
+          background: #10121a;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 24px;
+          width: 920px;
+          max-width: 100%;
+          height: 680px;
+          max-height: 94vh;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 24px 70px rgba(0, 0, 0, 0.9);
+          overflow: hidden;
+        }
+
+        .studio-header {
+          height: 62px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 24px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.02);
+          flex-shrink: 0;
+        }
+
+        .studio-title-cluster {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .studio-title-badge {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: var(--brand-accent);
+          color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 8px rgba(255, 87, 34, 0.4);
+        }
+
+        .studio-title-text {
+          font-size: 16px;
+          font-weight: 800;
+          color: #ffffff;
+        }
+
+        .studio-type-toggle {
+          display: inline-flex;
+          background: rgba(255, 255, 255, 0.06);
+          padding: 4px;
+          border-radius: 20px;
+          gap: 4px;
+        }
+
+        .studio-type-btn {
+          padding: 6px 16px;
+          border-radius: 16px;
+          border: none;
+          background: transparent;
+          color: var(--text-secondary);
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .studio-type-btn.active {
+          background: var(--brand-accent);
+          color: #ffffff;
+          box-shadow: 0 2px 10px rgba(255, 87, 34, 0.4);
+        }
+
+        .studio-body {
+          flex: 1;
+          display: flex;
+          overflow: hidden;
+          padding: 24px;
+          gap: 28px;
+        }
+
+        .studio-media-col {
+          width: 360px;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px dashed rgba(255, 255, 255, 0.16);
+          border-radius: 18px;
+          overflow: hidden;
+          position: relative;
+        }
+
+        .studio-dropzone {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          text-align: center;
+          cursor: pointer;
+          transition: background 0.15s ease;
+        }
+
+        .studio-dropzone:hover {
+          background: rgba(255, 255, 255, 0.04);
+        }
+
+        .studio-dropzone-icon {
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          background: rgba(255, 87, 34, 0.15);
+          color: var(--brand-primary);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 14px;
+        }
+
+        .studio-dropzone-title {
+          font-size: 15px;
+          font-weight: 700;
+          color: #ffffff;
+          margin-bottom: 6px;
+        }
+
+        .studio-dropzone-subtitle {
+          font-size: 12px;
+          color: var(--text-muted);
+          line-height: 1.5;
+          margin-bottom: 16px;
+        }
+
+        .studio-browse-btn {
+          padding: 8px 18px;
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          color: #ffffff;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .studio-preview-wrapper {
+          flex: 1;
+          position: relative;
+          background: #000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+
+        .studio-video-preview {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+
+        .studio-preview-badge {
+          position: absolute;
+          top: 12px;
+          left: 12px;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(8px);
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 700;
+          color: #ffffff;
+        }
+
+        .studio-change-media-btn {
+          position: absolute;
+          bottom: 12px;
+          right: 12px;
+          background: rgba(0, 0, 0, 0.75);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #ffffff;
+          padding: 6px 12px;
+          border-radius: 14px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          backdrop-filter: blur(8px);
+        }
+
+        .studio-form-col {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          overflow-y: auto;
+          padding-right: 6px;
+        }
+
+        .studio-creator-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 14px;
+          background: rgba(255, 255, 255, 0.04);
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .studio-creator-info {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .studio-creator-avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .studio-creator-name {
+          font-size: 13px;
+          font-weight: 700;
+          color: #ffffff;
+        }
+
+        .studio-creator-handle {
+          font-size: 11px;
+          color: var(--text-muted);
+        }
+
+        .studio-creator-select {
+          background: #191c26;
+          color: #ffffff;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 10px;
+          padding: 4px 10px;
+          font-size: 12px;
+          outline: none;
+        }
+
+        .studio-field-label {
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          color: var(--text-secondary);
+          text-transform: uppercase;
+          margin-bottom: 6px;
+          display: flex;
+          justify-content: space-between;
+        }
+
+        .studio-caption-textarea {
+          width: 100%;
+          min-height: 90px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 14px;
+          padding: 12px;
+          color: #ffffff;
+          font-size: 13px;
+          resize: vertical;
+          outline: none;
+          font-family: inherit;
+        }
+
+        .studio-caption-textarea:focus {
+          border-color: rgba(255, 87, 34, 0.6);
+        }
+
+        .studio-hashtags-box {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        .studio-hashtag-chip {
+          padding: 4px 10px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: var(--text-secondary);
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .studio-hashtag-chip.selected {
+          background: rgba(255, 87, 34, 0.2);
+          border-color: rgba(255, 87, 34, 0.5);
+          color: #ffffff;
+        }
+
+        .studio-input-field {
+          width: 100%;
+          height: 40px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          padding: 0 12px;
+          color: #ffffff;
+          font-size: 13px;
+          outline: none;
+        }
+
+        .studio-input-field:focus {
+          border-color: rgba(255, 87, 34, 0.6);
+        }
+
+        .studio-progress-card {
+          padding: 12px;
+          background: rgba(255, 87, 34, 0.08);
+          border: 1px solid rgba(255, 87, 34, 0.2);
+          border-radius: 14px;
+        }
+
+        .studio-progress-status {
+          font-size: 12px;
+          font-weight: 600;
+          color: #ffffff;
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 6px;
+        }
+
+        .studio-progress-bar {
+          width: 100%;
+          height: 6px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 3px;
+          overflow: hidden;
+        }
+
+        .studio-progress-fill {
+          height: 100%;
+          background: var(--brand-accent);
+          transition: width 0.2s ease;
+        }
+
+        .studio-footer-actions {
+          margin-top: auto;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 12px;
+          padding-top: 12px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        @media (max-width: 768px) {
+          .studio-modal-container {
+            width: 100vw;
+            height: 100dvh;
+            max-height: 100dvh;
+            border-radius: 0;
+          }
+          .studio-body {
+            flex-direction: column;
+            overflow-y: auto;
+          }
+          .studio-media-col {
+            width: 100%;
+            height: 240px;
+            flex-shrink: 0;
+          }
         }
 
         @keyframes spin {
