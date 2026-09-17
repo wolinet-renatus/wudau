@@ -327,6 +327,7 @@ exports.getAllPosts = async (req, res, next) => {
           $project: {
             caption: 1,
             postImage: 1,
+            location: 1,
             shareCount: 1,
             isFake: 1,
             createdAt: 1,
@@ -612,6 +613,7 @@ exports.getAllPosts = async (req, res, next) => {
           $project: {
             caption: 1,
             postImage: 1,
+            location: 1,
             shareCount: 1,
             isFake: 1,
             createdAt: 1,

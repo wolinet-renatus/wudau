@@ -122,11 +122,8 @@ exports.getliveUserList = async (req, res) => {
     const start = req.query.start ? parseInt(req.query.start) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit) : 20;
 
-    if (!req.query.userId) {
-      return res.status(200).json({ status: false, message: "userId must be needed." });
-    }
-
-    const userId = new mongoose.Types.ObjectId(req.query.userId);
+    const isGuest = !req.query.userId || req.query.userId === "null" || req.query.userId === "undefined" || !mongoose.Types.ObjectId.isValid(req.query.userId);
+    const userId = isGuest ? new mongoose.Types.ObjectId() : new mongoose.Types.ObjectId(req.query.userId);
 
     if (!settingJSON) {
       return res.status(200).json({ status: false, message: "Setting does not found." });

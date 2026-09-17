@@ -14,6 +14,8 @@ const Video = require("./models/video.model");
 const LikeHistoryOfPostOrVideo = require("./models/likeHistoryOfpostOrvideo.model");
 const PostOrVideoComment = require("./models/postOrvideoComment.model");
 const FollowerFollowing = require("./models/followerFollowing.model");
+const LiveUser = require("./models/liveUser.model");
+const LiveHistory = require("./models/liveHistory.model");
 
 async function seed() {
   await mongoose.connect(process.env.MongoDb_Connection_String);
@@ -30,6 +32,10 @@ async function seed() {
     { hashTag: "WudauCreatives", hashTagIcon: "storage/thumb4.jpg", hashTagBanner: "storage/category_global.jpg" },
     { hashTag: "DarEsSalaam", hashTagIcon: "storage/post6.jpg", hashTagBanner: "storage/banner_bongo_spotlight.jpg" },
     { hashTag: "AfrobeatsGlobal", hashTagIcon: "storage/thumb5.jpg", hashTagBanner: "storage/category_afrobeats.jpg" },
+    { hashTag: "KilimanjaroVibe", hashTagIcon: "storage/banner_tz_nature.jpg", hashTagBanner: "storage/banner_tz_nature.jpg" },
+    { hashTag: "SwahiliStyle", hashTagIcon: "storage/post1.jpg", hashTagBanner: "storage/banner_bongo_spotlight.jpg" },
+    { hashTag: "StreetFoodDar", hashTagIcon: "storage/post3.jpg", hashTagBanner: "storage/category_bongo.jpg" },
+    { hashTag: "EastAfricanArt", hashTagIcon: "storage/post4.jpg", hashTagBanner: "storage/category_global.jpg" },
   ];
   await HashTag.deleteMany({});
   const createdHashtags = await HashTag.insertMany(hashtagsData);
@@ -407,6 +413,72 @@ async function seed() {
       shareCount: 134,
       isFake: false,
     },
+    {
+      uniquePostId: "POST_1009",
+      caption: "Modern Kitenge silhouette with handwoven coastal beads! Celebrating timeless Swahili fashion on the streets of Dar 👗✨ #SwahiliStyle #WudauCreatives",
+      mainPostImage: "storage/post2.jpg",
+      postImage: ["storage/post2.jpg", "storage/post4.jpg"],
+      location: "Oysterbay, Dar es Salaam 🇹🇿",
+      hashTagId: [createdHashtags[10]._id, createdHashtags[6]._id],
+      userId: createdUsers[6]._id, // Nolwazi Khumalo
+      shareCount: 220,
+      isFake: false,
+    },
+    {
+      uniquePostId: "POST_1010",
+      caption: "Fresh seafood skewers, Zanzibar pizza, and chilled sugarcane ginger juice at the oceanfront night market! Savor the aroma 🍢🔥 #StreetFoodDar #ZanzibarVibes",
+      mainPostImage: "storage/post3.jpg",
+      postImage: ["storage/post3.jpg", "storage/post1.jpg"],
+      location: "Stone Town Waterfront 🇹🇿",
+      hashTagId: [createdHashtags[11]._id, createdHashtags[1]._id],
+      userId: createdUsers[1]._id, // Zuhura Bakari
+      shareCount: 175,
+      isFake: false,
+    },
+    {
+      uniquePostId: "POST_1011",
+      caption: "Above the sea of clouds at 4,700m! Pushing toward Uhuru Peak with the most resilient mountain guides in the world 🏔️🥾 #KilimanjaroVibe #NatureTz",
+      mainPostImage: "storage/banner_tz_nature.jpg",
+      postImage: ["storage/banner_tz_nature.jpg", "storage/post5.jpg"],
+      location: "Mount Kilimanjaro, Tanzania 🇹🇿",
+      hashTagId: [createdHashtags[9]._id, createdHashtags[5]._id],
+      userId: createdUsers[2]._id, // Emmanuel Mollel
+      shareCount: 388,
+      isFake: false,
+    },
+    {
+      uniquePostId: "POST_1012",
+      caption: "Traditional Makonde blackwood sculpture and Tingatinga vibrant canvas art in creation. Heritage preserved across generations 🎨🖌️ #EastAfricanArt #WudauCreatives",
+      mainPostImage: "storage/post4.jpg",
+      postImage: ["storage/post4.jpg", "storage/post6.jpg"],
+      location: "Mwenge Carvers Market, Dar es Salaam 🇹🇿",
+      hashTagId: [createdHashtags[12]._id, createdHashtags[6]._id],
+      userId: createdUsers[9]._id, // Camille Laurent
+      shareCount: 142,
+      isFake: false,
+    },
+    {
+      uniquePostId: "POST_1013",
+      caption: "When Amapiano bassline meets Bongo rhythm in an impromptu Dar beach jam! Music connects our continent 🇿🇦🇹🇿 #AfrobeatsGlobal #BongoDance",
+      mainPostImage: "storage/category_afrobeats.jpg",
+      postImage: ["storage/category_afrobeats.jpg", "storage/post3.jpg"],
+      location: "Coco Beach, Dar es Salaam 🇹🇿",
+      hashTagId: [createdHashtags[8]._id, createdHashtags[2]._id],
+      userId: createdUsers[6]._id, // Nolwazi Khumalo
+      shareCount: 290,
+      isFake: false,
+    },
+    {
+      uniquePostId: "POST_1014",
+      caption: "Rare afternoon resting on the acacia branch. Golden coat glistening in the Serengeti afternoon sun 🐆🌿 #SerengetiMagic #NatureTz",
+      mainPostImage: "storage/post5.jpg",
+      postImage: ["storage/post5.jpg", "storage/banner_tz_nature.jpg"],
+      location: "Seronera Valley, Serengeti 🇹🇿",
+      hashTagId: [createdHashtags[4]._id, createdHashtags[5]._id],
+      userId: createdUsers[4]._id, // Rehema Mushi
+      shareCount: 410,
+      isFake: false,
+    },
   ];
   await Post.deleteMany({});
   const createdPosts = await Post.insertMany(postsData);
@@ -632,6 +704,51 @@ async function seed() {
 
   await PostOrVideoComment.insertMany(commentsData);
   console.log(`Seeded ${commentsData.length} authentic post comments.`);
+
+  // 10. Real Live Creators
+  await LiveUser.deleteMany({});
+  await LiveHistory.deleteMany({});
+
+  const liveCreators = [
+    {
+      user: createdUsers[0], // Kassim
+      view: 2840,
+    },
+    {
+      user: createdUsers[1], // Zuhura
+      view: 1920,
+    },
+    {
+      user: createdUsers[4], // Rehema
+      view: 4510,
+    },
+    {
+      user: createdUsers[3], // Amani
+      view: 3260,
+    },
+  ];
+
+  for (const lc of liveCreators) {
+    const lh = new LiveHistory({
+      userId: lc.user._id,
+      startTime: "14:00:00",
+    });
+    await lh.save();
+
+    const lu = new LiveUser({
+      name: lc.user.name,
+      userName: lc.user.userName,
+      image: lc.user.image,
+      userId: lc.user._id,
+      liveHistoryId: lh._id,
+      view: lc.view,
+      isFake: false,
+    });
+    await lu.save();
+
+    await User.updateOne({ _id: lc.user._id }, { $set: { isLive: true, liveHistoryId: lh._id } });
+  }
+  console.log("Seeded 4 real active live creator broadcasts.");
 
   console.log("==================================================");
   console.log("WUDAU authentic social media data seeded successfully!");

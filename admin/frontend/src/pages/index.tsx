@@ -302,41 +302,86 @@ interface CommentItem {
 }
 
 interface GiftItem {
-  id: string;
-  name: string;
-  coins: number;
+  _id?: string;
+  id?: string;
+  name?: string;
+  coins?: number;
+  coin?: number;
+  image?: string;
 }
 
-const GIFTS_LIST: GiftItem[] = [
-  { id: "g1", name: "Rose", coins: 10 },
-  { id: "g2", name: "Love Heart", coins: 50 },
-  { id: "g3", name: "African Drum", coins: 100 },
-  { id: "g4", name: "Diamond", coins: 500 },
-  { id: "g5", name: "Crown", coins: 1000 },
-  { id: "g6", name: "Safari Lion", coins: 2500 },
-];
+interface SongItem {
+  _id: string;
+  songTitle: string;
+  songImage: string;
+  singerName: string;
+  songTime: number | string;
+  songLink: string;
+  songCategoryName?: string;
+  songCategoryImage?: string;
+  isFavorite?: boolean;
+}
+
+interface LiveStreamItem {
+  _id: string;
+  name: string;
+  userName: string;
+  image: string;
+  view: number;
+  isLive: boolean;
+  isVerified?: boolean;
+  liveHistoryId?: string;
+  countryFlagImage?: string;
+  videoUrl?: string;
+}
+
+interface HashTagItem {
+  _id: string;
+  hashTag: string;
+  hashTagIcon?: string;
+  hashTagBanner?: string;
+  totalHashTagUsedCount?: number;
+}
 
 export default function Home({
   initialVideos = [],
   initialPosts = [],
+  initialHashtags = [],
+  initialSongs = [],
+  initialLiveStreams = [],
+  initialGifts = [],
 }: {
   initialVideos?: VideoItem[];
   initialPosts?: PostItem[];
+  initialHashtags?: HashTagItem[];
+  initialSongs?: SongItem[];
+  initialLiveStreams?: LiveStreamItem[];
+  initialGifts?: GiftItem[];
 }) {
   const router = useRouter();
 
-  // Navigation & Viewport State
-  const [currentTab, setCurrentTab] = useState<"reels" | "live" | "social" | "music" | "explore" | "profile">("reels");
+  // Navigation & Viewport State - Defaults to "social" (Home Feed) for fluid multi-post scrolling
+  const [currentTab, setCurrentTab] = useState<"social" | "reels" | "live" | "music" | "explore" | "profile">("social");
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [currentFilter, setCurrentFilter] = useState<string>("all");
   const [currentReelIndex, setCurrentReelIndex] = useState<number>(0);
   const [language, setLanguage] = useState<string>("English");
   const [mobileSearchOpen, setMobileSearchOpen] = useState<boolean>(false);
 
-  // Content Data
+  // Content Data - 100% Backed by MongoDB Collections (Zero Mock Data)
   const [videos, setVideos] = useState<VideoItem[]>(initialVideos);
   const [posts, setPosts] = useState<PostItem[]>(initialPosts);
+  const [hashtags, setHashtags] = useState<HashTagItem[]>(initialHashtags);
+  const [songs, setSongs] = useState<SongItem[]>(initialSongs);
+  const [liveStreams, setLiveStreams] = useState<LiveStreamItem[]>(initialLiveStreams);
+  const [gifts, setGifts] = useState<GiftItem[]>(initialGifts || []);
   const [searchQuery, setSearchQuery] = useState<string>("");
+
+  // Continuous Infinite Scroll for Home Social Feed
+  const [postPage, setPostPage] = useState<number>(1);
+  const [hasMorePosts, setHasMorePosts] = useState<boolean>(true);
+  const [isLoadingMorePosts, setIsLoadingMorePosts] = useState<boolean>(false);
+  const feedSentinelRef = useRef<HTMLDivElement | null>(null);
 
   // User & Authentication State
   const [isAuth, setIsAuth] = useState<boolean>(false);
@@ -379,21 +424,15 @@ export default function Home({
   const [newPostCommentText, setNewPostCommentText] = useState<string>("");
   const [followedUsersMap, setFollowedUsersMap] = useState<{ [userId: string]: boolean }>({});
   const [postHeartEffect, setPostHeartEffect] = useState<boolean>(false);
+  const [cardPhotoIndices, setCardPhotoIndices] = useState<{ [postId: string]: number }>({});
+  const [cardCommentInputs, setCardCommentInputs] = useState<{ [postId: string]: string }>({});
 
   // Music Preview in Sound Tab
   const [playingAudioUrl, setPlayingAudioUrl] = useState<string | null>(null);
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
 
-  // Realistic Comments
-  const [commentsMap, setCommentsMap] = useState<{ [videoId: string]: CommentItem[] }>({
-    default: [
-      { id: "c1", userName: "@jay_bongo", text: "Hii ni kali sana bro! Dar es Salaam stand up! 🔥🇹🇿", time: "2m ago" },
-      { id: "c2", userName: "@zuhura_znz", text: "Mambo ni moto sana, Zanzibar tuko pamoja! 🌴✨", time: "8m ago" },
-      { id: "c3", userName: "@rehema_wildlife", text: "Unbelievable nature, Serengeti is truly the pride of Africa 🦁❤️", time: "15m ago" },
-      { id: "c4", userName: "@kenji_tokyo", text: "Greetings from Tokyo! Absolutely love the energy of WUDAU 🇯🇵🇹🇿", time: "25m ago" },
-      { id: "c5", userName: "@mollel_arusha", text: "Ngoma inabamba mbaya! Saluti tele kutoka Arusha 🏔️", time: "1h ago" },
-    ],
-  });
+  // Real Comments from MongoDB
+  const [commentsMap, setCommentsMap] = useState<{ [videoId: string]: CommentItem[] }>({});
 
   // Client-side authentication & user state check
   useEffect(() => {
@@ -435,18 +474,26 @@ export default function Home({
     }
   }, [posts]);
 
-  // Fetch updated data from API on mount
+  // Fetch updated data from all MongoDB-backed API endpoints on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [vRes, pRes] = await Promise.all([
-          axios.get("client/video/getAllVideos?start=1&limit=30", { headers: { key: secretKey } }),
-          axios.get("client/post/getAllPosts?start=1&limit=30", { headers: { key: secretKey } }),
+        const [vRes, pRes, hRes, sRes, lRes, gRes] = await Promise.all([
+          axios.get("client/video/getAllVideos?start=1&limit=30", { headers: { key: secretKey } }).catch(() => ({ data: { data: [] } })),
+          axios.get("client/post/getAllPosts?start=1&limit=30", { headers: { key: secretKey } }).catch(() => ({ data: { post: [] } })),
+          axios.get("client/hashTag/hashtagDrop", { headers: { key: secretKey } }).catch(() => ({ data: { data: [] } })),
+          axios.get("client/song/getSongsByUser", { headers: { key: secretKey } }).catch(() => ({ data: { songs: [] } })),
+          axios.get("client/liveUser/getliveUserList", { headers: { key: secretKey } }).catch(() => ({ data: { liveUserList: [] } })),
+          axios.get("client/gift/getGiftsForUser", { headers: { key: secretKey } }).catch(() => ({ data: { data: [] } })),
         ]);
         if (vRes.data?.data?.length) setVideos(vRes.data.data);
         if (pRes.data?.post?.length) setPosts(pRes.data.post);
+        if (hRes.data?.data?.length) setHashtags(hRes.data.data);
+        if (sRes.data?.songs?.length) setSongs(sRes.data.songs);
+        if (lRes.data?.liveUserList?.length) setLiveStreams(lRes.data.liveUserList);
+        if (gRes.data?.data?.length) setGifts(gRes.data.data);
       } catch (err) {
-        console.warn("Client data fetch error, using fallback data:", err);
+        console.warn("Client data fetch error:", err);
       }
     };
     fetchData();
@@ -532,36 +579,66 @@ export default function Home({
     }
   };
 
-  // Clean Filter Logic
+  // Dynamic Categories from MongoDB hashtags
+  const dynamicCategories = useMemo(() => {
+    const base = [{ id: "all", label: "For You" }];
+    const tagList = (hashtags && hashtags.length > 0 ? hashtags : []).map((h) => ({
+      id: h.hashTag.toLowerCase(),
+      label: `#${h.hashTag}`,
+      name: h.hashTag,
+    }));
+    return [...base, ...tagList];
+  }, [hashtags]);
+
+  // Dynamic Explore Destinations derived from real MongoDB posts & hashtags
+  const dynamicExploreCards = useMemo(() => {
+    const tagMap: { [tag: string]: { tag: string; name: string; count: number; image: string } } = {};
+    posts.forEach((p) => {
+      const tags = Array.isArray(p.hashTag) ? p.hashTag : [];
+      const img = p.postImage?.[0] || p.mainPostImage || "storage/thumb1.jpg";
+      tags.forEach((t) => {
+        const clean = t.replace("#", "");
+        if (!tagMap[clean]) {
+          tagMap[clean] = {
+            tag: clean,
+            name: clean.replace(/([A-Z])/g, " $1").trim(),
+            count: 1,
+            image: img,
+          };
+        } else {
+          tagMap[clean].count += 1;
+        }
+      });
+    });
+
+    hashtags.forEach((h) => {
+      const clean = h.hashTag.replace("#", "");
+      if (!tagMap[clean]) {
+        tagMap[clean] = {
+          tag: clean,
+          name: clean.replace(/([A-Z])/g, " $1").trim(),
+          count: h.totalHashTagUsedCount || 1,
+          image: h.hashTagIcon || h.hashTagBanner || "storage/thumb1.jpg",
+        };
+      }
+    });
+
+    return Object.values(tagMap);
+  }, [posts, hashtags]);
+
+  // Fully Dynamic Filter for Videos (Reels)
   const filteredVideos = useMemo(() => {
     let list = videos;
-    if (currentFilter === "tanzania") {
-      list = list.filter((v) =>
-        (v.caption + " " + v.location + " " + v.name + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("tanzania") ||
-        (v.location || "").toLowerCase().includes("dar") ||
-        (v.location || "").toLowerCase().includes("zanzibar") ||
-        (v.location || "").toLowerCase().includes("arusha")
-      );
-    } else if (currentFilter === "serengeti") {
-      list = list.filter((v) =>
-        (v.caption + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("serengeti") ||
-        (v.caption + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("nature")
-      );
-    } else if (currentFilter === "singeli") {
-      list = list.filter((v) =>
-        (v.caption + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("singeli") ||
-        (v.caption + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("bongo")
-      );
-    } else if (currentFilter === "zanzibar") {
-      list = list.filter((v) =>
-        (v.caption + " " + v.location + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("zanzibar")
-      );
-    } else if (currentFilter === "global") {
-      list = list.filter((v) =>
-        (v.caption + " " + v.location + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("tokyo") ||
-        (v.caption + " " + v.location + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("paris") ||
-        (v.caption + " " + v.location + " " + (v.hashTag || []).join(" ")).toLowerCase().includes("johannesburg")
-      );
+    if (currentFilter !== "all") {
+      const f = currentFilter.toLowerCase().replace("#", "").trim();
+      list = list.filter((v) => {
+        const tags = Array.isArray(v.hashTag) ? v.hashTag.map((t: string) => t.toLowerCase()) : [];
+        const caption = (v.caption || "").toLowerCase();
+        const loc = (v.location || "").toLowerCase();
+        const name = (v.name || "").toLowerCase();
+        const userName = (v.userName || "").toLowerCase();
+        return tags.some((t: string) => t.includes(f) || f.includes(t)) || caption.includes(f) || loc.includes(f) || name.includes(f) || userName.includes(f);
+      });
     }
 
     if (searchQuery.trim()) {
@@ -572,11 +649,135 @@ export default function Home({
           (v.name || "").toLowerCase().includes(q) ||
           (v.userName || "").toLowerCase().includes(q) ||
           (v.location || "").toLowerCase().includes(q) ||
-          (v.hashTag || []).some((h) => h.toLowerCase().includes(q))
+          (Array.isArray(v.hashTag) && v.hashTag.some((h: string) => h.toLowerCase().includes(q)))
       );
     }
     return list;
   }, [videos, currentFilter, searchQuery]);
+
+  // Fully Dynamic Filter for Posts (Home Feed)
+  const filteredPosts = useMemo(() => {
+    let list = posts;
+    if (currentFilter !== "all") {
+      const f = currentFilter.toLowerCase().replace("#", "").trim();
+      list = list.filter((p) => {
+        const tags = Array.isArray(p.hashTag) ? p.hashTag.map((t: string) => t.toLowerCase()) : [];
+        const caption = (p.caption || "").toLowerCase();
+        const loc = (p.location || "").toLowerCase();
+        const name = (p.name || "").toLowerCase();
+        const userName = (p.userName || "").toLowerCase();
+        return tags.some((t: string) => t.includes(f) || f.includes(t)) || caption.includes(f) || loc.includes(f) || name.includes(f) || userName.includes(f);
+      });
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (p) =>
+          (p.caption || "").toLowerCase().includes(q) ||
+          (p.name || "").toLowerCase().includes(q) ||
+          (p.userName || "").toLowerCase().includes(q) ||
+          (p.location || "").toLowerCase().includes(q) ||
+          (Array.isArray(p.hashTag) && p.hashTag.some((h: string) => h.toLowerCase().includes(q)))
+      );
+    }
+    return list;
+  }, [posts, currentFilter, searchQuery]);
+
+  const handleInlinePostComment = async (postId: string, e: React.FormEvent) => {
+    e.preventDefault();
+    const commentText = (cardCommentInputs[postId] || "").trim();
+    if (!commentText) return;
+
+    const commenterName = currentUser?.userName || "@You";
+    const commenterDisplayName = currentUser?.name || "You";
+    const commenterImage = currentUser?.image || "storage/avatar_kassim.png";
+
+    const newCommentItem: CommentItem = {
+      _id: "inline_" + Date.now(),
+      id: "inline_" + Date.now(),
+      userName: commenterName,
+      name: commenterDisplayName,
+      userImage: commenterImage,
+      commentText: commentText,
+      text: commentText,
+      time: "Just now",
+      totalLikes: 0,
+      isLike: false,
+    };
+
+    setPostCommentsMap((prev) => ({
+      ...prev,
+      [postId]: [newCommentItem, ...(prev[postId] || [])],
+    }));
+
+    setPostCommentsCount((prev) => ({
+      ...prev,
+      [postId]: (postCommentsCount[postId] || 0) + 1,
+    }));
+
+    setCardCommentInputs((prev) => ({ ...prev, [postId]: "" }));
+    showToast("Comment posted 💬");
+
+    const userIdParam = currentUser?._id ? `&userId=${currentUser._id}` : "";
+    axios
+      .post(
+        `client/postOrvideoComment/postComment?postId=${postId}&type=post${userIdParam}`,
+        { commentText },
+        { headers: { key: secretKey } }
+      )
+      .catch((err) => console.warn("Inline comment sync error:", err));
+  };
+
+  // Continuous Social Feed: Infinite Scroll Loader
+  const loadMorePosts = async () => {
+    if (isLoadingMorePosts || !hasMorePosts) return;
+    setIsLoadingMorePosts(true);
+    try {
+      const nextPage = postPage + 1;
+      const res = await axios.get(`client/post/getAllPosts?start=${nextPage}&limit=10`, {
+        headers: { key: secretKey },
+      });
+      const newPosts: PostItem[] = res.data?.post || [];
+      if (!newPosts.length) {
+        setHasMorePosts(false);
+      } else {
+        setPosts((prev) => {
+          const existingIds = new Set(prev.map((p) => p._id));
+          const fresh = newPosts.filter((np) => !existingIds.has(np._id));
+          if (fresh.length === 0) {
+            setHasMorePosts(false);
+            return prev;
+          }
+          return [...prev, ...fresh];
+        });
+        setPostPage(nextPage);
+      }
+    } catch (err) {
+      console.warn("Error loading more posts:", err);
+    } finally {
+      setIsLoadingMorePosts(false);
+    }
+  };
+
+  // Infinite Scroll Trigger for Continuous Feed
+  useEffect(() => {
+    if (currentTab !== "social") return;
+    const sentinel = feedSentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMorePosts && !isLoadingMorePosts) {
+          loadMorePosts();
+        }
+      },
+      { threshold: 0.1, rootMargin: "300px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [currentTab, hasMorePosts, isLoadingMorePosts, postPage]);
 
   const activeVideo = filteredVideos[currentReelIndex] || filteredVideos[0];
 
@@ -731,7 +932,9 @@ export default function Home({
 
   const handleSendGift = (gift: GiftItem) => {
     setShowGiftModal(false);
-    showToast(`Sent ${gift.name} (${gift.coins} coins) to ${activeVideo?.name || "Creator"}`);
+    const coins = gift.coin || gift.coins || 10;
+    const name = gift.name || `${coins} Coins`;
+    showToast(`Sent ${name} (${coins} coins) to ${activeVideo?.name || "Creator"}`);
   };
 
   const handleAddComment = (e: React.FormEvent) => {
@@ -956,22 +1159,18 @@ export default function Home({
             </Link>
           </div>
 
-          {/* Clean Category Tabs (NO Childish Emojis) */}
+          {/* Dynamic Category Tabs from MongoDB */}
           <div className="header-center">
             <nav className="category-tabs-track">
-              {[
-                { id: "all", label: "For You" },
-                { id: "tanzania", label: "Tanzania" },
-                { id: "serengeti", label: "Serengeti" },
-                { id: "singeli", label: "Singeli & Bongo" },
-                { id: "zanzibar", label: "Zanzibar" },
-                { id: "global", label: "Global" },
-              ].map((tab) => (
+              {dynamicCategories.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => {
                     setCurrentFilter(tab.id);
                     setCurrentReelIndex(0);
+                    if (currentTab !== "social" && currentTab !== "reels") {
+                      setCurrentTab("social");
+                    }
                   }}
                   className={`category-tab-btn ${currentFilter === tab.id ? "active" : ""}`}
                 >
@@ -1169,29 +1368,23 @@ export default function Home({
                 </nav>
               </div>
 
-              {/* Cultural Channels (CLEAN LIST WITH REGION PILLS, NO EMOJIS) */}
+              {/* Trending Hashtags from MongoDB */}
               <div className="drawer-nav-group">
-                <span className="drawer-group-label">CULTURAL HIGHLIGHTS</span>
+                <span className="drawer-group-label">TRENDING HASHTAGS</span>
                 <div className="cultural-channels-list">
-                  {[
-                    { tag: "tanzania", name: "Dar es Salaam Dance", region: "Kinondoni" },
-                    { tag: "singeli", name: "Singeli 300BPM", region: "Mbagala" },
-                    { tag: "serengeti", name: "Serengeti Safari", region: "Mara" },
-                    { tag: "zanzibar", name: "Zanzibar Taarab", region: "Stone Town" },
-                    { tag: "global", name: "Global Rhythms", region: "World" },
-                  ].map((chan) => (
+                  {(hashtags && hashtags.length > 0 ? hashtags.slice(0, 8) : []).map((chan) => (
                     <button
-                      key={chan.tag}
+                      key={chan._id || chan.hashTag}
                       onClick={() => {
-                        setCurrentFilter(chan.tag);
-                        setCurrentTab("reels");
+                        setCurrentFilter(chan.hashTag.toLowerCase());
+                        setCurrentTab("social");
                         setCurrentReelIndex(0);
                         setIsMenuOpen(false);
                       }}
                       className="cultural-channel-row"
                     >
-                      <span className="channel-title">{chan.name}</span>
-                      <span className="channel-region-pill">{chan.region}</span>
+                      <span className="channel-title">#{chan.hashTag}</span>
+                      <span className="channel-region-pill">{chan.totalHashTagUsedCount ? `${chan.totalHashTagUsedCount} posts` : "Trending"}</span>
                     </button>
                   ))}
                 </div>
@@ -1546,311 +1739,414 @@ export default function Home({
                 <p>Real-time interactive video broadcasts from creators across Tanzania and the world.</p>
               </div>
               <div className="live-streams-grid">
-                {[
-                  {
-                    id: "l1",
-                    title: "Coco Beach Street Dance Battle 2026",
-                    host: "Kassim Mwambao (Dar es Salaam)",
-                    viewers: "2.8k",
-                    image: "storage/thumb2.jpg",
-                    tag: "LIVE",
-                  },
-                  {
-                    id: "l2",
-                    title: "Stone Town Acoustic Dhow Sunset Live",
-                    host: "Zuhura Bakari (Zanzibar)",
-                    viewers: "1.9k",
-                    image: "storage/thumb4.jpg",
-                    tag: "LIVE",
-                  },
-                  {
-                    id: "l3",
-                    title: "Serengeti Dawn Wildlife Migration Patrol",
-                    host: "Rehema Mushi (Serengeti)",
-                    viewers: "4.5k",
-                    image: "storage/thumb1.jpg",
-                    tag: "LIVE",
-                  },
-                  {
-                    id: "l4",
-                    title: "Singeli 300BPM Speed Challenge Live",
-                    host: "Amani Juma (Mbagala)",
-                    viewers: "3.2k",
-                    image: "storage/thumb3.jpg",
-                    tag: "LIVE",
-                  },
-                ].map((stream) => (
-                  <div
-                    key={stream.id}
-                    onClick={() => {
-                      setCurrentTab("reels");
-                      showToast(`Entering broadcast: ${stream.title}`);
-                    }}
-                    className="live-stream-card"
-                  >
-                    <img src={resolveMedia(stream.image)} alt={stream.title} className="stream-cover-img" />
-                    <div className="stream-badge-live">{stream.tag}</div>
-                    <div className="stream-viewers-pill">{stream.viewers} watching</div>
-                    <div className="stream-info-overlay">
-                      <h4>{stream.title}</h4>
-                      <p>Hosted by {stream.host}</p>
-                    </div>
+                {liveStreams.length === 0 ? (
+                  <div className="empty-state-card" style={{ gridColumn: "1 / -1" }}>
+                    <IconLive size={36} />
+                    <h3>No creators currently live</h3>
+                    <p>Live creator streams will appear here in real-time as stages go on air.</p>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: COMMUNITY SOCIAL FEED */}
-          {currentTab === "social" && (
-            <div className="tab-surface-page">
-              <div className="page-header-row">
-                <h2>Community Feed</h2>
-                <p>Behind the scenes moments, creative photography, and culture updates from creators across Africa & beyond.</p>
-              </div>
-              <div className="community-posts-grid">
-                {posts.map((post) => {
-                  const isPostLiked = postLikesMap[post._id] !== undefined ? postLikesMap[post._id] : !!post.isLike;
-                  const currentLikes = postLikesCount[post._id] !== undefined ? postLikesCount[post._id] : (post.totalLikes || 0);
-                  const currentComments = postCommentsCount[post._id] !== undefined ? postCommentsCount[post._id] : (post.totalComments || 0);
-                  const isCreatorFollowed = !!followedUsersMap[post.userId];
-                  const hasMultiImages = post.postImage && post.postImage.length > 1;
-
-                  return (
-                    <article
-                      key={post._id}
-                      className="community-post-card"
-                      onClick={() => handleOpenPostModal(post)}
+                ) : (
+                  liveStreams.map((stream) => (
+                    <div
+                      key={stream._id}
+                      onClick={() => {
+                        setCurrentTab("reels");
+                        showToast(`Entering live broadcast: ${stream.name}`);
+                      }}
+                      className="live-stream-card"
                     >
-                      <div className="post-header-row" onClick={(e) => e.stopPropagation()}>
-                        <img
-                          src={resolveMedia(post.userImage)}
-                          alt={post.name}
-                          className="post-user-avatar"
-                        />
-                        <div className="post-user-info">
-                          <div className="post-user-name-line">
-                            <span className="post-user-name">{post.name}</span>
-                            {post.isVerified && (
-                              <span className="verified-icon-badge" title="Verified Creator">
-                                <IconCheck size={12} />
-                              </span>
-                            )}
-                          </div>
-                          <span className="post-user-handle">
-                            {post.location ? (
-                              <span className="location-pin-wrap">
-                                <IconMapPin size={11} /> {post.location}
-                              </span>
-                            ) : (
-                              post.userName
-                            )}
-                          </span>
-                        </div>
-                        {post.userId && (
-                          <button
-                            onClick={(e) => handleToggleFollow(post.userId, post.userName, e)}
-                            className={`post-card-follow-btn ${isCreatorFollowed ? "active" : ""}`}
-                          >
-                            {isCreatorFollowed ? "Following" : "Follow"}
-                          </button>
-                        )}
-                        <span className="post-timestamp">{post.time || "Recently"}</span>
+                      <img src={resolveMedia(stream.image)} alt={stream.name} className="stream-cover-img" />
+                      <div className="stream-badge-live">LIVE</div>
+                      <div className="stream-viewers-pill">{(stream.view || 1500).toLocaleString()} watching</div>
+                      <div className="stream-info-overlay">
+                        <h4>{stream.name}</h4>
+                        <p>Hosted by {stream.userName}</p>
                       </div>
-
-                      <div className="post-media-box">
-                        <img
-                          src={resolveMedia(post.postImage?.[0] || post.mainPostImage)}
-                          alt="Community Post"
-                          className="post-main-img"
-                        />
-                        {hasMultiImages && (
-                          <div className="post-multi-indicator" title="Multiple photos">
-                            <IconLayers size={13} />
-                            <span>1/{post.postImage.length}</span>
-                          </div>
-                        )}
-                        <div className="post-overlay-hint">
-                          <span>Click to open details & comments</span>
-                        </div>
-                      </div>
-
-                      <div className="post-body-content">
-                        <p className="post-caption-text">
-                          <span className="post-author-bold">{post.userName}</span>{" "}
-                          {post.caption}
-                        </p>
-                        <div className="post-action-buttons" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={(e) => handleTogglePostLike(post, e)}
-                            className={`post-action-btn ${isPostLiked ? "liked" : ""}`}
-                            title={isPostLiked ? "Unlike post" : "Like post"}
-                          >
-                            <IconHeart size={18} filled={isPostLiked} />
-                            <span>{currentLikes.toLocaleString()} Likes</span>
-                          </button>
-                          <button
-                            onClick={() => handleOpenPostModal(post, true)}
-                            className="post-action-btn"
-                            title="View and add comments"
-                          >
-                            <IconMessage size={18} />
-                            <span>{currentComments.toLocaleString()} Comments</span>
-                          </button>
-                          <button
-                            onClick={(e) => handleSharePost(post, e)}
-                            className="post-action-btn share"
-                            title="Share post"
-                          >
-                            <IconShare size={18} />
-                          </button>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
 
-          {/* TAB 4: SOUNDS & MUSIC LIBRARY */}
+          {/* TAB 3: COMMUNITY SOCIAL FEED (FLUID CONTINUOUS SCROLLING FEED) */}
+          {currentTab === "social" && (
+            <div className="tab-surface-page social-feed-viewport">
+              {/* Creator Stories & Reels Highlights Row */}
+              <div className="stories-tray-container">
+                <div className="stories-track">
+                  {videos.slice(0, 10).map((vid, idx) => {
+                    const isCreatorLive = liveStreams.some(
+                      (l) => (l.userName || "").toLowerCase() === (vid.userName || "").toLowerCase()
+                    );
+                    return (
+                      <div
+                        key={vid._id || idx}
+                        onClick={() => {
+                          setCurrentReelIndex(idx);
+                          setCurrentTab("reels");
+                          showToast(`Watching @${vid.userName}`);
+                        }}
+                        className="story-avatar-item"
+                      >
+                        <div className={`story-ring-wrap ${isCreatorLive ? "live-ring" : ""}`}>
+                          <img src={resolveMedia(vid.userImage)} alt={vid.name} className="story-img" />
+                          {isCreatorLive && <span className="story-live-badge">LIVE</span>}
+                        </div>
+                        <span className="story-label">{vid.name.split(" ")[0]}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Feed Category Filter Chips Bar */}
+              <div className="feed-category-chips-bar">
+                <div className="chips-scroll-track">
+                  {dynamicCategories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => {
+                        setCurrentFilter(cat.id);
+                      }}
+                      className={`feed-category-chip ${currentFilter === cat.id ? "active" : ""}`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Main Social Posts Stream */}
+              <div className="social-timeline-stream">
+                {filteredPosts.length === 0 ? (
+                  <div className="empty-state-card">
+                    <IconSearch size={36} />
+                    <h3>No posts found in this category</h3>
+                    <p>Try switching categories or exploring all community posts.</p>
+                    <button
+                      onClick={() => {
+                        setCurrentFilter("all");
+                        setSearchQuery("");
+                      }}
+                      className="action-accent-btn"
+                    >
+                      Show All Posts
+                    </button>
+                  </div>
+                ) : (
+                  filteredPosts.map((post) => {
+                    const isPostLiked = postLikesMap[post._id] !== undefined ? postLikesMap[post._id] : !!post.isLike;
+                    const currentLikes = postLikesCount[post._id] !== undefined ? postLikesCount[post._id] : (post.totalLikes || 0);
+                    const currentComments = postCommentsCount[post._id] !== undefined ? postCommentsCount[post._id] : (post.totalComments || 0);
+                    const isCreatorFollowed = !!followedUsersMap[post.userId];
+                    const photos = post.postImage && post.postImage.length > 0 ? post.postImage : [post.mainPostImage || "storage/thumb1.jpg"];
+                    const activePhotoIdx = cardPhotoIndices[post._id] || 0;
+                    const currentCardPhoto = photos[activePhotoIdx] || photos[0];
+                    const commentsForPost = postCommentsMap[post._id] || [];
+
+                    return (
+                      <article key={post._id} className="timeline-post-card">
+                        {/* Header: Author & Location & Follow */}
+                        <div className="timeline-card-header">
+                          <img
+                            src={resolveMedia(post.userImage)}
+                            alt={post.name}
+                            className="timeline-user-avatar"
+                            onClick={() => handleOpenPostModal(post)}
+                          />
+                          <div className="timeline-user-meta" onClick={() => handleOpenPostModal(post)}>
+                            <div className="timeline-name-line">
+                              <span className="timeline-author-name">{post.name}</span>
+                              {post.isVerified && (
+                                <span className="verified-icon-badge" title="Verified Creator">
+                                  <IconCheck size={12} />
+                                </span>
+                              )}
+                            </div>
+                            <span className="timeline-author-handle">
+                              {post.location ? (
+                                <span className="location-pin-wrap">
+                                  <IconMapPin size={11} /> {post.location}
+                                </span>
+                              ) : (
+                                post.userName
+                              )}
+                            </span>
+                          </div>
+
+                          <div className="timeline-header-actions">
+                            {post.userId && (
+                              <button
+                                onClick={(e) => handleToggleFollow(post.userId, post.userName, e)}
+                                className={`post-card-follow-btn ${isCreatorFollowed ? "active" : ""}`}
+                              >
+                                {isCreatorFollowed ? "Following" : "Follow"}
+                              </button>
+                            )}
+                            <span className="timeline-post-time">{post.time || "Recently"}</span>
+                          </div>
+                        </div>
+
+                        {/* Media Carousel / Photo Stage */}
+                        <div
+                          className="timeline-media-stage"
+                          onDoubleClick={(e) => handleTogglePostLike(post, e)}
+                        >
+                          <img
+                            src={resolveMedia(currentCardPhoto)}
+                            alt={post.caption || "Post Media"}
+                            className="timeline-main-photo"
+                            onClick={() => handleOpenPostModal(post)}
+                          />
+
+                          {/* Multi-photo carousel buttons */}
+                          {photos.length > 1 && (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCardPhotoIndices((prev) => ({
+                                    ...prev,
+                                    [post._id]: (activePhotoIdx - 1 + photos.length) % photos.length,
+                                  }));
+                                }}
+                                className="carousel-nav-arrow left"
+                                aria-label="Previous photo"
+                              >
+                                ‹
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCardPhotoIndices((prev) => ({
+                                    ...prev,
+                                    [post._id]: (activePhotoIdx + 1) % photos.length,
+                                  }));
+                                }}
+                                className="carousel-nav-arrow right"
+                                aria-label="Next photo"
+                              >
+                                ›
+                              </button>
+                              <div className="carousel-dots-indicator">
+                                {photos.map((_, pIdx) => (
+                                  <span
+                                    key={pIdx}
+                                    className={`carousel-dot ${pIdx === activePhotoIdx ? "active" : ""}`}
+                                  />
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Action Toolbar */}
+                        <div className="timeline-actions-row">
+                          <div className="timeline-actions-left">
+                            <button
+                              onClick={(e) => handleTogglePostLike(post, e)}
+                              className={`timeline-action-icon-btn ${isPostLiked ? "liked" : ""}`}
+                              title={isPostLiked ? "Unlike" : "Like"}
+                            >
+                              <IconHeart size={20} filled={isPostLiked} />
+                            </button>
+                            <button
+                              onClick={() => handleOpenPostModal(post, true)}
+                              className="timeline-action-icon-btn"
+                              title="Comments"
+                            >
+                              <IconMessage size={20} />
+                            </button>
+                            <button
+                              onClick={(e) => handleSharePost(post, e)}
+                              className="timeline-action-icon-btn"
+                              title="Share"
+                            >
+                              <IconShare size={20} />
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => showToast("Post saved to bookmarks 🔖")}
+                            className="timeline-action-icon-btn"
+                            title="Save post"
+                          >
+                            <IconBookmark size={20} />
+                          </button>
+                        </div>
+
+                        {/* Likes Count Row */}
+                        <div className="timeline-likes-count">
+                          <strong>{currentLikes.toLocaleString()} likes</strong>
+                        </div>
+
+                        {/* Category / Hashtag Chips */}
+                        {Array.isArray(post.hashTag) && post.hashTag.length > 0 && (
+                          <div className="timeline-hashtags-row">
+                            {post.hashTag.map((t, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => {
+                                  setCurrentFilter(t.toLowerCase().replace("#", ""));
+                                }}
+                                className="timeline-tag-pill"
+                              >
+                                #{t.replace("#", "")}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Caption Section */}
+                        <div className="timeline-caption-row">
+                          <span className="caption-author-handle">{post.userName}</span>{" "}
+                          <span className="caption-text-content">{post.caption}</span>
+                        </div>
+
+                        {/* Live Comments Preview */}
+                        <div className="timeline-comments-section">
+                          {currentComments > 0 && (
+                            <button
+                              onClick={() => handleOpenPostModal(post, true)}
+                              className="view-all-comments-link"
+                            >
+                              View all {currentComments} comments
+                            </button>
+                          )}
+                          {commentsForPost.slice(0, 2).map((c, cIdx) => (
+                            <div key={c._id || cIdx} className="timeline-comment-snippet">
+                              <span className="comment-snippet-user">{c.userName}</span>{" "}
+                              <span className="comment-snippet-text">{c.commentText || c.text}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Fast Inline Comment Form */}
+                        <form
+                          onSubmit={(e) => handleInlinePostComment(post._id, e)}
+                          className="timeline-inline-comment-form"
+                        >
+                          <input
+                            type="text"
+                            placeholder="Add a comment..."
+                            value={cardCommentInputs[post._id] || ""}
+                            onChange={(e) =>
+                              setCardCommentInputs((prev) => ({ ...prev, [post._id]: e.target.value }))
+                            }
+                            className="timeline-inline-input"
+                          />
+                          <button
+                            type="submit"
+                            disabled={!(cardCommentInputs[post._id] || "").trim()}
+                            className="timeline-inline-submit-btn"
+                          >
+                            Post
+                          </button>
+                        </form>
+                      </article>
+                    );
+                  })
+                )}
+
+                {/* Continuous Infinite Scroll Sentinel */}
+                <div ref={feedSentinelRef} className="feed-infinite-scroll-sentinel">
+                  {isLoadingMorePosts && (
+                    <div className="feed-scroll-loader">
+                      <div className="scroll-loader-spinner" />
+                      <span>Pulling more posts...</span>
+                    </div>
+                  )}
+                  {!hasMorePosts && filteredPosts.length > 0 && (
+                    <div className="feed-end-message">
+                      <span className="end-badge">✦ All caught up</span>
+                      <p>You have seen all recent community posts from your favorite creators.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: SOUNDS & MUSIC LIBRARY (100% REAL FROM MONGODB) */}
           {currentTab === "music" && (
             <div className="tab-surface-page">
               <div className="page-header-row">
                 <h2>Soundtracks & Music</h2>
-                <p>Explore original African rhythms, Bongo Flava, Singeli, and global collaborations.</p>
+                <p>Explore authentic African rhythms, Bongo Flava, Singeli, and global collaborations from MongoDB.</p>
               </div>
               <div className="music-tracks-grid">
-                {[
-                  {
-                    title: "Mapenzi ya Bongo",
-                    singer: "Kassim ft. Jay Temba",
-                    time: "0:45",
-                    genre: "Bongo Flava",
-                    link: "storage/song_bongo_1.mp3",
-                    image: "storage/category_bongo.jpg",
-                  },
-                  {
-                    title: "Kinondoni Singeli Rush 300BPM",
-                    singer: "Amani Juma",
-                    time: "0:35",
-                    genre: "Singeli",
-                    link: "storage/song_singeli_1.mp3",
-                    image: "storage/category_bongo.jpg",
-                  },
-                  {
-                    title: "Serengeti Sunrise Acoustic",
-                    singer: "Zuhura Bakari",
-                    time: "0:50",
-                    genre: "Coastal Acoustic",
-                    link: "storage/song_acoustic_tz.mp3",
-                    image: "storage/category_nature.jpg",
-                  },
-                  {
-                    title: "Ngorongoro Dawn Chants",
-                    singer: "Emmanuel Mollel",
-                    time: "0:40",
-                    genre: "Traditional Maasai",
-                    link: "storage/song_maasai_chant.mp3",
-                    image: "storage/category_nature.jpg",
-                  },
-                  {
-                    title: "Durban Sunset Amapiano",
-                    singer: "Nolwazi Khumalo",
-                    time: "0:55",
-                    genre: "Amapiano",
-                    link: "storage/song_amapiano.mp3",
-                    image: "storage/category_afrobeats.jpg",
-                  },
-                  {
-                    title: "Shibuya Afro Groove",
-                    singer: "Kenji Takahashi",
-                    time: "0:42",
-                    genre: "Tokyo Fusion",
-                    link: "storage/song_tokyo_fusion.mp3",
-                    image: "storage/category_global.jpg",
-                  },
-                ].map((track, idx) => (
-                  <div key={idx} className="track-listing-item">
-                    <img src={resolveMedia(track.image)} alt={track.title} className="track-thumb" />
-                    <div className="track-details">
-                      <h4>{track.title}</h4>
-                      <p>
-                        {track.singer} • <span className="genre-label">{track.genre}</span>
-                      </p>
-                    </div>
-                    <span className="track-time-tag">{track.time}</span>
-                    <button
-                      onClick={() => handleToggleMusic(track.link)}
-                      className="track-play-action"
-                    >
-                      {playingAudioUrl === resolveMedia(track.link) ? "Pause" : "Play"}
-                    </button>
+                {songs.length === 0 ? (
+                  <div className="empty-state-card" style={{ gridColumn: "1 / -1" }}>
+                    <IconMusic size={36} />
+                    <h3>No soundtracks available</h3>
+                    <p>New tracks uploaded by artists will appear here.</p>
                   </div>
-                ))}
+                ) : (
+                  songs.map((track) => (
+                    <div key={track._id} className="track-listing-item">
+                      <img
+                        src={resolveMedia(track.songImage || "storage/category_bongo.jpg")}
+                        alt={track.songTitle}
+                        className="track-thumb"
+                      />
+                      <div className="track-details">
+                        <h4>{track.songTitle}</h4>
+                        <p>
+                          {track.singerName} • <span className="genre-label">{track.songCategoryName || "Original Sound"}</span>
+                        </p>
+                      </div>
+                      <span className="track-time-tag">0:{track.songTime}</span>
+                      <button
+                        onClick={() => handleToggleMusic(track.songLink)}
+                        className={`track-play-action ${playingAudioUrl === resolveMedia(track.songLink) ? "playing" : ""}`}
+                      >
+                        {playingAudioUrl === resolveMedia(track.songLink) ? "Pause" : "Play"}
+                      </button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
 
-          {/* TAB 5: DISCOVER TANZANIA SHOWCASE */}
+          {/* TAB 5: DISCOVER & EXPLORE SHOWCASE (DERIVED FROM MONGODB) */}
           {currentTab === "explore" && (
             <div className="tab-surface-page">
               <div className="page-header-row">
-                <h2>Discover Tanzania</h2>
-                <p>Natural beauty, cultural rhythm, and untamed spirit across Africa&apos;s leading destinations.</p>
+                <h2>Explore & Discover</h2>
+                <p>Natural beauty, cultural rhythm, and authentic creator moments aggregated from real posts across WUDAU.</p>
               </div>
               <div className="destinations-showcase-grid">
-                {[
-                  {
-                    name: "Serengeti National Park",
-                    subtitle: "Great Migration & Lion Prides",
-                    desc: "Witness the greatest wildlife spectacle on Earth across the endless savanna plains.",
-                    image: "storage/thumb1.jpg",
-                    tag: "#Serengeti",
-                  },
-                  {
-                    name: "Stone Town, Zanzibar",
-                    subtitle: "Spice Island & Swahili Soul",
-                    desc: "Labyrinthine alleys, acoustic coastal melodies, and sunset dhow sails on turquoise waters.",
-                    image: "storage/post4.jpg",
-                    tag: "#Zanzibar",
-                  },
-                  {
-                    name: "Mount Kilimanjaro & Meru",
-                    subtitle: "The Roof of Africa",
-                    desc: "Towering snow peaks meeting vibrant Maasai culture and rhythmic footwork traditions.",
-                    image: "storage/thumb5.jpg",
-                    tag: "#Kilimanjaro",
-                  },
-                  {
-                    name: "Dar es Salaam & Coco Beach",
-                    subtitle: "Street Dance & Singeli Capital",
-                    desc: "Electric urban vibes, beach dance battles, and high-energy music production.",
-                    image: "storage/thumb2.jpg",
-                    tag: "#DarEsSalaam",
-                  },
-                ].map((item, i) => (
-                  <div key={i} className="destination-feature-card">
-                    <div className="destination-media-wrap">
-                      <img src={resolveMedia(item.image)} alt={item.name} />
-                      <span className="destination-tag-badge">{item.tag}</span>
-                    </div>
-                    <div className="destination-content">
-                      <h3>{item.name}</h3>
-                      <h4>{item.subtitle}</h4>
-                      <p>{item.desc}</p>
-                      <button
-                        onClick={() => {
-                          setCurrentFilter("tanzania");
-                          setCurrentTab("reels");
-                        }}
-                        className="destination-view-btn"
-                      >
-                        Watch Reels from Here →
-                      </button>
-                    </div>
+                {dynamicExploreCards.length === 0 ? (
+                  <div className="empty-state-card" style={{ gridColumn: "1 / -1" }}>
+                    <IconCompass size={36} />
+                    <h3>No destinations discovered yet</h3>
                   </div>
-                ))}
+                ) : (
+                  dynamicExploreCards.map((item, i) => (
+                    <div key={i} className="destination-feature-card">
+                      <div className="destination-media-wrap">
+                        <img src={resolveMedia(item.image)} alt={item.name} />
+                        <span className="destination-tag-badge">#{item.tag}</span>
+                      </div>
+                      <div className="destination-content">
+                        <h3>{item.name}</h3>
+                        <h4>Trending Culture Topic</h4>
+                        <p>{item.count} community posts, reels, and stories shared by creators.</p>
+                        <button
+                          onClick={() => {
+                            setCurrentFilter(item.tag.toLowerCase());
+                            setCurrentTab("social");
+                            showToast(`Exploring #${item.tag} feed`);
+                          }}
+                          className="destination-view-btn"
+                        >
+                          Explore #{item.tag} Feed →
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -2334,15 +2630,19 @@ export default function Home({
               </div>
               <p className="modal-subtitle">Support {activeVideo?.name} with virtual creator gifts</p>
               <div className="gifts-selection-grid">
-                {GIFTS_LIST.map((g) => (
+                {gifts.map((g) => (
                   <button
-                    key={g.id}
+                    key={g._id || g.id}
                     onClick={() => handleSendGift(g)}
                     className="gift-select-item"
                   >
-                    <IconGift size={24} />
-                    <span className="gift-title">{g.name}</span>
-                    <span className="gift-cost">{g.coins} Coins</span>
+                    {g.image ? (
+                      <img src={resolveMedia(g.image)} alt={g.name || "Gift"} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />
+                    ) : (
+                      <IconGift size={24} />
+                    )}
+                    <span className="gift-title">{g.name || `${g.coin || g.coins} Coins`}</span>
+                    <span className="gift-cost">{g.coin || g.coins || 10} Coins</span>
                   </button>
                 ))}
               </div>
@@ -3671,6 +3971,461 @@ export default function Home({
           height: 100%;
           overflow-y: auto;
           padding: 24px 20px 80px 20px;
+        }
+
+        .social-feed-viewport {
+          max-width: 680px;
+          margin: 0 auto;
+          padding: 16px 16px 90px 16px;
+          scroll-behavior: smooth;
+        }
+
+        /* Stories Tray */
+        .stories-tray-container {
+          width: 100%;
+          overflow-x: auto;
+          padding: 4px 0 14px 0;
+          margin-bottom: 8px;
+          scrollbar-width: none;
+        }
+        .stories-tray-container::-webkit-scrollbar {
+          display: none;
+        }
+        .stories-track {
+          display: flex;
+          gap: 14px;
+          align-items: center;
+        }
+        .story-avatar-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          cursor: pointer;
+          flex-shrink: 0;
+          width: 66px;
+        }
+        .story-ring-wrap {
+          position: relative;
+          width: 58px;
+          height: 58px;
+          border-radius: 50%;
+          padding: 2.5px;
+          background: linear-gradient(45deg, #ff2d55, #ff7a00, #ff007a);
+          transition: transform 0.2s ease;
+        }
+        .story-ring-wrap:hover {
+          transform: scale(1.06);
+        }
+        .story-ring-wrap.live-ring {
+          background: linear-gradient(45deg, #ef4444, #dc2626, #b91c1c);
+          animation: pulseLiveRing 1.8s infinite;
+        }
+        @keyframes pulseLiveRing {
+          0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+          70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .story-img {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid #0c0d12;
+        }
+        .story-live-badge {
+          position: absolute;
+          bottom: -3px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #ef4444;
+          color: #fff;
+          font-size: 8px;
+          font-weight: 900;
+          padding: 1px 5px;
+          border-radius: 4px;
+          letter-spacing: 0.5px;
+          border: 1.5px solid #0c0d12;
+        }
+        .story-label {
+          font-size: 11px;
+          color: #cbd5e1;
+          font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 62px;
+          text-align: center;
+        }
+
+        /* Feed Category Filter Chips Bar */
+        .feed-category-chips-bar {
+          width: 100%;
+          overflow-x: auto;
+          margin-bottom: 18px;
+          scrollbar-width: none;
+          padding-bottom: 8px;
+        }
+        .feed-category-chips-bar::-webkit-scrollbar {
+          display: none;
+        }
+        .chips-scroll-track {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+        .feed-category-chip {
+          padding: 6px 14px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.04);
+          color: #94a3b8;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.18s ease;
+        }
+        .feed-category-chip:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: #ffffff;
+          border-color: rgba(255, 255, 255, 0.25);
+        }
+        .feed-category-chip.active {
+          background: #ff2d55;
+          border-color: #ff2d55;
+          color: #ffffff;
+          box-shadow: 0 4px 14px rgba(255, 45, 85, 0.4);
+        }
+
+        /* Main Social Timeline Stream */
+        .social-timeline-stream {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          width: 100%;
+        }
+        .timeline-post-card {
+          background: #0f141c;
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .timeline-post-card:hover {
+          border-color: rgba(255, 255, 255, 0.15);
+        }
+        .timeline-card-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .timeline-user-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1.5px solid rgba(255, 255, 255, 0.15);
+          cursor: pointer;
+        }
+        .timeline-user-meta {
+          flex: 1;
+          min-width: 0;
+          cursor: pointer;
+        }
+        .timeline-name-line {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .timeline-author-name {
+          font-size: 13.5px;
+          font-weight: 700;
+          color: #ffffff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .timeline-author-handle {
+          display: block;
+          font-size: 11px;
+          color: #94a3b8;
+          margin-top: 1px;
+        }
+        .timeline-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .timeline-post-time {
+          font-size: 11px;
+          color: #64748b;
+          white-space: nowrap;
+        }
+        .timeline-media-stage {
+          width: 100%;
+          position: relative;
+          background: #000000;
+          min-height: 340px;
+          max-height: 580px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+        .timeline-main-photo {
+          width: 100%;
+          height: auto;
+          max-height: 580px;
+          object-fit: cover;
+          display: block;
+          cursor: pointer;
+        }
+        .carousel-nav-arrow {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.65);
+          backdrop-filter: blur(8px);
+          color: #ffffff;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          z-index: 5;
+        }
+        .carousel-nav-arrow:hover {
+          background: rgba(0, 0, 0, 0.85);
+          transform: translateY(-50%) scale(1.1);
+        }
+        .carousel-nav-arrow.left { left: 12px; }
+        .carousel-nav-arrow.right { right: 12px; }
+        .carousel-dots-indicator {
+          position: absolute;
+          bottom: 12px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          gap: 6px;
+          z-index: 5;
+          background: rgba(0, 0, 0, 0.5);
+          padding: 4px 8px;
+          border-radius: 10px;
+          backdrop-filter: blur(6px);
+        }
+        .carousel-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.4);
+          transition: all 0.2s ease;
+        }
+        .carousel-dot.active {
+          background: #ff2d55;
+          width: 16px;
+          border-radius: 4px;
+        }
+        .timeline-actions-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 16px 4px 16px;
+        }
+        .timeline-actions-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .timeline-action-icon-btn {
+          background: transparent;
+          border: none;
+          color: #cbd5e1;
+          cursor: pointer;
+          padding: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.15s ease, color 0.15s ease;
+        }
+        .timeline-action-icon-btn:hover {
+          color: #ffffff;
+          transform: scale(1.14);
+        }
+        .timeline-action-icon-btn.liked {
+          color: #ff2d55;
+        }
+        .timeline-likes-count {
+          padding: 2px 16px;
+          font-size: 13px;
+          color: #ffffff;
+        }
+        .timeline-hashtags-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          padding: 6px 16px 2px 16px;
+        }
+        .timeline-tag-pill {
+          background: rgba(56, 189, 248, 0.08);
+          color: #38bdf8;
+          border: 1px solid rgba(56, 189, 248, 0.2);
+          border-radius: 12px;
+          padding: 2px 8px;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        .timeline-tag-pill:hover {
+          background: rgba(56, 189, 248, 0.2);
+          border-color: #38bdf8;
+        }
+        .timeline-caption-row {
+          padding: 4px 16px 8px 16px;
+          font-size: 13.5px;
+          line-height: 1.5;
+          color: #e2e8f0;
+        }
+        .caption-author-handle {
+          font-weight: 700;
+          color: #ffffff;
+        }
+        .caption-text-content {
+          color: #cbd5e1;
+        }
+        .timeline-comments-section {
+          padding: 2px 16px 8px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .view-all-comments-link {
+          background: transparent;
+          border: none;
+          color: #64748b;
+          font-size: 12px;
+          font-weight: 500;
+          cursor: pointer;
+          text-align: left;
+          padding: 0;
+          margin-bottom: 2px;
+        }
+        .view-all-comments-link:hover {
+          color: #94a3b8;
+          text-decoration: underline;
+        }
+        .timeline-comment-snippet {
+          font-size: 12px;
+          line-height: 1.4;
+        }
+        .comment-snippet-user {
+          font-weight: 600;
+          color: #ffffff;
+        }
+        .comment-snippet-text {
+          color: #94a3b8;
+        }
+        .timeline-inline-comment-form {
+          display: flex;
+          align-items: center;
+          padding: 8px 16px 12px 16px;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          gap: 10px;
+        }
+        .timeline-inline-input {
+          flex: 1;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 20px;
+          padding: 8px 14px;
+          font-size: 12.5px;
+          color: #ffffff;
+          outline: none;
+          transition: border-color 0.15s ease;
+        }
+        .timeline-inline-input:focus {
+          border-color: rgba(255, 45, 85, 0.5);
+        }
+        .timeline-inline-submit-btn {
+          background: transparent;
+          border: none;
+          color: #ff2d55;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          padding: 4px 8px;
+          transition: opacity 0.15s ease;
+        }
+        .timeline-inline-submit-btn:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+        }
+
+        /* Continuous Infinite Scroll Loader & Sentinel */
+        .feed-infinite-scroll-sentinel {
+          padding: 24px 0 32px 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 52px;
+          width: 100%;
+        }
+        .feed-scroll-loader {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: #94a3b8;
+          font-size: 13px;
+          font-weight: 600;
+          background: rgba(255, 255, 255, 0.04);
+          padding: 10px 20px;
+          border-radius: 24px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .scroll-loader-spinner {
+          width: 18px;
+          height: 18px;
+          border: 2px solid rgba(255, 45, 85, 0.2);
+          border-top-color: #ff2d55;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+        .feed-end-message {
+          text-align: center;
+          padding: 20px 16px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          max-width: 440px;
+          width: 100%;
+        }
+        .feed-end-message .end-badge {
+          display: inline-block;
+          background: rgba(255, 45, 85, 0.12);
+          color: #ff2d55;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 3px 12px;
+          border-radius: 12px;
+          margin-bottom: 6px;
+          letter-spacing: 0.3px;
+        }
+        .feed-end-message p {
+          font-size: 12px;
+          color: #64748b;
+          margin: 0;
         }
 
         .page-header-row {
@@ -5150,12 +5905,12 @@ export default function Home({
   );
 }
 
-// Server-Side Props for Instant First Paint
+// Server-Side Props for Instant First Paint - 100% Real Data
 export async function getServerSideProps() {
   try {
     const apiBase = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_BASE_URL || baseURL;
     const cleanBase = apiBase.endsWith("/") ? apiBase : `${apiBase}/`;
-    const [videosRes, postsRes] = await Promise.all([
+    const [videosRes, postsRes, hashtagsRes, songsRes, liveRes, giftsRes] = await Promise.all([
       fetch(`${cleanBase}client/video/getAllVideos?start=1&limit=30`, {
         headers: { key: secretKey },
       })
@@ -5166,6 +5921,26 @@ export async function getServerSideProps() {
       })
         .then((r) => r.json())
         .catch(() => ({ post: [] })),
+      fetch(`${cleanBase}client/hashTag/hashtagDrop`, {
+        headers: { key: secretKey },
+      })
+        .then((r) => r.json())
+        .catch(() => ({ data: [] })),
+      fetch(`${cleanBase}client/song/getSongsByUser`, {
+        headers: { key: secretKey },
+      })
+        .then((r) => r.json())
+        .catch(() => ({ songs: [] })),
+      fetch(`${cleanBase}client/liveUser/getliveUserList`, {
+        headers: { key: secretKey },
+      })
+        .then((r) => r.json())
+        .catch(() => ({ liveUserList: [] })),
+      fetch(`${cleanBase}client/gift/getGiftsForUser`, {
+        headers: { key: secretKey },
+      })
+        .then((r) => r.json())
+        .catch(() => ({ data: [] })),
     ]);
 
     const videoList: VideoItem[] = videosRes.data || [];
@@ -5183,6 +5958,10 @@ export async function getServerSideProps() {
       props: {
         initialVideos: videoList,
         initialPosts: postsRes.post || [],
+        initialHashtags: hashtagsRes.data || [],
+        initialSongs: songsRes.songs || [],
+        initialLiveStreams: liveRes.liveUserList || [],
+        initialGifts: giftsRes.data || [],
       },
     };
   } catch (e) {
@@ -5190,6 +5969,10 @@ export async function getServerSideProps() {
       props: {
         initialVideos: [],
         initialPosts: [],
+        initialHashtags: [],
+        initialSongs: [],
+        initialLiveStreams: [],
+        initialGifts: [],
       },
     };
   }

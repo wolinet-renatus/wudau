@@ -72,29 +72,36 @@ exports.favoriteSongByUser = async (req, res) => {
 //get all songs when upload video by the user
 exports.getSongsByUser = async (req, res, next) => {
   try {
-    if (!req.query.userId) {
-      return res.status(200).json({ status: false, message: "userId must be requried." });
+    const isGuest = !req.query.userId || req.query.userId === "null" || req.query.userId === "undefined" || !mongoose.Types.ObjectId.isValid(req.query.userId);
+    const userId = isGuest ? null : new mongoose.Types.ObjectId(req.query.userId);
+
+    let user = null;
+    if (userId) {
+      user = await User.findOne({ _id: userId });
+      if (!user) {
+        return res.status(200).json({ status: false, message: "User does not found." });
+      }
+      if (user.isBlock) {
+        return res.status(200).json({ status: false, message: "you are blocked by the admin." });
+      }
     }
 
-    const userId = new mongoose.Types.ObjectId(req.query.userId);
-
-    const [user, songs] = await Promise.all([
-      User.findOne({ _id: userId }),
-      Song.aggregate([
-        {
-          $lookup: {
-            from: "songcategories",
-            localField: "songCategoryId",
-            foreignField: "_id",
-            as: "songCategory",
-          },
+    const songs = await Song.aggregate([
+      {
+        $lookup: {
+          from: "songcategories",
+          localField: "songCategoryId",
+          foreignField: "_id",
+          as: "songCategory",
         },
-        {
-          $unwind: {
-            path: "$songCategory",
-            preserveNullAndEmptyArrays: false,
-          },
+      },
+      {
+        $unwind: {
+          path: "$songCategory",
+          preserveNullAndEmptyArrays: true,
         },
+      },
+      ...(userId ? [
         {
           $lookup: {
             from: "songfavorites",
@@ -110,30 +117,23 @@ exports.getSongsByUser = async (req, res, next) => {
             ],
             as: "isFavorite",
           },
+        }
+      ] : []),
+      {
+        $project: {
+          singerName: 1,
+          songTitle: 1,
+          songTime: 1,
+          songLink: 1,
+          songImage: 1,
+          createdAt: 1,
+          songCategoryName: "$songCategory.name",
+          songCategoryImage: "$songCategory.image",
+          isFavorite: userId ? { $cond: { if: { $gt: [{ $size: "$isFavorite" }, 0] }, then: true, else: false } } : { $literal: false },
         },
-        {
-          $project: {
-            singerName: 1,
-            songTitle: 1,
-            songTime: 1,
-            songLink: 1,
-            songImage: 1,
-            createdAt: 1,
-            songCategoryName: "$songCategory.name",
-            songCategoryImage: "$songCategory.image",
-            isFavorite: { $cond: { if: { $gt: [{ $size: "$isFavorite" }, 0] }, then: true, else: false } },
-          },
-        },
-      ]),
+      },
+      { $sort: { createdAt: -1 } },
     ]);
-
-    if (!user) {
-      return res.status(200).json({ status: false, message: "User does not found." });
-    }
-
-    if (user.isBlock) {
-      return res.status(200).json({ status: false, message: "you are blocked by the admin." });
-    }
 
     return res.status(200).json({ status: true, message: "Retrieve the list of songs.", songs: songs });
   } catch (error) {
