@@ -360,8 +360,8 @@ export default function Home({
 }) {
   const router = useRouter();
 
-  // Navigation & Viewport State - Defaults to "social" (Home Feed) for fluid multi-post scrolling
-  const [currentTab, setCurrentTab] = useState<"social" | "reels" | "live" | "music" | "explore" | "profile">("social");
+  // Navigation & Viewport State - Defaults to "reels" (Vertical Video Experience) with Auto-Scroll
+  const [currentTab, setCurrentTab] = useState<"social" | "reels" | "live" | "music" | "explore" | "profile">("reels");
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [currentFilter, setCurrentFilter] = useState<string>("all");
   const [currentReelIndex, setCurrentReelIndex] = useState<number>(0);
@@ -1174,7 +1174,15 @@ export default function Home({
             </button>
 
             {/* Brand Logo */}
-            <Link href="/" className="brand-link">
+            <Link
+              href="/"
+              className="brand-link"
+              onClick={(e) => {
+                e.preventDefault();
+                setCurrentTab("reels");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
               <div className="brand-logo-mark">W</div>
               <span className="brand-name">WUDAU</span>
             </Link>
@@ -1185,17 +1193,6 @@ export default function Home({
             <nav className="header-main-nav">
               <button
                 onClick={() => {
-                  setCurrentTab("social");
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className={`header-nav-tab ${currentTab === "social" ? "active" : ""}`}
-                title="Community Feed"
-              >
-                <IconCommunity size={16} />
-                <span>Feed</span>
-              </button>
-              <button
-                onClick={() => {
                   setCurrentTab("reels");
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
@@ -1204,6 +1201,17 @@ export default function Home({
               >
                 <IconReels size={16} />
                 <span>Reels</span>
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentTab("social");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`header-nav-tab ${currentTab === "social" ? "active" : ""}`}
+                title="Community Feed"
+              >
+                <IconCommunity size={16} />
+                <span>Feed</span>
               </button>
               <button
                 onClick={() => {
@@ -2923,46 +2931,62 @@ export default function Home({
           display: flex;
           justify-content: center;
           align-items: center;
-          padding: 0 12px;
+          padding: 0 16px;
           min-width: 0;
         }
 
         .header-main-nav {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 4px;
-          background: rgba(255, 255, 255, 0.03);
-          padding: 4px 6px;
-          border-radius: 24px;
-          border: 1px solid rgba(255, 255, 255, 0.07);
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.04);
+          padding: 5px 8px;
+          border-radius: 26px;
+          border: 1px solid rgba(255, 255, 255, 0.09);
+          flex-shrink: 0;
         }
 
         .header-nav-tab {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 6px;
-          padding: 6px 14px;
-          border: none;
+          justify-content: center;
+          gap: 7px;
+          padding: 7px 16px;
+          margin: 0;
+          border: 1px solid transparent;
+          outline: none;
+          -webkit-appearance: none;
+          appearance: none;
           background: transparent;
           color: var(--text-secondary);
           font-size: 13px;
           font-weight: 600;
+          line-height: 1;
           cursor: pointer;
-          border-radius: 18px;
+          border-radius: 20px;
           white-space: nowrap;
-          transition: all 0.18s ease;
+          flex-shrink: 0;
+          user-select: none;
+          transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .header-nav-tab:focus,
+        .header-nav-tab:focus-visible {
+          outline: none !important;
+          box-shadow: none;
         }
 
         .header-nav-tab:hover {
           color: #ffffff;
-          background: rgba(255, 255, 255, 0.07);
+          background: rgba(255, 255, 255, 0.06);
         }
 
         .header-nav-tab.active {
           color: #ffffff;
           background: rgba(255, 255, 255, 0.14);
+          border: 1px solid rgba(255, 255, 255, 0.2);
           font-weight: 700;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
         }
 
         /* Header Right Controls */
