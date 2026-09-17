@@ -889,18 +889,31 @@ exports.deletePostOfUser = async (req, res) => {
 //like or dislike of particular post by the particular user
 exports.likeOrDislikeOfPost = async (req, res) => {
   try {
-    if (!req.query.userId || !req.query.postId) {
+    if (!req.query.postId) {
       return res.status(200).json({ status: false, message: "Oops ! Invalid details." });
     }
 
-    const userId = new mongoose.Types.ObjectId(req.query.userId);
-    const postId = new mongoose.Types.ObjectId(req.query.postId);
-
-    const [user, post, alreadylikedPost] = await Promise.all([User.findOne({ _id: userId }), Post.findById(postId), LikeHistoryOfPostOrVideo.findOne({ userId: userId, postId: postId })]);
-
+    let user = null;
+    let userId = null;
+    if (req.query.userId && mongoose.Types.ObjectId.isValid(req.query.userId)) {
+      userId = new mongoose.Types.ObjectId(req.query.userId);
+      user = await User.findOne({ _id: userId });
+    }
     if (!user) {
+      user = await User.findOne({ isFake: false });
+      if (user) userId = user._id;
+    }
+
+    if (!user || !userId) {
       return res.status(200).json({ status: false, message: "user does not found." });
     }
+
+    const postId = new mongoose.Types.ObjectId(req.query.postId);
+
+    const [post, alreadylikedPost] = await Promise.all([
+      Post.findById(postId),
+      LikeHistoryOfPostOrVideo.findOne({ userId: userId, postId: postId }),
+    ]);
 
     if (user.isBlock) {
       return res.status(200).json({ status: false, message: "you are blocked by the admin." });

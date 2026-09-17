@@ -185,6 +185,62 @@ const IconMapPin = ({ size = 13 }: { size?: number }) => (
   </SvgIcon>
 );
 
+const IconChevronLeft = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <polyline points="15 18 9 12 15 6" />
+  </SvgIcon>
+);
+
+const IconChevronRight = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <polyline points="9 18 15 12 9 6" />
+  </SvgIcon>
+);
+
+const IconBookmark = ({ filled = false, size = 20 }: { filled?: boolean; size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill={filled ? "#f59e0b" : "none"}
+    stroke={filled ? "#f59e0b" : "currentColor"}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ flexShrink: 0 }}
+  >
+    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
+const IconClose = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </SvgIcon>
+);
+
+const IconSend = ({ size = 18 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <line x1="22" y1="2" x2="11" y2="13" />
+    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+  </SvgIcon>
+);
+
+const IconCheck = ({ size = 14 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <polyline points="20 6 9 17 4 12" />
+  </SvgIcon>
+);
+
+const IconLayers = ({ size = 16 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+    <polyline points="2 17 12 22 22 17" />
+    <polyline points="2 12 12 17 22 12" />
+  </SvgIcon>
+);
+
 // ============================================================================
 // DATA MODELS
 // ============================================================================
@@ -208,6 +264,7 @@ interface VideoItem {
   songLink?: string;
   singerName?: string;
   location?: string;
+  isLike?: boolean;
 }
 
 interface PostItem {
@@ -227,13 +284,21 @@ interface PostItem {
   time: string;
   location?: string;
   mainPostImage?: string;
+  isLike?: boolean;
+  isFollow?: boolean;
 }
 
 interface CommentItem {
-  id: string;
+  id?: string;
+  _id?: string;
   userName: string;
-  text: string;
+  name?: string;
+  userImage?: string;
+  commentText?: string;
+  text?: string;
   time: string;
+  totalLikes?: number;
+  isLike?: boolean;
 }
 
 interface GiftItem {
@@ -303,6 +368,18 @@ export default function Home({
   const [commentInput, setCommentInput] = useState<string>("");
   const [floatingHearts, setFloatingHearts] = useState<{ id: number; x: number; y: number }[]>([]);
 
+  // Community Posts Interactive State
+  const [selectedPost, setSelectedPost] = useState<PostItem | null>(null);
+  const [selectedPostPhotoIndex, setSelectedPostPhotoIndex] = useState<number>(0);
+  const [postLikesMap, setPostLikesMap] = useState<{ [postId: string]: boolean }>({});
+  const [postLikesCount, setPostLikesCount] = useState<{ [postId: string]: number }>({});
+  const [postCommentsCount, setPostCommentsCount] = useState<{ [postId: string]: number }>({});
+  const [postCommentsMap, setPostCommentsMap] = useState<{ [postId: string]: CommentItem[] }>({});
+  const [isLoadingPostComments, setIsLoadingPostComments] = useState<boolean>(false);
+  const [newPostCommentText, setNewPostCommentText] = useState<string>("");
+  const [followedUsersMap, setFollowedUsersMap] = useState<{ [userId: string]: boolean }>({});
+  const [postHeartEffect, setPostHeartEffect] = useState<boolean>(false);
+
   // Music Preview in Sound Tab
   const [playingAudioUrl, setPlayingAudioUrl] = useState<string | null>(null);
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
@@ -336,6 +413,28 @@ export default function Home({
     }
   }, []);
 
+  // Sync post states when posts change
+  useEffect(() => {
+    if (posts && posts.length) {
+      const initialLikesMap: { [id: string]: boolean } = {};
+      const initialLikesCount: { [id: string]: number } = {};
+      const initialCommentsCount: { [id: string]: number } = {};
+      const initialFollowMap: { [id: string]: boolean } = {};
+      posts.forEach((p) => {
+        initialLikesMap[p._id] = !!p.isLike;
+        initialLikesCount[p._id] = p.totalLikes || 0;
+        initialCommentsCount[p._id] = p.totalComments || 0;
+        if (p.userId) {
+          initialFollowMap[p.userId] = !!p.isFollow;
+        }
+      });
+      setPostLikesMap((prev) => ({ ...initialLikesMap, ...prev }));
+      setPostLikesCount((prev) => ({ ...initialLikesCount, ...prev }));
+      setPostCommentsCount((prev) => ({ ...initialCommentsCount, ...prev }));
+      setFollowedUsersMap((prev) => ({ ...initialFollowMap, ...prev }));
+    }
+  }, [posts]);
+
   // Fetch updated data from API on mount
   useEffect(() => {
     const fetchData = async () => {
@@ -353,7 +452,8 @@ export default function Home({
     fetchData();
   }, []);
 
-  // Keyboard navigation for reels
+
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -362,8 +462,16 @@ export default function Home({
         setShowGiftModal(false);
         setShowAuthModal(false);
         setMobileSearchOpen(false);
+        setSelectedPost(null);
       }
-      if (currentTab === "reels" && !showCommentsDrawer && !showGiftModal && !showAuthModal) {
+      if (selectedPost && selectedPost.postImage && selectedPost.postImage.length > 1) {
+        if (e.key === "ArrowLeft") {
+          setSelectedPostPhotoIndex((prev) => (prev > 0 ? prev - 1 : selectedPost.postImage.length - 1));
+        } else if (e.key === "ArrowRight") {
+          setSelectedPostPhotoIndex((prev) => (prev < selectedPost.postImage.length - 1 ? prev + 1 : 0));
+        }
+      }
+      if (currentTab === "reels" && !showCommentsDrawer && !showGiftModal && !showAuthModal && !selectedPost) {
         if (e.key === "ArrowDown") {
           handleNextReel();
         } else if (e.key === "ArrowUp") {
@@ -378,7 +486,7 @@ export default function Home({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentTab, currentReelIndex, videos.length, showCommentsDrawer, showGiftModal, showAuthModal]);
+  }, [currentTab, currentReelIndex, videos.length, showCommentsDrawer, showGiftModal, showAuthModal, selectedPost]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -471,6 +579,23 @@ export default function Home({
   }, [videos, currentFilter, searchQuery]);
 
   const activeVideo = filteredVideos[currentReelIndex] || filteredVideos[0];
+
+  // Fetch real video comments when comments drawer opens
+  useEffect(() => {
+    if (showCommentsDrawer && activeVideo?._id) {
+      const userIdParam = currentUser?._id ? `&userId=${currentUser._id}` : "";
+      axios
+        .get(`client/postOrvideoComment/getpostOrvideoComments?videoId=${activeVideo._id}&type=video${userIdParam}`, {
+          headers: { key: secretKey },
+        })
+        .then((res) => {
+          if (res.data?.status && Array.isArray(res.data.postOrVideoComment) && res.data.postOrVideoComment.length > 0) {
+            setCommentsMap((prev) => ({ ...prev, [activeVideo._id]: res.data.postOrVideoComment }));
+          }
+        })
+        .catch((err) => console.warn("Fetch video comments error:", err));
+    }
+  }, [showCommentsDrawer, activeVideo?._id]);
 
   // Reset playback progress when switching reel or category
   useEffect(() => {
@@ -578,7 +703,12 @@ export default function Home({
     const currentCount = reelLikesCount[id] !== undefined ? reelLikesCount[id] : activeVideo?.totalLikes || 0;
     setLikedReelIds((prev) => ({ ...prev, [id]: !wasLiked }));
     setReelLikesCount((prev) => ({ ...prev, [id]: wasLiked ? Math.max(0, currentCount - 1) : currentCount + 1 }));
-    showToast(wasLiked ? "Unliked" : "Liked reel");
+    showToast(wasLiked ? "Unliked" : "Liked reel ❤️");
+
+    const userIdParam = currentUser?._id ? `&userId=${currentUser._id}` : "";
+    axios
+      .post(`client/video/likeOrDislikeOfVideo?videoId=${id}${userIdParam}`, {}, { headers: { key: secretKey } })
+      .catch((err) => console.warn("Video like sync error:", err));
   };
 
   const handleShare = (video: VideoItem, e?: React.MouseEvent) => {
@@ -608,17 +738,157 @@ export default function Home({
     e.preventDefault();
     if (!commentInput.trim()) return;
     const vidId = activeVideo?._id || "default";
+    const text = commentInput.trim();
     const currentList = commentsMap[vidId] || commentsMap["default"] || [];
     const commenterName = currentUser?.userName || "@You";
     const newComment: CommentItem = {
       id: "c_" + Date.now(),
+      _id: "c_" + Date.now(),
       userName: commenterName,
-      text: commentInput.trim(),
+      text: text,
+      commentText: text,
       time: "Just now",
     };
     setCommentsMap({ ...commentsMap, [vidId]: [newComment, ...currentList] });
     setCommentInput("");
-    showToast("Comment posted");
+    showToast("Comment posted 💬");
+
+    if (activeVideo?._id) {
+      const userIdParam = currentUser?._id ? `&userId=${currentUser._id}` : "";
+      axios
+        .post(
+          `client/postOrvideoComment/commentOfPostOrVideo?videoId=${activeVideo._id}&commentText=${encodeURIComponent(text)}&type=video${userIdParam}`,
+          {},
+          { headers: { key: secretKey } }
+        )
+        .catch((err) => console.warn("Video comment error:", err));
+    }
+  };
+
+  // ============================================================================
+  // COMMUNITY POST INTERACTION HANDLERS
+  // ============================================================================
+  const handleTogglePostLike = (post: PostItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const pid = post._id;
+    const isLiked = postLikesMap[pid] !== undefined ? postLikesMap[pid] : !!post.isLike;
+    const curCount = postLikesCount[pid] !== undefined ? postLikesCount[pid] : (post.totalLikes || 0);
+
+    const nextLiked = !isLiked;
+    const nextCount = nextLiked ? curCount + 1 : Math.max(0, curCount - 1);
+
+    setPostLikesMap((prev) => ({ ...prev, [pid]: nextLiked }));
+    setPostLikesCount((prev) => ({ ...prev, [pid]: nextCount }));
+
+    if (nextLiked) {
+      setPostHeartEffect(true);
+      setTimeout(() => setPostHeartEffect(false), 700);
+      showToast("Liked post ❤️");
+    } else {
+      showToast("Unliked post");
+    }
+
+    const userIdParam = currentUser?._id ? `&userId=${currentUser._id}` : "";
+    axios
+      .post(`client/post/likeOrDislikeOfPost?postId=${pid}${userIdParam}`, {}, { headers: { key: secretKey } })
+      .catch((err) => console.warn("Post like sync error:", err));
+  };
+
+  const handleOpenPostModal = (post: PostItem, focusComment = false) => {
+    setSelectedPost(post);
+    setSelectedPostPhotoIndex(0);
+    setNewPostCommentText("");
+
+    setIsLoadingPostComments(true);
+    const userIdParam = currentUser?._id ? `&userId=${currentUser._id}` : "";
+    axios
+      .get(`client/postOrvideoComment/getpostOrvideoComments?postId=${post._id}&type=post${userIdParam}`, {
+        headers: { key: secretKey },
+      })
+      .then((res) => {
+        if (res.data?.status && Array.isArray(res.data.postOrVideoComment)) {
+          setPostCommentsMap((prev) => ({ ...prev, [post._id]: res.data.postOrVideoComment }));
+          setPostCommentsCount((prev) => ({ ...prev, [post._id]: res.data.postOrVideoComment.length }));
+        }
+      })
+      .catch((err) => console.warn("Fetch post comments error:", err))
+      .finally(() => setIsLoadingPostComments(false));
+  };
+
+  const handleClosePostModal = () => {
+    setSelectedPost(null);
+    setSelectedPostPhotoIndex(0);
+    setNewPostCommentText("");
+  };
+
+  const handleAddPostComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPostCommentText.trim() || !selectedPost) return;
+
+    const pid = selectedPost._id;
+    const text = newPostCommentText.trim();
+    const commenterName = currentUser?.userName || "@You";
+    const commenterDisplayName = currentUser?.name || "You";
+    const commenterImage = currentUser?.image || "storage/avatar_kassim.png";
+
+    const newCommentItem: CommentItem = {
+      _id: "temp_" + Date.now(),
+      id: "temp_" + Date.now(),
+      userName: commenterName,
+      name: commenterDisplayName,
+      userImage: commenterImage,
+      commentText: text,
+      text: text,
+      time: "Just now",
+      totalLikes: 0,
+      isLike: false,
+    };
+
+    const currentList = postCommentsMap[pid] || [];
+    setPostCommentsMap((prev) => ({
+      ...prev,
+      [pid]: [newCommentItem, ...currentList],
+    }));
+
+    const curCount = postCommentsCount[pid] !== undefined ? postCommentsCount[pid] : (selectedPost.totalComments || 0);
+    setPostCommentsCount((prev) => ({ ...prev, [pid]: curCount + 1 }));
+
+    setNewPostCommentText("");
+    showToast("Comment posted 💬");
+
+    const userIdParam = currentUser?._id ? `&userId=${currentUser._id}` : "";
+    axios
+      .post(
+        `client/postOrvideoComment/commentOfPostOrVideo?postId=${pid}&commentText=${encodeURIComponent(text)}&type=post${userIdParam}`,
+        {},
+        { headers: { key: secretKey } }
+      )
+      .catch((err) => console.warn("Post comment sync error:", err));
+  };
+
+  const handleToggleFollow = (creatorUserId: string, userName?: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const isFollowed = !!followedUsersMap[creatorUserId];
+    setFollowedUsersMap((prev) => ({ ...prev, [creatorUserId]: !isFollowed }));
+    showToast(isFollowed ? `Unfollowed ${userName || "creator"}` : `Following ${userName || "creator"} ✨`);
+  };
+
+  const handleSharePost = (post: PostItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (typeof window !== "undefined") {
+      const url = `${window.location.origin}/?tab=social&postId=${post._id}`;
+      if (navigator.share) {
+        navigator
+          .share({
+            title: post.caption || "View post on WUDAU",
+            url,
+          })
+          .catch(() => {});
+      } else {
+        navigator.clipboard?.writeText(url);
+        showToast("Post link copied to clipboard");
+      }
+    }
   };
 
   const handleToggleMusic = (songUrl?: string) => {
@@ -1336,45 +1606,109 @@ export default function Home({
             <div className="tab-surface-page">
               <div className="page-header-row">
                 <h2>Community Feed</h2>
-                <p>Behind the scenes moments, creative photography, and culture updates.</p>
+                <p>Behind the scenes moments, creative photography, and culture updates from creators across Africa & beyond.</p>
               </div>
               <div className="community-posts-grid">
-                {posts.map((post) => (
-                  <article key={post._id} className="community-post-card">
-                    <div className="post-header-row">
-                      <img
-                        src={resolveMedia(post.userImage)}
-                        alt={post.name}
-                        className="post-user-avatar"
-                      />
-                      <div className="post-user-info">
-                        <span className="post-user-name">{post.name}</span>
-                        <span className="post-user-handle">{post.location || post.userName}</span>
+                {posts.map((post) => {
+                  const isPostLiked = postLikesMap[post._id] !== undefined ? postLikesMap[post._id] : !!post.isLike;
+                  const currentLikes = postLikesCount[post._id] !== undefined ? postLikesCount[post._id] : (post.totalLikes || 0);
+                  const currentComments = postCommentsCount[post._id] !== undefined ? postCommentsCount[post._id] : (post.totalComments || 0);
+                  const isCreatorFollowed = !!followedUsersMap[post.userId];
+                  const hasMultiImages = post.postImage && post.postImage.length > 1;
+
+                  return (
+                    <article
+                      key={post._id}
+                      className="community-post-card"
+                      onClick={() => handleOpenPostModal(post)}
+                    >
+                      <div className="post-header-row" onClick={(e) => e.stopPropagation()}>
+                        <img
+                          src={resolveMedia(post.userImage)}
+                          alt={post.name}
+                          className="post-user-avatar"
+                        />
+                        <div className="post-user-info">
+                          <div className="post-user-name-line">
+                            <span className="post-user-name">{post.name}</span>
+                            {post.isVerified && (
+                              <span className="verified-icon-badge" title="Verified Creator">
+                                <IconCheck size={12} />
+                              </span>
+                            )}
+                          </div>
+                          <span className="post-user-handle">
+                            {post.location ? (
+                              <span className="location-pin-wrap">
+                                <IconMapPin size={11} /> {post.location}
+                              </span>
+                            ) : (
+                              post.userName
+                            )}
+                          </span>
+                        </div>
+                        {post.userId && (
+                          <button
+                            onClick={(e) => handleToggleFollow(post.userId, post.userName, e)}
+                            className={`post-card-follow-btn ${isCreatorFollowed ? "active" : ""}`}
+                          >
+                            {isCreatorFollowed ? "Following" : "Follow"}
+                          </button>
+                        )}
+                        <span className="post-timestamp">{post.time || "Recently"}</span>
                       </div>
-                      <span className="post-timestamp">{post.time || "Recently"}</span>
-                    </div>
-                    <div className="post-media-box">
-                      <img
-                        src={resolveMedia(post.postImage?.[0] || post.mainPostImage)}
-                        alt="Community Post"
-                        className="post-main-img"
-                      />
-                    </div>
-                    <div className="post-body-content">
-                      <p className="post-caption-text">{post.caption}</p>
-                      <div className="post-action-buttons">
-                        <button onClick={() => showToast("Liked post")} className="post-action-btn">
-                          <IconHeart size={16} />
-                          <span>{post.totalLikes || 18} Likes</span>
-                        </button>
-                        <button onClick={() => setShowCommentsDrawer(true)} className="post-action-btn">
-                          <IconMessage size={16} />
-                          <span>Comments</span>
-                        </button>
+
+                      <div className="post-media-box">
+                        <img
+                          src={resolveMedia(post.postImage?.[0] || post.mainPostImage)}
+                          alt="Community Post"
+                          className="post-main-img"
+                        />
+                        {hasMultiImages && (
+                          <div className="post-multi-indicator" title="Multiple photos">
+                            <IconLayers size={13} />
+                            <span>1/{post.postImage.length}</span>
+                          </div>
+                        )}
+                        <div className="post-overlay-hint">
+                          <span>Click to open details & comments</span>
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                ))}
+
+                      <div className="post-body-content">
+                        <p className="post-caption-text">
+                          <span className="post-author-bold">{post.userName}</span>{" "}
+                          {post.caption}
+                        </p>
+                        <div className="post-action-buttons" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={(e) => handleTogglePostLike(post, e)}
+                            className={`post-action-btn ${isPostLiked ? "liked" : ""}`}
+                            title={isPostLiked ? "Unlike post" : "Like post"}
+                          >
+                            <IconHeart size={18} filled={isPostLiked} />
+                            <span>{currentLikes.toLocaleString()} Likes</span>
+                          </button>
+                          <button
+                            onClick={() => handleOpenPostModal(post, true)}
+                            className="post-action-btn"
+                            title="View and add comments"
+                          >
+                            <IconMessage size={18} />
+                            <span>{currentComments.toLocaleString()} Comments</span>
+                          </button>
+                          <button
+                            onClick={(e) => handleSharePost(post, e)}
+                            className="post-action-btn share"
+                            title="Share post"
+                          >
+                            <IconShare size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -1660,17 +1994,21 @@ export default function Home({
               </div>
 
               <div className="sheet-comments-scroll">
-                {(commentsMap[activeVideo._id] || commentsMap["default"] || []).map((c) => (
-                  <div key={c.id} className="comment-thread-item">
-                    <div className="comment-initial-badge">
-                      {c.userName.slice(1, 3).toUpperCase()}
-                    </div>
+                {(commentsMap[activeVideo._id] || commentsMap["default"] || []).map((c, idx) => (
+                  <div key={c._id || c.id || idx} className="comment-thread-item">
+                    {c.userImage ? (
+                      <img src={resolveMedia(c.userImage)} alt={c.userName} className="comment-thread-avatar-img" />
+                    ) : (
+                      <div className="comment-initial-badge">
+                        {(c.userName || "U").slice(1, 3).toUpperCase()}
+                      </div>
+                    )}
                     <div className="comment-body-bubble">
                       <div className="comment-author-line">
-                        <span className="comment-author-name">{c.userName}</span>
+                        <span className="comment-author-name">{c.userName || c.name}</span>
                         <span className="comment-time-ago">{c.time}</span>
                       </div>
-                      <p className="comment-message-text">{c.text}</p>
+                      <p className="comment-message-text">{c.commentText || c.text}</p>
                     </div>
                   </div>
                 ))}
@@ -1688,6 +2026,296 @@ export default function Home({
                   Send
                 </button>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================================== */}
+        {/* POST DETAIL & INTERACTIVE COMMENTS MODAL                            */}
+        {/* ==================================================================== */}
+        {selectedPost && (
+          <div className="post-modal-overlay" onClick={handleClosePostModal}>
+            <div className="post-modal-container" onClick={(e) => e.stopPropagation()}>
+              {/* LEFT: MEDIA CAROUSEL AREA */}
+              <div
+                className="post-modal-media-col"
+                onDoubleClick={(e) => handleTogglePostLike(selectedPost, e)}
+              >
+                {/* Current Image */}
+                {selectedPost.postImage && selectedPost.postImage.length > 0 ? (
+                  <img
+                    src={resolveMedia(
+                      selectedPost.postImage[selectedPostPhotoIndex] ||
+                        selectedPost.mainPostImage ||
+                        selectedPost.postImage[0]
+                    )}
+                    alt={selectedPost.caption}
+                    className="post-modal-media-img"
+                  />
+                ) : (
+                  <img
+                    src={resolveMedia(selectedPost.mainPostImage || selectedPost.postImage?.[0])}
+                    alt={selectedPost.caption}
+                    className="post-modal-media-img"
+                  />
+                )}
+
+                {/* Double click floating heart burst */}
+                {postHeartEffect && (
+                  <div className="modal-floating-heart-burst">
+                    <IconHeart size={90} filled={true} />
+                  </div>
+                )}
+
+                {/* Carousel Prev/Next Controls */}
+                {selectedPost.postImage && selectedPost.postImage.length > 1 && (
+                  <>
+                    <button
+                      className="carousel-btn prev"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPostPhotoIndex((prev) =>
+                          prev > 0 ? prev - 1 : selectedPost.postImage.length - 1
+                        );
+                      }}
+                      title="Previous photo (Arrow Left)"
+                    >
+                      <IconChevronLeft size={20} />
+                    </button>
+                    <button
+                      className="carousel-btn next"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPostPhotoIndex((prev) =>
+                          prev < selectedPost.postImage.length - 1 ? prev + 1 : 0
+                        );
+                      }}
+                      title="Next photo (Arrow Right)"
+                    >
+                      <IconChevronRight size={20} />
+                    </button>
+
+                    {/* Dots Indicator */}
+                    <div className="carousel-dots-row">
+                      {selectedPost.postImage.map((_, dotIdx) => (
+                        <span
+                          key={dotIdx}
+                          className={`carousel-dot ${dotIdx === selectedPostPhotoIndex ? "active" : ""}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPostPhotoIndex(dotIdx);
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Counter Badge */}
+                    <span className="carousel-counter-tag">
+                      {selectedPostPhotoIndex + 1} / {selectedPost.postImage.length}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* RIGHT: DETAILS & COMMENTS THREAD */}
+              <div className="post-modal-details-col">
+                {/* Header: Author Info */}
+                <div className="modal-author-header">
+                  <div className="modal-author-left">
+                    <img
+                      src={resolveMedia(selectedPost.userImage)}
+                      alt={selectedPost.name}
+                      className="modal-author-avatar"
+                    />
+                    <div className="modal-author-names">
+                      <div className="modal-author-display-name">
+                        <span>{selectedPost.name}</span>
+                        {selectedPost.isVerified && (
+                          <span className="verified-icon-badge" title="Verified Creator">
+                            <IconCheck size={13} />
+                          </span>
+                        )}
+                      </div>
+                      <span className="modal-author-location">
+                        {selectedPost.location ? (
+                          <>
+                            <IconMapPin size={11} /> {selectedPost.location}
+                          </>
+                        ) : (
+                          selectedPost.userName
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="modal-header-actions">
+                    {selectedPost.userId && (
+                      <button
+                        onClick={(e) => handleToggleFollow(selectedPost.userId, selectedPost.userName, e)}
+                        className={`follow-toggle-btn ${followedUsersMap[selectedPost.userId] ? "active" : ""}`}
+                      >
+                        {followedUsersMap[selectedPost.userId] ? "Following" : "Follow"}
+                      </button>
+                    )}
+                    <button
+                      onClick={handleClosePostModal}
+                      className="modal-close-x"
+                      title="Close (Esc)"
+                    >
+                      <IconClose size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Scrollable Comments & Caption Thread */}
+                <div className="modal-comments-thread">
+                  {/* Original Post Caption */}
+                  <div className="modal-original-caption-box">
+                    <img
+                      src={resolveMedia(selectedPost.userImage)}
+                      alt={selectedPost.name}
+                      className="caption-avatar"
+                    />
+                    <div className="caption-content">
+                      <span className="caption-author">{selectedPost.userName}</span>
+                      <span className="caption-text">
+                        {selectedPost.caption.split(" ").map((word, wIdx) => {
+                          if (word.startsWith("#")) {
+                            return (
+                              <span key={wIdx} className="caption-hashtag">
+                                {word}{" "}
+                              </span>
+                            );
+                          }
+                          return word + " ";
+                        })}
+                      </span>
+                      <span className="caption-time">{selectedPost.time || "Recently"}</span>
+                    </div>
+                  </div>
+
+                  {/* Comments List */}
+                  {isLoadingPostComments ? (
+                    <div className="comments-loading-state">
+                      <div className="comments-spinner" />
+                      <span>Loading comments...</span>
+                    </div>
+                  ) : (postCommentsMap[selectedPost._id] || []).length === 0 ? (
+                    <div className="comments-empty-state">
+                      <IconMessage size={32} />
+                      <p className="empty-title">No comments yet</p>
+                      <p className="empty-desc">Start the conversation! Share what you think about this post.</p>
+                    </div>
+                  ) : (
+                    (postCommentsMap[selectedPost._id] || []).map((comment, cIdx) => (
+                      <div key={comment._id || comment.id || cIdx} className="single-comment-item">
+                        {comment.userImage ? (
+                          <img
+                            src={resolveMedia(comment.userImage)}
+                            alt={comment.userName}
+                            className="comment-user-avatar"
+                          />
+                        ) : (
+                          <div className="comment-user-avatar placeholder">
+                            {(comment.name || comment.userName || "U").slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="comment-text-box">
+                          <div className="comment-header-line">
+                            <span className="comment-handle">{comment.userName || comment.name}</span>
+                            <span className="comment-timestamp">{comment.time || "Recently"}</span>
+                          </div>
+                          <p className="comment-body-text">{comment.commentText || comment.text}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Footer: Action Bar */}
+                <div className="modal-action-bar">
+                  <div className="modal-actions-row">
+                    <div className="modal-actions-left">
+                      <button
+                        onClick={(e) => handleTogglePostLike(selectedPost, e)}
+                        className={`modal-icon-btn ${
+                          postLikesMap[selectedPost._id] !== undefined
+                            ? postLikesMap[selectedPost._id]
+                              ? "liked"
+                              : ""
+                            : selectedPost.isLike
+                            ? "liked"
+                            : ""
+                        }`}
+                        title="Like post"
+                      >
+                        <IconHeart
+                          size={24}
+                          filled={
+                            postLikesMap[selectedPost._id] !== undefined
+                              ? postLikesMap[selectedPost._id]
+                              : !!selectedPost.isLike
+                          }
+                        />
+                      </button>
+                      <button
+                        className="modal-icon-btn"
+                        title="Comments count"
+                      >
+                        <IconMessage size={24} />
+                      </button>
+                      <button
+                        onClick={(e) => handleSharePost(selectedPost, e)}
+                        className="modal-icon-btn"
+                        title="Share post"
+                      >
+                        <IconShare size={24} />
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => showToast("Post saved to bookmarks")}
+                      className="modal-icon-btn"
+                      title="Bookmark post"
+                    >
+                      <IconBookmark size={22} />
+                    </button>
+                  </div>
+
+                  <span className="modal-likes-label">
+                    {(
+                      postLikesCount[selectedPost._id] !== undefined
+                        ? postLikesCount[selectedPost._id]
+                        : selectedPost.totalLikes || 0
+                    ).toLocaleString()}{" "}
+                    likes
+                  </span>
+                  <span className="modal-date-label">
+                    {(
+                      postCommentsCount[selectedPost._id] !== undefined
+                        ? postCommentsCount[selectedPost._id]
+                        : selectedPost.totalComments || 0
+                    ).toLocaleString()}{" "}
+                    comments · {selectedPost.time || "Recently"}
+                  </span>
+                </div>
+
+                {/* Footer: Add Comment Form */}
+                <form onSubmit={handleAddPostComment} className="modal-comment-input-form">
+                  <input
+                    type="text"
+                    placeholder={`Add a comment as ${currentUser?.userName || "@You"}...`}
+                    value={newPostCommentText}
+                    onChange={(e) => setNewPostCommentText(e.target.value)}
+                    className="modal-comment-input"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newPostCommentText.trim()}
+                    className="modal-comment-post-btn"
+                  >
+                    Post
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         )}
@@ -3137,79 +3765,196 @@ export default function Home({
         /* Community Feed */
         .community-posts-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 16px;
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+          gap: 20px;
         }
 
         .community-post-card {
-          background: var(--bg-card);
-          border-radius: 14px;
-          border: 1px solid var(--border-subtle);
+          background: #0f141c;
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
           overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          cursor: pointer;
+          transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s ease, box-shadow 0.22s ease;
+        }
+
+        .community-post-card:hover {
+          transform: translateY(-4px);
+          border-color: rgba(255, 45, 85, 0.35);
+          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
         }
 
         .post-header-row {
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 12px;
+          padding: 12px 14px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
 
         .post-user-avatar {
-          width: 36px;
-          height: 36px;
+          width: 38px;
+          height: 38px;
           border-radius: 50%;
           object-fit: cover;
+          border: 1.5px solid rgba(255, 255, 255, 0.12);
         }
 
         .post-user-info {
           flex: 1;
+          min-width: 0;
+        }
+
+        .post-user-name-line {
+          display: flex;
+          align-items: center;
+          gap: 4px;
         }
 
         .post-user-name {
-          display: block;
           font-size: 13px;
           font-weight: 700;
           color: #ffffff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .post-user-handle {
           display: block;
           font-size: 11px;
-          color: var(--text-muted);
+          color: #94a3b8;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .location-pin-wrap {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          color: #38bdf8;
+        }
+
+        .post-card-follow-btn {
+          padding: 4px 10px;
+          font-size: 11px;
+          font-weight: 600;
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.06);
+          color: #e2e8f0;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .post-card-follow-btn.active {
+          background: #ff2d55;
+          border-color: #ff2d55;
+          color: #fff;
         }
 
         .post-timestamp {
           font-size: 10px;
-          color: var(--text-muted);
+          color: #64748b;
+          white-space: nowrap;
         }
 
         .post-media-box {
           width: 100%;
-          height: 240px;
-          background: #000;
+          height: 280px;
+          background: #050811;
+          position: relative;
+          overflow: hidden;
         }
 
         .post-main-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          transition: transform 0.35s ease;
+        }
+
+        .community-post-card:hover .post-main-img {
+          transform: scale(1.03);
+        }
+
+        .post-multi-indicator {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(8px);
+          padding: 4px 8px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 600;
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          z-index: 2;
+        }
+
+        .post-overlay-hint {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 40%);
+          display: flex;
+          align-items: flex-end;
+          padding: 12px;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+
+        .community-post-card:hover .post-overlay-hint {
+          opacity: 1;
+        }
+
+        .post-overlay-hint span {
+          font-size: 11px;
+          font-weight: 600;
+          color: #ffffff;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(6px);
+          padding: 3px 8px;
+          border-radius: 8px;
         }
 
         .post-body-content {
-          padding: 12px;
+          padding: 12px 14px;
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          justify-content: space-between;
+        }
+
+        .post-author-bold {
+          font-weight: 700;
+          color: #ffffff;
+          margin-right: 5px;
         }
 
         .post-caption-text {
           font-size: 12px;
           color: #cbd5e1;
-          line-height: 1.4;
-          margin-bottom: 10px;
+          line-height: 1.45;
+          margin-bottom: 12px;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
 
         .post-action-buttons {
           display: flex;
-          gap: 14px;
+          align-items: center;
+          gap: 16px;
+          padding-top: 8px;
+          border-top: 1px solid rgba(255, 255, 255, 0.04);
         }
 
         .post-action-btn {
@@ -3218,14 +3963,586 @@ export default function Home({
           gap: 6px;
           border: none;
           background: transparent;
-          font-size: 11px;
+          font-size: 12px;
           font-weight: 600;
-          color: var(--text-muted);
+          color: #94a3b8;
           cursor: pointer;
+          transition: color 0.15s ease, transform 0.15s ease;
         }
 
         .post-action-btn:hover {
-          color: var(--text-primary);
+          color: #ffffff;
+          transform: scale(1.05);
+        }
+
+        .post-action-btn.liked {
+          color: #ff2d55;
+        }
+
+        .post-action-btn.share {
+          margin-left: auto;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* POST DETAIL MODAL (INSTAGRAM / TIKTOK WEB STYLE)                   */
+        /* ------------------------------------------------------------------ */
+        .post-modal-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 1000;
+          background: rgba(0, 0, 0, 0.86);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          animation: modalOverlayFade 0.2s ease;
+        }
+
+        @keyframes modalOverlayFade {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        .post-modal-container {
+          width: 100%;
+          max-width: 980px;
+          height: 84vh;
+          max-height: 740px;
+          background: #0b0f17;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 20px;
+          box-shadow: 0 32px 96px rgba(0, 0, 0, 0.85);
+          display: flex;
+          overflow: hidden;
+          position: relative;
+          animation: modalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalScaleIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Left: Media Area */
+        .post-modal-media-col {
+          flex: 1.35;
+          background: #03060c;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          user-select: none;
+        }
+
+        .post-modal-media-img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          background: #020408;
+        }
+
+        .modal-floating-heart-burst {
+          position: absolute;
+          pointer-events: none;
+          z-index: 20;
+          animation: heartBurstAnim 0.7s cubic-bezier(0.17, 0.89, 0.32, 1.49) forwards;
+        }
+
+        @keyframes heartBurstAnim {
+          0% { opacity: 0; transform: scale(0.3); }
+          40% { opacity: 1; transform: scale(1.3); }
+          75% { opacity: 0.9; transform: scale(1.1); }
+          100% { opacity: 0; transform: scale(1.4) translateY(-30px); }
+        }
+
+        /* Carousel controls */
+        .carousel-btn {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.65);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 10;
+          transition: all 0.18s ease;
+        }
+
+        .carousel-btn:hover {
+          background: rgba(255, 255, 255, 0.25);
+          transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-btn.prev { left: 14px; }
+        .carousel-btn.next { right: 14px; }
+
+        .carousel-dots-row {
+          position: absolute;
+          bottom: 16px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          gap: 6px;
+          z-index: 10;
+        }
+
+        .carousel-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.4);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .carousel-dot.active {
+          background: #ff2d55;
+          width: 18px;
+          border-radius: 10px;
+        }
+
+        .carousel-counter-tag {
+          position: absolute;
+          top: 14px;
+          left: 14px;
+          background: rgba(0, 0, 0, 0.65);
+          backdrop-filter: blur(8px);
+          color: #ffffff;
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 700;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          z-index: 10;
+        }
+
+        /* Right: Details & Comments Column */
+        .post-modal-details-col {
+          flex: 1;
+          min-width: 320px;
+          max-width: 420px;
+          background: #0d121c;
+          border-left: 1px solid rgba(255, 255, 255, 0.08);
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
+
+        /* Modal Header */
+        .modal-author-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 14px 16px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(13, 18, 28, 0.95);
+        }
+
+        .modal-author-left {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0;
+        }
+
+        .modal-author-avatar {
+          width: 42px;
+          height: 42px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid rgba(255, 45, 85, 0.6);
+          flex-shrink: 0;
+        }
+
+        .modal-author-names {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+        }
+
+        .modal-author-display-name {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 14px;
+          font-weight: 700;
+          color: #ffffff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .verified-icon-badge {
+          color: #3b82f6;
+          display: inline-flex;
+        }
+
+        .modal-author-location {
+          font-size: 11px;
+          color: #94a3b8;
+          display: flex;
+          align-items: center;
+          gap: 3px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .modal-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .follow-toggle-btn {
+          padding: 5px 12px;
+          border-radius: 16px;
+          font-size: 12px;
+          font-weight: 600;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.08);
+          color: #ffffff;
+          cursor: pointer;
+          transition: all 0.18s ease;
+        }
+
+        .follow-toggle-btn.active {
+          background: #ff2d55;
+          border-color: #ff2d55;
+          color: #ffffff;
+        }
+
+        .modal-close-x {
+          background: transparent;
+          border: none;
+          color: #94a3b8;
+          cursor: pointer;
+          padding: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          transition: color 0.15s ease, transform 0.15s ease;
+        }
+
+        .modal-close-x:hover {
+          color: #ffffff;
+          transform: scale(1.15);
+        }
+
+        /* Modal Caption & Comments Scroll Area */
+        .modal-comments-thread {
+          flex: 1;
+          overflow-y: auto;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .modal-original-caption-box {
+          display: flex;
+          gap: 12px;
+          padding-bottom: 14px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .caption-avatar {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          object-fit: cover;
+          flex-shrink: 0;
+        }
+
+        .caption-content {
+          flex: 1;
+        }
+
+        .caption-author {
+          font-size: 13px;
+          font-weight: 700;
+          color: #ffffff;
+          margin-right: 6px;
+        }
+
+        .caption-text {
+          font-size: 13px;
+          line-height: 1.45;
+          color: #e2e8f0;
+        }
+
+        .caption-hashtag {
+          color: #38bdf8;
+          font-weight: 500;
+          cursor: pointer;
+        }
+
+        .caption-hashtag:hover {
+          text-decoration: underline;
+        }
+
+        .caption-time {
+          display: block;
+          margin-top: 6px;
+          font-size: 11px;
+          color: #64748b;
+        }
+
+        /* Loading & Empty states */
+        .comments-loading-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 30px 10px;
+          gap: 10px;
+          color: #94a3b8;
+          font-size: 12px;
+        }
+
+        .comments-spinner {
+          width: 22px;
+          height: 22px;
+          border: 2px solid rgba(255, 255, 255, 0.15);
+          border-top-color: #ff2d55;
+          border-radius: 50%;
+          animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        .comments-empty-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 36px 14px;
+          text-align: center;
+          color: #64748b;
+        }
+
+        .comments-empty-state .empty-title {
+          font-size: 14px;
+          font-weight: 700;
+          color: #e2e8f0;
+          margin-top: 8px;
+        }
+
+        .comments-empty-state .empty-desc {
+          font-size: 12px;
+          color: #94a3b8;
+          margin-top: 4px;
+          max-width: 240px;
+        }
+
+        /* Individual Comment Items */
+        .single-comment-item {
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+        }
+
+        .comment-user-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          object-fit: cover;
+          flex-shrink: 0;
+        }
+
+        .comment-user-avatar.placeholder {
+          background: linear-gradient(135deg, #6366f1, #a855f7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: 700;
+          color: #ffffff;
+        }
+
+        .comment-text-box {
+          flex: 1;
+        }
+
+        .comment-header-line {
+          display: flex;
+          align-items: baseline;
+          gap: 6px;
+          margin-bottom: 2px;
+        }
+
+        .comment-handle {
+          font-size: 13px;
+          font-weight: 700;
+          color: #f1f5f9;
+        }
+
+        .comment-timestamp {
+          font-size: 10px;
+          color: #64748b;
+        }
+
+        .comment-body-text {
+          font-size: 13px;
+          color: #cbd5e1;
+          line-height: 1.4;
+          word-break: break-word;
+        }
+
+        .comment-thread-avatar-img {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          object-fit: cover;
+          flex-shrink: 0;
+        }
+
+        /* Modal Action Bar */
+        .modal-action-bar {
+          padding: 12px 16px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(13, 18, 28, 0.95);
+        }
+
+        .modal-actions-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+
+        .modal-actions-left {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .modal-icon-btn {
+          background: transparent;
+          border: none;
+          color: #e2e8f0;
+          cursor: pointer;
+          padding: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.15s ease, color 0.15s ease;
+        }
+
+        .modal-icon-btn:hover {
+          transform: scale(1.15);
+          color: #ffffff;
+        }
+
+        .modal-icon-btn.liked {
+          color: #ff2d55;
+          animation: heartPop 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+        }
+
+        @keyframes heartPop {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.35); }
+          100% { transform: scale(1); }
+        }
+
+        .modal-likes-label {
+          font-size: 13px;
+          font-weight: 700;
+          color: #ffffff;
+          display: block;
+          margin-bottom: 2px;
+        }
+
+        .modal-date-label {
+          font-size: 11px;
+          color: #64748b;
+          display: block;
+        }
+
+        /* Modal Input Bar */
+        .modal-comment-input-form {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 16px 14px;
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          background: #0d121c;
+        }
+
+        .modal-comment-input {
+          flex: 1;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 20px;
+          padding: 9px 14px;
+          color: #ffffff;
+          font-size: 13px;
+          outline: none;
+          transition: border-color 0.2s ease;
+        }
+
+        .modal-comment-input:focus {
+          border-color: #ff2d55;
+          background: rgba(255, 255, 255, 0.09);
+        }
+
+        .modal-comment-post-btn {
+          background: linear-gradient(135deg, #ff2d55, #f43f5e);
+          color: #ffffff;
+          border: none;
+          border-radius: 20px;
+          padding: 9px 18px;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: opacity 0.2s ease, transform 0.15s ease;
+        }
+
+        .modal-comment-post-btn:disabled {
+          opacity: 0.35;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .modal-comment-post-btn:not(:disabled):hover {
+          transform: scale(1.03);
+        }
+
+        /* Responsive Modal for Mobile Screens */
+        @media (max-width: 768px) {
+          .post-modal-overlay {
+            padding: 0;
+            align-items: flex-end;
+          }
+          .post-modal-container {
+            height: 94vh;
+            max-height: 94vh;
+            border-radius: 20px 20px 0 0;
+            flex-direction: column;
+          }
+          .post-modal-media-col {
+            flex: none;
+            height: 38vh;
+          }
+          .post-modal-details-col {
+            flex: 1;
+            max-width: none;
+            border-left: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+          }
         }
 
         /* Music Track Listing */

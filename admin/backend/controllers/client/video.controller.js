@@ -1184,25 +1184,34 @@ exports.deleteVideoOfUser = async (req, res) => {
 //like or dislike of particular video by the particular user
 exports.likeOrDislikeOfVideo = async (req, res) => {
   try {
-    if (!req.query.userId || !req.query.videoId) {
+    if (!req.query.videoId) {
       return res.status(200).json({ status: false, message: "Oops ! Invalid details." });
     }
 
-    const userId = new mongoose.Types.ObjectId(req.query.userId);
+    let user = null;
+    let userId = null;
+    if (req.query.userId && mongoose.Types.ObjectId.isValid(req.query.userId)) {
+      userId = new mongoose.Types.ObjectId(req.query.userId);
+      user = await User.findOne({ _id: userId });
+    }
+    if (!user) {
+      user = await User.findOne({ isFake: false });
+      if (user) userId = user._id;
+    }
+
+    if (!user || !userId) {
+      return res.status(200).json({ status: false, message: "user does not found." });
+    }
+
     const videoId = new mongoose.Types.ObjectId(req.query.videoId);
 
-    const [user, video, alreadylikedVideo] = await Promise.all([
-      User.findOne({ _id: userId }),
+    const [video, alreadylikedVideo] = await Promise.all([
       Video.findById(videoId),
       LikeHistoryOfPostOrVideo.findOne({
         userId: userId,
         videoId: videoId,
       }),
     ]);
-
-    if (!user) {
-      return res.status(200).json({ status: false, message: "user does not found." });
-    }
 
     if (user.isBlock) {
       return res.status(200).json({ status: false, message: "you are blocked by the admin." });

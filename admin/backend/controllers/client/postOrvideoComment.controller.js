@@ -19,8 +19,27 @@ const admin = require("../../util/privateKey");
 //create comment of particular post or video
 exports.commentOfPostOrVideo = async (req, res) => {
   try {
-    if (!req.query.userId || !req.query.commentText || !req.query.type) {
+    if (!req.query.commentText || !req.query.type) {
       return res.status(200).json({ status: false, message: "Oops ! Invalid details." });
+    }
+
+    let user = null;
+    let userId = null;
+    if (req.query.userId && mongoose.Types.ObjectId.isValid(req.query.userId)) {
+      userId = new mongoose.Types.ObjectId(req.query.userId);
+      user = await User.findOne({ _id: userId });
+    }
+    if (!user) {
+      user = await User.findOne({ isFake: false });
+      if (user) userId = user._id;
+    }
+
+    if (!user || !userId) {
+      return res.status(200).json({ status: false, message: "User does not found." });
+    }
+
+    if (user.isBlock) {
+      return res.status(200).json({ status: false, message: "you are blocked by the admin." });
     }
 
     if (req.query.type === "post") {
@@ -28,11 +47,9 @@ exports.commentOfPostOrVideo = async (req, res) => {
         return res.status(200).json({ status: false, message: "postId must be requried." });
       }
 
-      const userId = new mongoose.Types.ObjectId(req.query.userId);
       const postId = new mongoose.Types.ObjectId(req.query.postId);
 
-      const [user, post, postOrVideoComment] = await Promise.all([
-        User.findOne({ _id: userId }).lean(),
+      const [post, postOrVideoComment] = await Promise.all([
         Post.findOne({ _id: postId }).lean(),
         PostOrVideoComment.create({
           userId: userId,
@@ -40,14 +57,6 @@ exports.commentOfPostOrVideo = async (req, res) => {
           commentText: req.query.commentText.trim(),
         }),
       ]);
-
-      if (!user) {
-        return res.status(200).json({ status: false, message: "User does not found." });
-      }
-
-      if (user.isBlock) {
-        return res.status(200).json({ status: false, message: "you are blocked by the admin." });
-      }
 
       if (!post) {
         return res.status(200).json({ status: false, message: "post does not found." });
@@ -242,9 +251,12 @@ exports.likeOrDislikeOfComment = async (req, res) => {
 //get all comments for particular video or post
 exports.getpostOrvideoComments = async (req, res) => {
   try {
-    if (!req.query.userId || !req.query.type) {
+    if (!req.query.type) {
       return res.status(200).json({ status: false, message: "Oops ! Invalid details." });
     }
+
+    const isGuest = !req.query.userId || req.query.userId === "null" || req.query.userId === "undefined" || !mongoose.Types.ObjectId.isValid(req.query.userId);
+    const userId = isGuest ? new mongoose.Types.ObjectId() : new mongoose.Types.ObjectId(req.query.userId);
 
     if (req.query.type === "post") {
       if (!req.query.postId) {
@@ -252,17 +264,31 @@ exports.getpostOrvideoComments = async (req, res) => {
       }
 
       let now = dayjs();
-
-      const userId = new mongoose.Types.ObjectId(req.query.userId);
       const postId = new mongoose.Types.ObjectId(req.query.postId);
 
-      const [user, post, postOrVideoComment] = await Promise.all([
-        User.findOne({ _id: userId }).lean(),
-        Post.findOne({ _id: postId }).lean(),
-        PostOrVideoComment.aggregate([
-          {
-            $match: { postId: postId, videoId: null },
-          },
+      let user = null;
+      let post = null;
+      if (isGuest) {
+        user = { _id: userId, isBlock: false };
+        post = await Post.findById(postId).lean();
+      } else {
+        [user, post] = await Promise.all([User.findOne({ _id: userId }).lean(), Post.findById(postId).lean()]);
+      }
+
+      if (!user) user = { _id: userId, isBlock: false };
+
+      if (user.isBlock) {
+        return res.status(200).json({ status: false, message: "you are blocked by the admin." });
+      }
+
+      if (!post) {
+        return res.status(200).json({ status: false, message: "post does not found." });
+      }
+
+      const postOrVideoComment = await PostOrVideoComment.aggregate([
+        {
+          $match: { postId: postId, videoId: null },
+        },
           {
             $lookup: {
               from: "users",
@@ -364,20 +390,7 @@ exports.getpostOrvideoComments = async (req, res) => {
             },
           },
           { $sort: { createdAt: -1 } },
-        ]),
-      ]);
-
-      if (!user) {
-        return res.status(200).json({ status: false, message: "User does not found." });
-      }
-
-      if (user.isBlock) {
-        return res.status(200).json({ status: false, message: "you are blocked by the admin." });
-      }
-
-      if (!post) {
-        return res.status(200).json({ status: false, message: "post does not found." });
-      }
+        ]);
 
       return res.status(200).json({ status: true, message: "Comments for particular post.", postOrVideoComment: postOrVideoComment });
     } else if (req.query.type === "video") {
@@ -386,17 +399,31 @@ exports.getpostOrvideoComments = async (req, res) => {
       }
 
       let now = dayjs();
-
-      const userId = new mongoose.Types.ObjectId(req.query.userId);
       const videoId = new mongoose.Types.ObjectId(req.query.videoId);
 
-      const [user, video, postOrVideoComment] = await Promise.all([
-        User.findOne({ _id: userId }).lean(),
-        Video.findOne({ _id: videoId }).lean(),
-        PostOrVideoComment.aggregate([
-          {
-            $match: { videoId: videoId, postId: null },
-          },
+      let user = null;
+      let video = null;
+      if (isGuest) {
+        user = { _id: userId, isBlock: false };
+        video = await Video.findById(videoId).lean();
+      } else {
+        [user, video] = await Promise.all([User.findOne({ _id: userId }).lean(), Video.findById(videoId).lean()]);
+      }
+
+      if (!user) user = { _id: userId, isBlock: false };
+
+      if (user.isBlock) {
+        return res.status(200).json({ status: false, message: "you are blocked by the admin." });
+      }
+
+      if (!video) {
+        return res.status(200).json({ status: false, message: "video does not found." });
+      }
+
+      const postOrVideoComment = await PostOrVideoComment.aggregate([
+        {
+          $match: { videoId: videoId, postId: null },
+        },
           {
             $lookup: {
               from: "users",
@@ -497,20 +524,7 @@ exports.getpostOrvideoComments = async (req, res) => {
             },
           },
           { $sort: { createdAt: -1 } },
-        ]),
-      ]);
-
-      if (!user) {
-        return res.status(200).json({ status: false, message: "User does not found." });
-      }
-
-      if (user.isBlock) {
-        return res.status(200).json({ status: false, message: "you are blocked by the admin." });
-      }
-
-      if (!video) {
-        return res.status(200).json({ status: false, message: "video does not found." });
-      }
+        ]);
 
       return res.status(200).json({ status: true, message: "Comments for particular video.", postOrVideoComment: postOrVideoComment });
     } else {
