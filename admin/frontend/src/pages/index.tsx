@@ -249,6 +249,52 @@ const IconLayers = ({ size = 16 }: { size?: number }) => (
   </SvgIcon>
 );
 
+const IconWhatsApp = ({ size = 24 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+  </SvgIcon>
+);
+
+const IconFacebook = ({ size = 24 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+  </SvgIcon>
+);
+
+const IconTwitter = ({ size = 22 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M4 4l11.7 16h4.3L8.3 4H4zm3.9 2h2.7l8.2 11.2h-2.7L7.9 6z" />
+  </SvgIcon>
+);
+
+const IconTelegram = ({ size = 24 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <line x1="22" y1="2" x2="11" y2="13" />
+    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+  </SvgIcon>
+);
+
+const IconMail = ({ size = 22 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+    <polyline points="22,6 12,13 2,6" />
+  </SvgIcon>
+);
+
+const IconCopy = ({ size = 18 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  </SvgIcon>
+);
+
+const IconCode = ({ size = 16 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
+  </SvgIcon>
+);
+
 // ============================================================================
 // DATA MODELS
 // ============================================================================
@@ -418,6 +464,16 @@ export default function Home({
   const [showGiftModal, setShowGiftModal] = useState<boolean>(false);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authModalTitle, setAuthModalTitle] = useState<string>("");
+  const [authModalSubtitle, setAuthModalSubtitle] = useState<string>("");
+  const [authModalAction, setAuthModalAction] = useState<string>("");
+  const [showShareModal, setShowShareModal] = useState<boolean>(false);
+  const [shareTarget, setShareTarget] = useState<{
+    url: string;
+    title: string;
+    type: "reel" | "post";
+    author?: string;
+  } | null>(null);
+  const [copiedShareLink, setCopiedShareLink] = useState<boolean>(false);
   const [commentInput, setCommentInput] = useState<string>("");
   const [floatingHearts, setFloatingHearts] = useState<{ id: number; x: number; y: number }[]>([]);
 
@@ -527,13 +583,40 @@ export default function Home({
           const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.drawImage(tempVid, 0, 0, canvas.width, canvas.height);
+            // Stamp Official WUDAU Watermark onto Thumbnail
+            const stampW = Math.min(220, Math.round(canvas.width * 0.38));
+            const stampH = Math.round(stampW * 0.22);
+            const pad = Math.round(canvas.width * 0.04);
+            const bx = canvas.width - stampW - pad;
+            const by = canvas.height - stampH - pad;
+
+            ctx.save();
+            ctx.fillStyle = "rgba(10, 12, 18, 0.75)";
+            if (ctx.roundRect) {
+              ctx.roundRect(bx, by, stampW, stampH, Math.round(stampH / 2));
+            } else {
+              ctx.rect(bx, by, stampW, stampH);
+            }
+            ctx.fill();
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+            ctx.stroke();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = `bold ${Math.round(stampH * 0.42)}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            const creatorTag = currentUser?.userName ? `@${currentUser.userName}` : "@wudau";
+            ctx.fillText(`WUDAU • ${creatorTag}`, bx + stampW / 2, by + stampH / 2);
+            ctx.restore();
+
             canvas.toBlob((blob) => {
               if (blob) {
                 const thumb = new File([blob], "thumbnail.jpg", { type: "image/jpeg" });
                 setUploadThumbnailFile(thumb);
                 setUploadThumbnailPreview(canvas.toDataURL("image/jpeg"));
               }
-            }, "image/jpeg", 0.85);
+            }, "image/jpeg", 0.88);
           }
         } catch (cvErr) {
           console.warn("Canvas capture note:", cvErr);
@@ -544,11 +627,76 @@ export default function Home({
     }
   };
 
-  const handlePostImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePostImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    const files = Array.from(e.target.files).slice(0, 5);
-    setPostImages(files);
-    const previews = files.map((f) => URL.createObjectURL(f));
+    const rawFiles = Array.from(e.target.files).slice(0, 5);
+    const creatorTag = currentUser?.userName ? `@${currentUser.userName}` : "@wudau";
+
+    const watermarkedFiles: File[] = await Promise.all(
+      rawFiles.map((file) => {
+        return new Promise<File>((resolve) => {
+          const img = new Image();
+          const objUrl = URL.createObjectURL(file);
+          img.onload = () => {
+            try {
+              const canvas = document.createElement("canvas");
+              canvas.width = img.naturalWidth || 800;
+              canvas.height = img.naturalHeight || 800;
+              const ctx = canvas.getContext("2d");
+              if (ctx) {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                // Stamp Wudau Watermark
+                const stampW = Math.min(240, Math.round(canvas.width * 0.35));
+                const stampH = Math.round(stampW * 0.22);
+                const pad = Math.round(canvas.width * 0.04);
+                const bx = canvas.width - stampW - pad;
+                const by = canvas.height - stampH - pad;
+
+                ctx.save();
+                ctx.fillStyle = "rgba(10, 12, 18, 0.75)";
+                if (ctx.roundRect) ctx.roundRect(bx, by, stampW, stampH, Math.round(stampH / 2));
+                else ctx.rect(bx, by, stampW, stampH);
+                ctx.fill();
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+                ctx.stroke();
+
+                ctx.fillStyle = "#ffffff";
+                ctx.font = `bold ${Math.round(stampH * 0.42)}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(`WUDAU • ${creatorTag}`, bx + stampW / 2, by + stampH / 2);
+                ctx.restore();
+
+                canvas.toBlob((blob) => {
+                  if (blob) {
+                    const markedFile = new File([blob], file.name, { type: file.type || "image/jpeg" });
+                    resolve(markedFile);
+                  } else {
+                    resolve(file);
+                  }
+                  URL.revokeObjectURL(objUrl);
+                }, file.type || "image/jpeg", 0.9);
+              } else {
+                resolve(file);
+                URL.revokeObjectURL(objUrl);
+              }
+            } catch {
+              resolve(file);
+              URL.revokeObjectURL(objUrl);
+            }
+          };
+          img.onerror = () => {
+            resolve(file);
+            URL.revokeObjectURL(objUrl);
+          };
+          img.src = objUrl;
+        });
+      })
+    );
+
+    setPostImages(watermarkedFiles);
+    const previews = watermarkedFiles.map((f) => URL.createObjectURL(f));
     setPostImagePreviews(previews);
   };
 
@@ -814,6 +962,7 @@ export default function Home({
         setShowGiftModal(false);
         setShowAuthModal(false);
         setShowUploadStudio(false);
+        setShowShareModal(false);
         setMobileSearchOpen(false);
         setSelectedPost(null);
       }
@@ -824,7 +973,7 @@ export default function Home({
           setSelectedPostPhotoIndex((prev) => (prev < selectedPost.postImage.length - 1 ? prev + 1 : 0));
         }
       }
-      if (currentTab === "reels" && !showCommentsDrawer && !showGiftModal && !showAuthModal && !selectedPost && !showUploadStudio) {
+      if (currentTab === "reels" && !showCommentsDrawer && !showGiftModal && !showAuthModal && !selectedPost && !showUploadStudio && !showShareModal) {
         if (e.key === "ArrowDown") {
           handleNextReel();
         } else if (e.key === "ArrowUp") {
@@ -839,7 +988,7 @@ export default function Home({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentTab, currentReelIndex, videos.length, showCommentsDrawer, showGiftModal, showAuthModal, selectedPost]);
+  }, [currentTab, currentReelIndex, videos.length, showCommentsDrawer, showGiftModal, showAuthModal, showUploadStudio, showShareModal, selectedPost]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -1011,8 +1160,46 @@ export default function Home({
     return list;
   }, [posts, currentFilter, searchQuery]);
 
+  // Auth enforcement helper for community actions
+  const requireAuth = (
+    action: "like" | "comment" | "follow" | "gift" | "create" | "preview_limit",
+    customReason?: string
+  ) => {
+    if (isAuth) return true;
+
+    let title = "Join the WUDAU Community";
+    let subtitle = "Log in or create a free account to like, comment, and interact with creators.";
+
+    if (action === "like") {
+      title = "Like this Moment?";
+      subtitle = customReason || "Sign in to like reels and posts, and show your support to creators.";
+    } else if (action === "comment") {
+      title = "Join the Conversation";
+      subtitle = customReason || "Sign in to post comments, reply to friends, and chat with creators.";
+    } else if (action === "follow") {
+      title = "Follow Creator";
+      subtitle = customReason || "Sign in to follow creators and see their newest moments in your feed.";
+    } else if (action === "gift") {
+      title = "Send Virtual Gift";
+      subtitle = customReason || "Sign in to send gifts, cheer for live streams, and show love to creators.";
+    } else if (action === "create") {
+      title = "WUDAU Creator Studio";
+      subtitle = customReason || "Sign in or create an account to upload your own vertical reels, photos, and music.";
+    } else if (action === "preview_limit") {
+      title = "Enjoying WUDAU?";
+      subtitle = customReason || "You've reached the guest preview limit. Sign in to unlock unlimited streaming, infinite feeds, and creative moments.";
+    }
+
+    setAuthModalTitle(title);
+    setAuthModalSubtitle(subtitle);
+    setAuthModalAction(action);
+    setShowAuthModal(true);
+    return false;
+  };
+
   const handleInlinePostComment = async (postId: string, e: React.FormEvent) => {
     e.preventDefault();
+    if (!requireAuth("comment", "Sign in to join the conversation and comment.")) return;
     const commentText = (cardCommentInputs[postId] || "").trim();
     if (!commentText) return;
 
@@ -1058,6 +1245,7 @@ export default function Home({
 
   // Continuous Social Feed: Infinite Scroll Loader
   const loadMorePosts = async () => {
+    if (!isAuth) return; // Guests are limited to preview posts
     if (isLoadingMorePosts || !hasMorePosts) return;
     setIsLoadingMorePosts(true);
     try {
@@ -1131,8 +1319,18 @@ export default function Home({
     setIsBuffering(false);
   }, [currentReelIndex, currentFilter]);
 
+  const GUEST_REEL_LIMIT = 3;
+
   const handleNextReel = () => {
     if (filteredVideos.length === 0) return;
+    if (!isAuth && currentReelIndex >= GUEST_REEL_LIMIT - 1) {
+      setCurrentReelIndex(GUEST_REEL_LIMIT);
+      requireAuth(
+        "preview_limit",
+        "You've completed your 3-reel guest preview! Sign in or create a free account to watch continuous reels."
+      );
+      return;
+    }
     setProgressPercent(0);
     setCurrentReelIndex((prev) => (prev + 1) % filteredVideos.length);
     setIsPlaying(true);
@@ -1227,6 +1425,7 @@ export default function Home({
 
   const handleLike = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    if (!requireAuth("like", `Sign in to like this reel and support ${activeVideo?.userName || "the creator"}.`)) return;
     const wasLiked = likedReelIds[id];
     const currentCount = reelLikesCount[id] !== undefined ? reelLikesCount[id] : activeVideo?.totalLikes || 0;
     setLikedReelIds((prev) => ({ ...prev, [id]: !wasLiked }));
@@ -1243,21 +1442,19 @@ export default function Home({
     if (e) e.stopPropagation();
     if (typeof window !== "undefined") {
       const url = `${window.location.origin}/?videoId=${video._id}`;
-      if (navigator.share) {
-        navigator
-          .share({
-            title: video.caption || "Watch on WUDAU",
-            url,
-          })
-          .catch(() => {});
-      } else {
-        navigator.clipboard?.writeText(url);
-        showToast("Link copied to clipboard");
-      }
+      setShareTarget({
+        url,
+        title: video.caption || "Watch this viral reel on WUDAU 🔥",
+        type: "reel",
+        author: video.userName || "Creator",
+      });
+      setCopiedShareLink(false);
+      setShowShareModal(true);
     }
   };
 
   const handleSendGift = (gift: GiftItem) => {
+    if (!requireAuth("gift", "Sign in to send gifts to live creators.")) return;
     setShowGiftModal(false);
     const coins = gift.coin || gift.coins || 10;
     const name = gift.name || `${coins} Coins`;
@@ -1266,6 +1463,7 @@ export default function Home({
 
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!requireAuth("comment", "Sign in to comment on this reel.")) return;
     if (!commentInput.trim()) return;
     const vidId = activeVideo?._id || "default";
     const text = commentInput.trim();
@@ -1275,13 +1473,20 @@ export default function Home({
       id: "c_" + Date.now(),
       _id: "c_" + Date.now(),
       userName: commenterName,
+      name: currentUser?.name || "You",
+      userImage: currentUser?.image || "storage/avatar_kassim.png",
       text: text,
       commentText: text,
       time: "Just now",
+      totalLikes: 0,
+      isLike: false,
     };
-    setCommentsMap({ ...commentsMap, [vidId]: [newComment, ...currentList] });
+    setCommentsMap((prev) => ({
+      ...prev,
+      [vidId]: [newComment, ...currentList],
+    }));
     setCommentInput("");
-    showToast("Comment posted 💬");
+    showToast("Comment added 💬");
 
     if (activeVideo?._id) {
       const userIdParam = currentUser?._id ? `&userId=${currentUser._id}` : "";
@@ -1300,6 +1505,7 @@ export default function Home({
   // ============================================================================
   const handleTogglePostLike = (post: PostItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    if (!requireAuth("like", `Sign in to like this post and support ${post.userName || "the creator"}.`)) return;
     const pid = post._id;
     const isLiked = postLikesMap[pid] !== undefined ? postLikesMap[pid] : !!post.isLike;
     const curCount = postLikesCount[pid] !== undefined ? postLikesCount[pid] : (post.totalLikes || 0);
@@ -1353,6 +1559,7 @@ export default function Home({
 
   const handleAddPostComment = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!requireAuth("comment", "Sign in to comment on this post.")) return;
     if (!newPostCommentText.trim() || !selectedPost) return;
 
     const pid = selectedPost._id;
@@ -1398,6 +1605,7 @@ export default function Home({
 
   const handleToggleFollow = (creatorUserId: string, userName?: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    if (!requireAuth("follow", `Sign in to follow ${userName ? `@${userName}` : "creators"} and see their updates.`)) return;
     const isFollowed = !!followedUsersMap[creatorUserId];
     setFollowedUsersMap((prev) => ({ ...prev, [creatorUserId]: !isFollowed }));
     showToast(isFollowed ? `Unfollowed ${userName || "creator"}` : `Following ${userName || "creator"} ✨`);
@@ -1407,18 +1615,30 @@ export default function Home({
     if (e) e.stopPropagation();
     if (typeof window !== "undefined") {
       const url = `${window.location.origin}/?tab=social&postId=${post._id}`;
-      if (navigator.share) {
-        navigator
-          .share({
-            title: post.caption || "View post on WUDAU",
-            url,
-          })
-          .catch(() => {});
-      } else {
-        navigator.clipboard?.writeText(url);
-        showToast("Post link copied to clipboard");
-      }
+      setShareTarget({
+        url,
+        title: post.caption || "View this community moment on WUDAU ✨",
+        type: "post",
+        author: post.userName || post.name || "Creator",
+      });
+      setCopiedShareLink(false);
+      setShowShareModal(true);
     }
+  };
+
+  const handleCopyShareLink = () => {
+    if (!shareTarget) return;
+    navigator.clipboard?.writeText(shareTarget.url);
+    setCopiedShareLink(true);
+    showToast("Link copied to clipboard! 📋");
+    setTimeout(() => setCopiedShareLink(false), 2500);
+  };
+
+  const handleCopyEmbedCode = () => {
+    if (!shareTarget) return;
+    const embedCode = `<iframe src="${shareTarget.url}" width="360" height="640" style="border:none;border-radius:16px;overflow:hidden;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    navigator.clipboard?.writeText(embedCode);
+    showToast("Embed code copied! 📋");
   };
 
   const handleToggleMusic = (songUrl?: string) => {
@@ -1602,6 +1822,7 @@ export default function Home({
             {/* Create / Upload Shortcut */}
             <button
               onClick={() => {
+                if (!requireAuth("create", "Sign in or create an account to upload videos and community posts.")) return;
                 setShowUploadStudio(true);
               }}
               className="create-shortcut-btn"
@@ -1828,79 +2049,120 @@ export default function Home({
                     {/* Centered Video Player Card */}
                     <div
                       className="video-player-card"
-                      onClick={handleSurfaceClick}
+                      onClick={!isAuth && currentReelIndex >= 3 ? undefined : handleSurfaceClick}
                       onWheel={handleWheel}
                       onTouchStart={handleTouchStart}
                       onTouchEnd={handleTouchEnd}
                     >
-                      {/* Video Element */}
-                      <video
-                        ref={videoRef}
-                        key={activeVideo._id}
-                        src={resolveMedia(activeVideo.videoUrl)}
-                        poster={resolveMedia(activeVideo.videoImage)}
-                        autoPlay
-                        loop={!isAutoScroll}
-                        muted={isMuted}
-                        playsInline
-                        preload="auto"
-                        onWaiting={() => setIsBuffering(true)}
-                        onCanPlay={() => setIsBuffering(false)}
-                        onPlaying={() => setIsBuffering(false)}
-                        onEnded={handleVideoEnded}
-                        onTimeUpdate={handleTimeUpdate}
-                        className="main-reel-video"
-                      />
-
-                      {/* Instant Next Reel Preloader */}
-                      {filteredVideos.length > 1 && (
-                        <video
-                          src={resolveMedia(filteredVideos[(currentReelIndex + 1) % filteredVideos.length]?.videoUrl)}
-                          preload="auto"
-                          muted
-                          playsInline
-                          style={{ display: "none" }}
-                        />
-                      )}
-
-                      {/* Buffering Spinner */}
-                      {isBuffering && (
-                        <div className="buffering-overlay">
-                          <div className="buffering-spinner" />
-                        </div>
-                      )}
-
-                      {/* Floating Hearts Animation from Double-Tap */}
-                      {floatingHearts.map((heart) => (
-                        <div
-                          key={heart.id}
-                          className="floating-tap-heart"
-                          style={{ left: `${heart.x - 24}px`, top: `${heart.y - 24}px` }}
-                        >
-                          <IconHeart filled size={48} />
-                        </div>
-                      ))}
-
-                      {/* Sound Toggle Floating Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsMuted(!isMuted);
-                          showToast(isMuted ? "Sound Enabled" : "Muted");
-                        }}
-                        className="player-sound-btn"
-                        aria-label="Toggle Sound"
-                      >
-                        {isMuted ? <IconVolumeX size={18} /> : <IconVolume size={18} />}
-                      </button>
-
-                      {/* Pause / Play Fade Indicator */}
-                      {!isPlaying && (
-                        <div className="player-pause-indicator">
-                          <div className="pause-icon-pill">
-                            <polygon points="5 3 19 12 5 21 5 3" fill="#ffffff" />
+                      {!isAuth && currentReelIndex >= 3 ? (
+                        <div className="guest-reel-preview-gate">
+                          <div className="preview-gate-card">
+                            <div className="preview-gate-icon">🔥</div>
+                            <div className="preview-gate-badge">WUDAU REELS PREVIEW</div>
+                            <h3>Join WUDAU to Watch Unlimited Reels</h3>
+                            <p>
+                              You've completed your 3-reel guest preview! Sign in or create a free account to watch continuous reels, follow creators, and discover the sounds of East Africa.
+                            </p>
+                            <div className="preview-gate-actions">
+                              <Link href="/login" className="gate-btn primary">
+                                Log In to WUDAU
+                              </Link>
+                              <Link href="/Registration" className="gate-btn secondary">
+                                Create Free Account
+                              </Link>
+                              <button
+                                onClick={() => {
+                                  setCurrentReelIndex(0);
+                                  setProgressPercent(0);
+                                }}
+                                className="gate-btn reset"
+                              >
+                                ↺ Back to First Reel
+                              </button>
+                            </div>
                           </div>
                         </div>
+                      ) : (
+                        <>
+                          {/* Video Element */}
+                          <video
+                            ref={videoRef}
+                            key={activeVideo._id}
+                            src={resolveMedia(activeVideo.videoUrl)}
+                            poster={resolveMedia(activeVideo.videoImage)}
+                            autoPlay
+                            loop={!isAutoScroll}
+                            muted={isMuted}
+                            playsInline
+                            preload="auto"
+                            onWaiting={() => setIsBuffering(true)}
+                            onCanPlay={() => setIsBuffering(false)}
+                            onPlaying={() => setIsBuffering(false)}
+                            onEnded={handleVideoEnded}
+                            onTimeUpdate={handleTimeUpdate}
+                            className="main-reel-video"
+                          />
+
+                          {/* Instant Next Reel Preloader */}
+                          {filteredVideos.length > 1 && (
+                            <video
+                              src={resolveMedia(filteredVideos[(currentReelIndex + 1) % filteredVideos.length]?.videoUrl)}
+                              preload="auto"
+                              muted
+                              playsInline
+                              style={{ display: "none" }}
+                            />
+                          )}
+
+                          {/* Buffering Spinner */}
+                          {isBuffering && (
+                            <div className="buffering-overlay">
+                              <div className="buffering-spinner" />
+                            </div>
+                          )}
+
+                          {/* WUDAU Watermark Overlay */}
+                          <div className="wudau-reel-watermark">
+                            <div className="watermark-brand-pill">
+                              <span className="watermark-flame-icon">🔥</span>
+                              <span className="watermark-brand-word">WUDAU</span>
+                            </div>
+                            <span className="watermark-author-handle">@{activeVideo.userName || "creator"}</span>
+                          </div>
+
+                          {/* Floating Hearts Animation from Double-Tap */}
+                          {floatingHearts.map((heart) => (
+                            <div
+                              key={heart.id}
+                              className="floating-tap-heart"
+                              style={{ left: `${heart.x - 24}px`, top: `${heart.y - 24}px` }}
+                            >
+                              <IconHeart filled size={48} />
+                            </div>
+                          ))}
+
+                          {/* Sound Toggle Floating Button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsMuted(!isMuted);
+                              showToast(isMuted ? "Sound Enabled" : "Muted");
+                            }}
+                            className="player-sound-btn"
+                            aria-label="Toggle Sound"
+                          >
+                            {isMuted ? <IconVolumeX size={18} /> : <IconVolume size={18} />}
+                          </button>
+
+                          {/* Pause / Play Fade Indicator */}
+                          {!isPlaying && (
+                            <div className="player-pause-indicator">
+                              <div className="pause-icon-pill">
+                                <polygon points="5 3 19 12 5 21 5 3" fill="#ffffff" />
+                              </div>
+                            </div>
+                          )}
+                        </>
                       )}
 
                       {/* Floating Right Actions Column */}
@@ -1913,7 +2175,10 @@ export default function Home({
                             className="creator-avatar-img"
                           />
                           <button
-                            onClick={() => showToast(`Followed ${activeVideo.name}`)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleFollow(activeVideo.userId, activeVideo.userName, e);
+                            }}
                             className="follow-plus-badge"
                             title="Follow Creator"
                           >
@@ -1949,7 +2214,10 @@ export default function Home({
 
                         {/* Gift Button */}
                         <button
-                          onClick={() => setShowGiftModal(true)}
+                          onClick={() => {
+                            if (!requireAuth("gift", "Sign in to send gifts to live creators.")) return;
+                            setShowGiftModal(true);
+                          }}
                           className="action-icon-pill"
                           title="Send Gift"
                         >
@@ -2237,7 +2505,7 @@ export default function Home({
                     </button>
                   </div>
                 ) : (
-                  filteredPosts.map((post) => {
+                  (isAuth ? filteredPosts : filteredPosts.slice(0, 3)).map((post) => {
                     const isPostLiked = postLikesMap[post._id] !== undefined ? postLikesMap[post._id] : !!post.isLike;
                     const currentLikes = postLikesCount[post._id] !== undefined ? postLikesCount[post._id] : (post.totalLikes || 0);
                     const currentComments = postCommentsCount[post._id] !== undefined ? postCommentsCount[post._id] : (post.totalComments || 0);
@@ -2301,6 +2569,14 @@ export default function Home({
                             className="timeline-main-photo"
                             onClick={() => handleOpenPostModal(post)}
                           />
+
+                          {/* WUDAU Watermark on Photo */}
+                          <div className="wudau-photo-watermark">
+                            <span className="photo-watermark-flame">🔥</span>
+                            <span className="photo-watermark-brand">WUDAU</span>
+                            <span className="photo-watermark-dot">•</span>
+                            <span className="photo-watermark-user">@{post.userName}</span>
+                          </div>
 
                           {/* Multi-photo carousel buttons */}
                           {photos.length > 1 && (
@@ -2430,11 +2706,17 @@ export default function Home({
                         >
                           <input
                             type="text"
-                            placeholder="Add a comment..."
+                            placeholder={isAuth ? "Add a comment..." : "Log in to add a comment..."}
                             value={cardCommentInputs[post._id] || ""}
                             onChange={(e) =>
                               setCardCommentInputs((prev) => ({ ...prev, [post._id]: e.target.value }))
                             }
+                            onFocus={(e) => {
+                              if (!isAuth) {
+                                e.target.blur();
+                                requireAuth("comment", "Sign in to join the conversation and comment.");
+                              }
+                            }}
                             className="timeline-inline-input"
                           />
                           <button
@@ -2448,6 +2730,32 @@ export default function Home({
                       </article>
                     );
                   })
+                )}
+
+                {/* Guest Feed Preview Gate Barrier */}
+                {!isAuth && filteredPosts.length > 3 && (
+                  <div className="guest-feed-preview-gate">
+                    <div className="feed-gate-card">
+                      <div className="feed-gate-avatar-stack">
+                        {availableCreators.slice(0, 4).map((c) => (
+                          <img key={c._id} src={resolveMedia(c.image)} alt={c.name} className="stack-avatar" />
+                        ))}
+                      </div>
+                      <div className="feed-gate-badge">JOIN WUDAU COMMUNITY</div>
+                      <h3>Want to see more community moments?</h3>
+                      <p>
+                        Join thousands of artists, dancers, and creators sharing daily stories across Tanzania and beyond. Log in or register to unlock unlimited community feeds, likes, and comments.
+                      </p>
+                      <div className="feed-gate-actions">
+                        <Link href="/login" className="gate-btn primary">
+                          Log In to Continue
+                        </Link>
+                        <Link href="/Registration" className="gate-btn secondary">
+                          Create Free Account
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
                 )}
 
                 {/* Continuous Infinite Scroll Sentinel */}
@@ -2645,6 +2953,7 @@ export default function Home({
 
           <button
             onClick={() => {
+              if (!requireAuth("create", "Sign in or create an account to upload videos and community posts.")) return;
               setShowUploadStudio(true);
             }}
             className="tab-nav-btn create-tab-btn"
@@ -2710,9 +3019,15 @@ export default function Home({
               <form onSubmit={handleAddComment} className="comment-submit-form">
                 <input
                   type="text"
-                  placeholder="Add a comment..."
+                  placeholder={isAuth ? "Add a comment..." : "Log in to add a comment..."}
                   value={commentInput}
                   onChange={(e) => setCommentInput(e.target.value)}
+                  onFocus={(e) => {
+                    if (!isAuth) {
+                      e.target.blur();
+                      requireAuth("comment", "Sign in to comment on this reel.");
+                    }
+                  }}
                   className="comment-type-input"
                 />
                 <button type="submit" className="comment-post-btn">
@@ -2752,6 +3067,14 @@ export default function Home({
                     className="post-modal-media-img"
                   />
                 )}
+
+                {/* WUDAU Watermark on Photo Modal */}
+                <div className="wudau-photo-watermark modal-pos">
+                  <span className="photo-watermark-flame">🔥</span>
+                  <span className="photo-watermark-brand">WUDAU</span>
+                  <span className="photo-watermark-dot">•</span>
+                  <span className="photo-watermark-user">@{selectedPost.userName}</span>
+                </div>
 
                 {/* Double click floating heart burst */}
                 {postHeartEffect && (
@@ -2995,9 +3318,15 @@ export default function Home({
                 <form onSubmit={handleAddPostComment} className="modal-comment-input-form">
                   <input
                     type="text"
-                    placeholder={`Add a comment as ${currentUser?.userName || "@You"}...`}
+                    placeholder={isAuth ? `Add a comment as ${currentUser?.userName || "@You"}...` : "Log in to add a comment..."}
                     value={newPostCommentText}
                     onChange={(e) => setNewPostCommentText(e.target.value)}
+                    onFocus={(e) => {
+                      if (!isAuth) {
+                        e.target.blur();
+                        requireAuth("comment", "Sign in to comment on this post.");
+                      }
+                    }}
                     className="modal-comment-input"
                   />
                   <button
@@ -3392,29 +3721,225 @@ export default function Home({
         {/* ==================================================================== */}
         {showAuthModal && (
           <div className="drawer-overlay" onClick={() => setShowAuthModal(false)}>
-            <div className="modal-content-card" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header-line">
-                <h3>{authModalTitle}</h3>
-                <button onClick={() => setShowAuthModal(false)} className="sheet-close-cross">
-                  ✕
-                </button>
+            <div className="auth-prompt-modal-card" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setShowAuthModal(false)}
+                className="auth-modal-close-btn"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+              <div className="auth-modal-top-brand">
+                <span className="auth-modal-flame">🔥</span>
+                <span className="auth-modal-brand-name">WUDAU</span>
               </div>
-              <p className="modal-subtitle">Sign in or create an account to upload videos and interact.</p>
-              <div className="modal-actions-list">
+              <h3 className="auth-modal-title">{authModalTitle || "Join the WUDAU Community"}</h3>
+              <p className="auth-modal-subtitle">
+                {authModalSubtitle || "Log in or create an account to like, comment, and interact with creators across Africa."}
+              </p>
+
+              <div className="auth-modal-perks-list">
+                <div className="auth-perk-row">
+                  <span className="perk-bullet">✦</span>
+                  <span>Unlimited streaming of African reels, songs & stories</span>
+                </div>
+                <div className="auth-perk-row">
+                  <span className="perk-bullet">✦</span>
+                  <span>Like posts, comment on moments, and talk with creators</span>
+                </div>
+                <div className="auth-perk-row">
+                  <span className="perk-bullet">✦</span>
+                  <span>Upload your own vertical reels and community photos</span>
+                </div>
+              </div>
+
+              <div className="auth-modal-actions-box">
                 <Link
                   href="/login"
                   onClick={() => setShowAuthModal(false)}
-                  className="action-accent-btn full"
+                  className="auth-action-btn primary"
                 >
                   Log In to WUDAU
                 </Link>
                 <Link
                   href="/Registration"
                   onClick={() => setShowAuthModal(false)}
-                  className="action-hollow-btn full"
+                  className="auth-action-btn secondary"
                 >
                   Create Free Account
                 </Link>
+                <button
+                  onClick={() => setShowAuthModal(false)}
+                  className="auth-action-dismiss"
+                >
+                  Continue Viewing as Guest
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================================== */}
+        {/* TIKTOK-STYLE SHARE TO MODAL                                          */}
+        {/* ==================================================================== */}
+        {showShareModal && shareTarget && (
+          <div className="drawer-overlay" onClick={() => setShowShareModal(false)}>
+            <div className="tiktok-share-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="share-modal-header">
+                <div className="share-modal-title-col">
+                  <h3>Share to</h3>
+                  <p className="share-modal-author-note">
+                    {shareTarget.author ? `From @${shareTarget.author}` : "Share this content"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="sheet-close-cross"
+                  aria-label="Close share dialog"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* TikTok Style Destination Apps Track */}
+              <div className="share-apps-grid">
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                    shareTarget.title + "\n" + shareTarget.url
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="share-app-item"
+                  onClick={() => showToast("Opening WhatsApp...")}
+                >
+                  <div className="share-app-circle whatsapp">
+                    <IconWhatsApp size={28} />
+                  </div>
+                  <span className="share-app-label">WhatsApp</span>
+                </a>
+
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                    shareTarget.url
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="share-app-item"
+                  onClick={() => showToast("Opening Facebook...")}
+                >
+                  <div className="share-app-circle facebook">
+                    <IconFacebook size={26} />
+                  </div>
+                  <span className="share-app-label">Facebook</span>
+                </a>
+
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                    shareTarget.title
+                  )}&url=${encodeURIComponent(shareTarget.url)}&hashtags=Wudau,Tanzania`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="share-app-item"
+                  onClick={() => showToast("Opening X...")}
+                >
+                  <div className="share-app-circle twitter">
+                    <IconTwitter size={24} />
+                  </div>
+                  <span className="share-app-label">X (Twitter)</span>
+                </a>
+
+                <a
+                  href={`https://t.me/share/url?url=${encodeURIComponent(
+                    shareTarget.url
+                  )}&text=${encodeURIComponent(shareTarget.title)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="share-app-item"
+                  onClick={() => showToast("Opening Telegram...")}
+                >
+                  <div className="share-app-circle telegram">
+                    <IconTelegram size={26} />
+                  </div>
+                  <span className="share-app-label">Telegram</span>
+                </a>
+
+                <a
+                  href={`mailto:?subject=${encodeURIComponent(
+                    shareTarget.title
+                  )}&body=${encodeURIComponent(
+                    shareTarget.title + "\n\nWatch on WUDAU:\n" + shareTarget.url
+                  )}`}
+                  className="share-app-item"
+                  onClick={() => showToast("Opening Email...")}
+                >
+                  <div className="share-app-circle email">
+                    <IconMail size={24} />
+                  </div>
+                  <span className="share-app-label">Email</span>
+                </a>
+
+                <a
+                  href={`sms:?&body=${encodeURIComponent(
+                    shareTarget.title + " " + shareTarget.url
+                  )}`}
+                  className="share-app-item"
+                >
+                  <div className="share-app-circle sms">
+                    <IconMessage size={24} />
+                  </div>
+                  <span className="share-app-label">SMS</span>
+                </a>
+              </div>
+
+              <div className="share-divider-line" />
+
+              {/* Copy Link Row */}
+              <div className="share-copy-link-section">
+                <div className="share-link-input-wrap">
+                  <input
+                    type="text"
+                    readOnly
+                    value={shareTarget.url}
+                    className="share-link-input"
+                  />
+                  <button
+                    onClick={handleCopyShareLink}
+                    className={`share-link-copy-btn ${copiedShareLink ? "copied" : ""}`}
+                  >
+                    {copiedShareLink ? (
+                      <>
+                        <IconCheck size={16} />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <IconCopy size={16} />
+                        <span>Copy Link</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Utility / Embed Actions */}
+              <div className="share-footer-utilities">
+                <button onClick={handleCopyEmbedCode} className="share-util-btn">
+                  <IconCode size={15} />
+                  <span>Copy Embed Code</span>
+                </button>
+                {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+                  <button
+                    onClick={() => {
+                      navigator.share({
+                        title: shareTarget.title,
+                        url: shareTarget.url,
+                      }).catch(() => {});
+                    }}
+                    className="share-util-btn system"
+                  >
+                    <span>More Options...</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -6329,7 +6854,7 @@ export default function Home({
           gap: 8px;
         }
 
-        /* Comments Bottom Sheet */
+        /* Comments Bottom Sheet & Desktop Panel */
         .bottom-comments-sheet {
           position: fixed;
           bottom: 0;
@@ -6346,6 +6871,689 @@ export default function Home({
           animation: slideUp 0.2s ease-out;
           border-top: 1px solid var(--border-subtle);
           z-index: 210;
+        }
+
+        @media (min-width: 769px) {
+          .bottom-comments-sheet {
+            top: 50%;
+            bottom: auto;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 440px;
+            max-width: 90vw;
+            height: 640px;
+            max-height: 85vh;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: 0 32px 90px rgba(0, 0, 0, 0.85);
+            animation: modalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+          .sheet-drag-handle {
+            display: none;
+          }
+          .sheet-comments-scroll {
+            max-height: calc(640px - 140px);
+            flex: 1;
+          }
+        }
+
+        @media (min-width: 1200px) {
+          /* Dock side-by-side with the centered reel player on desktop so the video remains completely visible */
+          .bottom-comments-sheet {
+            left: calc(50% + 240px);
+            transform: translateY(-50%);
+            width: 390px;
+            height: 700px;
+            max-height: 86vh;
+          }
+        }
+
+        /* WUDAU Watermark Floating Badge */
+        .wudau-reel-watermark {
+          position: absolute;
+          top: 18px;
+          left: 18px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 5px 12px;
+          border-radius: 20px;
+          background: rgba(8, 10, 15, 0.65);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          z-index: 15;
+          pointer-events: none;
+          user-select: none;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+          animation: fadeIn 0.4s ease;
+        }
+
+        .watermark-brand-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .watermark-flame-icon {
+          font-size: 13px;
+        }
+
+        .watermark-brand-word {
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.1em;
+          background: linear-gradient(135deg, #ff5722 0%, #ff9800 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .watermark-author-handle {
+          font-size: 11px;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.82);
+        }
+
+        .wudau-photo-watermark {
+          position: absolute;
+          bottom: 14px;
+          right: 14px;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 4px 10px;
+          border-radius: 14px;
+          background: rgba(5, 7, 12, 0.72);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          z-index: 10;
+          pointer-events: none;
+          user-select: none;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .wudau-photo-watermark.modal-pos {
+          bottom: 20px;
+          right: 20px;
+          padding: 5px 12px;
+          border-radius: 16px;
+        }
+
+        .photo-watermark-flame {
+          font-size: 11px;
+        }
+
+        .photo-watermark-brand {
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          background: linear-gradient(135deg, #ff5722 0%, #ff9800 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .photo-watermark-dot {
+          font-size: 10px;
+          color: rgba(255, 255, 255, 0.4);
+        }
+
+        .photo-watermark-user {
+          font-size: 10px;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.85);
+        }
+
+        /* Guest Reel Preview Gate */
+        .guest-reel-preview-gate {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at center, #1b2133 0%, #080a11 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          z-index: 30;
+          text-align: center;
+        }
+
+        .preview-gate-card {
+          max-width: 320px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .preview-gate-icon {
+          font-size: 44px;
+        }
+
+        .preview-gate-badge {
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          padding: 4px 10px;
+          border-radius: 12px;
+          background: rgba(255, 87, 34, 0.16);
+          color: #ff7043;
+          border: 1px solid rgba(255, 87, 34, 0.3);
+        }
+
+        .preview-gate-card h3 {
+          font-size: 18px;
+          font-weight: 800;
+          color: #ffffff;
+          line-height: 1.3;
+          margin: 0;
+        }
+
+        .preview-gate-card p {
+          font-size: 13px;
+          color: #94a3b8;
+          line-height: 1.5;
+          margin: 0;
+        }
+
+        .preview-gate-actions {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-top: 8px;
+        }
+
+        .gate-btn {
+          width: 100%;
+          padding: 12px 18px;
+          border-radius: 14px;
+          font-size: 13px;
+          font-weight: 700;
+          text-align: center;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.18s ease;
+          border: none;
+          cursor: pointer;
+        }
+
+        .gate-btn.primary {
+          background: linear-gradient(135deg, #ff5722 0%, #ff9800 100%);
+          color: #ffffff;
+          box-shadow: 0 4px 18px rgba(255, 87, 34, 0.4);
+        }
+
+        .gate-btn.primary:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 24px rgba(255, 87, 34, 0.55);
+        }
+
+        .gate-btn.secondary {
+          background: rgba(255, 255, 255, 0.08);
+          color: #ffffff;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .gate-btn.secondary:hover {
+          background: rgba(255, 255, 255, 0.14);
+        }
+
+        .gate-btn.reset {
+          background: transparent;
+          color: #94a3b8;
+          font-size: 12px;
+          font-weight: 600;
+          padding: 6px;
+        }
+
+        .gate-btn.reset:hover {
+          color: #ffffff;
+        }
+
+        /* Guest Feed Preview Gate */
+        .guest-feed-preview-gate {
+          margin: 24px 0 40px 0;
+          background: linear-gradient(180deg, rgba(20, 24, 38, 0.75) 0%, rgba(11, 14, 23, 0.95) 100%);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          border-radius: 24px;
+          padding: 36px 24px;
+          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+          text-align: center;
+          display: flex;
+          justify-content: center;
+        }
+
+        .feed-gate-card {
+          max-width: 440px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .feed-gate-avatar-stack {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 4px;
+        }
+
+        .feed-gate-avatar-stack .stack-avatar {
+          width: 46px;
+          height: 46px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 3px solid #0e121c;
+          margin-left: -14px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .feed-gate-avatar-stack .stack-avatar:first-child {
+          margin-left: 0;
+        }
+
+        .feed-gate-badge {
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          padding: 4px 12px;
+          border-radius: 14px;
+          background: rgba(255, 87, 34, 0.15);
+          color: #ff7043;
+          border: 1px solid rgba(255, 87, 34, 0.28);
+        }
+
+        .feed-gate-card h3 {
+          font-size: 20px;
+          font-weight: 800;
+          color: #ffffff;
+          line-height: 1.3;
+          margin: 0;
+        }
+
+        .feed-gate-card p {
+          font-size: 14px;
+          color: #94a3b8;
+          line-height: 1.5;
+          margin: 0;
+        }
+
+        .feed-gate-actions {
+          display: flex;
+          gap: 12px;
+          width: 100%;
+          margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+          .feed-gate-actions {
+            flex-direction: column;
+          }
+        }
+
+        /* TikTok Share Modal */
+        .tiktok-share-modal {
+          position: fixed;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 100%;
+          max-width: 480px;
+          background: #11141f;
+          border-radius: 24px 24px 0 0;
+          padding: 20px 22px 28px 22px;
+          box-shadow: 0 32px 80px rgba(0, 0, 0, 0.9);
+          border-top: 1px solid rgba(255, 255, 255, 0.14);
+          animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+          z-index: 220;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        @media (min-width: 769px) {
+          .tiktok-share-modal {
+            top: 50%;
+            bottom: auto;
+            transform: translate(-50%, -50%);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            animation: modalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+        }
+
+        .share-modal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .share-modal-title-col h3 {
+          font-size: 16px;
+          font-weight: 800;
+          color: #ffffff;
+          margin: 0;
+        }
+
+        .share-modal-author-note {
+          font-size: 12px;
+          color: #94a3b8;
+          margin: 2px 0 0 0;
+        }
+
+        .share-apps-grid {
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 10px;
+          padding: 8px 0;
+          overflow-x: auto;
+        }
+
+        @media (max-width: 480px) {
+          .share-apps-grid {
+            display: flex;
+            overflow-x: auto;
+            gap: 16px;
+            padding-bottom: 12px;
+            scrollbar-width: none;
+          }
+          .share-apps-grid::-webkit-scrollbar {
+            display: none;
+          }
+        }
+
+        .share-app-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          text-decoration: none;
+          color: #e2e8f0;
+          transition: transform 0.18s ease;
+          flex-shrink: 0;
+        }
+
+        .share-app-item:hover {
+          transform: translateY(-2px);
+        }
+
+        .share-app-circle {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #ffffff;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+          transition: transform 0.18s ease;
+        }
+
+        .share-app-circle.whatsapp {
+          background: #25d366;
+        }
+        .share-app-circle.facebook {
+          background: #1877f2;
+        }
+        .share-app-circle.twitter {
+          background: #0f1419;
+          border: 1px solid rgba(255, 255, 255, 0.22);
+        }
+        .share-app-circle.telegram {
+          background: #229ed9;
+        }
+        .share-app-circle.email {
+          background: #ea4335;
+        }
+        .share-app-circle.sms {
+          background: #34a853;
+        }
+
+        .share-app-label {
+          font-size: 11px;
+          font-weight: 600;
+          text-align: center;
+          color: #cbd5e1;
+        }
+
+        .share-divider-line {
+          height: 1px;
+          background: rgba(255, 255, 255, 0.1);
+          margin: 2px 0;
+        }
+
+        .share-copy-link-section {
+          width: 100%;
+        }
+
+        .share-link-input-wrap {
+          display: flex;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          border-radius: 14px;
+          padding: 4px 6px 4px 14px;
+          gap: 10px;
+        }
+
+        .share-link-input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          color: #e2e8f0;
+          font-size: 13px;
+          outline: none;
+          text-overflow: ellipsis;
+        }
+
+        .share-link-copy-btn {
+          padding: 8px 16px;
+          border-radius: 10px;
+          background: rgba(255, 255, 255, 0.12);
+          color: #ffffff;
+          font-size: 12px;
+          font-weight: 700;
+          border: none;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          transition: all 0.18s ease;
+          flex-shrink: 0;
+        }
+
+        .share-link-copy-btn:hover {
+          background: rgba(255, 255, 255, 0.22);
+        }
+
+        .share-link-copy-btn.copied {
+          background: #10b981;
+          color: #ffffff;
+        }
+
+        .share-footer-utilities {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+
+        .share-util-btn {
+          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          padding: 8px 14px;
+          border-radius: 12px;
+          color: #cbd5e1;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          transition: all 0.18s ease;
+        }
+
+        .share-util-btn:hover {
+          background: rgba(255, 255, 255, 0.08);
+          color: #ffffff;
+        }
+
+        /* Enhanced Auth Prompt Modal Card */
+        .auth-prompt-modal-card {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 100%;
+          max-width: 440px;
+          background: #111420;
+          border-radius: 24px;
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          padding: 28px 24px;
+          box-shadow: 0 32px 80px rgba(0, 0, 0, 0.9);
+          animation: modalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+          z-index: 230;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          position: relative;
+        }
+
+        .auth-modal-close-btn {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          border: none;
+          background: rgba(255, 255, 255, 0.08);
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          color: #ffffff;
+          font-size: 14px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .auth-modal-top-brand {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 12px;
+          border-radius: 20px;
+          background: rgba(255, 87, 34, 0.14);
+          border: 1px solid rgba(255, 87, 34, 0.3);
+          margin-bottom: 12px;
+        }
+
+        .auth-modal-flame {
+          font-size: 13px;
+        }
+
+        .auth-modal-brand-name {
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.12em;
+          background: linear-gradient(135deg, #ff5722 0%, #ff9800 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .auth-modal-title {
+          font-size: 20px;
+          font-weight: 800;
+          color: #ffffff;
+          margin: 0 0 8px 0;
+        }
+
+        .auth-modal-subtitle {
+          font-size: 13px;
+          color: #94a3b8;
+          line-height: 1.5;
+          margin: 0 0 16px 0;
+        }
+
+        .auth-modal-perks-list {
+          width: 100%;
+          background: rgba(255, 255, 255, 0.04);
+          border-radius: 14px;
+          padding: 12px 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          text-align: left;
+          margin-bottom: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .auth-perk-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          color: #cbd5e1;
+        }
+
+        .perk-bullet {
+          color: #ff7043;
+          font-size: 11px;
+        }
+
+        .auth-modal-actions-box {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .auth-action-btn {
+          width: 100%;
+          padding: 12px;
+          border-radius: 14px;
+          font-size: 13px;
+          font-weight: 700;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.18s ease;
+        }
+
+        .auth-action-btn.primary {
+          background: linear-gradient(135deg, #ff5722 0%, #ff9800 100%);
+          color: #ffffff;
+          box-shadow: 0 4px 16px rgba(255, 87, 34, 0.4);
+        }
+
+        .auth-action-btn.primary:hover {
+          transform: translateY(-1px);
+        }
+
+        .auth-action-btn.secondary {
+          background: rgba(255, 255, 255, 0.08);
+          color: #ffffff;
+          border: 1px solid rgba(255, 255, 255, 0.16);
+        }
+
+        .auth-action-btn.secondary:hover {
+          background: rgba(255, 255, 255, 0.14);
+        }
+
+        .auth-action-dismiss {
+          background: transparent;
+          border: none;
+          color: #64748b;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 4px;
+        }
+
+        .auth-action-dismiss:hover {
+          color: #94a3b8;
         }
 
         .sheet-drag-handle {
