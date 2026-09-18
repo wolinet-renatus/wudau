@@ -149,7 +149,6 @@ abstract class AppAsset {
   static const imgButterflyHeadband = "${getImagesPath}img_butterfly_headband.webp";
   static const imgCrackedPorcelainFace = "${getImagesPath}img_cracked_porcelain_face.webp";
   static const imgFaceSwap = "${getImagesPath}img_face_swap.webp";
-  static const imgNickShoes = "${getImagesPath}img_nick_shoes.webp";
   static const imgSequinButterfly = "${getImagesPath}img_sequin_butterfly.webp";
   static const imgSmallFlowers = "${getImagesPath}img_small_flowers.webp";
   static const imgSpringDeer = "${getImagesPath}img_spring_deer.webp";
@@ -174,7 +173,6 @@ abstract class AppAsset {
   static const effectButterflyHeadband = "${getEffectPath}effect_butterfly_headband.deepar";
   static const effectCrackedPorcelainFace = "${getEffectPath}effect_cracked_porcelain_face.deepar";
   static const effectFaceSwap = "${getEffectPath}effect_face_swap.deepar";
-  static const effectNickShoes = "${getEffectPath}effect_nick_shoes.deepar";
   static const effectSequinButterfly = "${getEffectPath}effect_sequin_butterfly.deepar";
   static const effectSpringDeer = "${getEffectPath}effect_spring_deer.deepar";
   static const effectSmallFlowers = "${getEffectPath}effect_small_flowers.deepar";
