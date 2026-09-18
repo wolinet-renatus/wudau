@@ -137,6 +137,14 @@ const IconVolumeX = ({ size = 20 }: { size?: number }) => (
   </SvgIcon>
 );
 
+const IconExternalLink = ({ size = 16 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    <polyline points="15 3 21 3 21 9" />
+    <line x1="10" y1="14" x2="21" y2="3" />
+  </SvgIcon>
+);
+
 const IconSearch = ({ size = 16 }: { size?: number }) => (
   <SvgIcon size={size}>
     <circle cx="11" cy="11" r="8" />
@@ -404,6 +412,8 @@ export default function Home({
   initialSongs = [],
   initialLiveStreams = [],
   initialGifts = [],
+  initialVideoId = null,
+  initialEmbed = false,
 }: {
   initialVideos?: VideoItem[];
   initialPosts?: PostItem[];
@@ -411,6 +421,8 @@ export default function Home({
   initialSongs?: SongItem[];
   initialLiveStreams?: LiveStreamItem[];
   initialGifts?: GiftItem[];
+  initialVideoId?: string | null;
+  initialEmbed?: boolean;
 }) {
   const router = useRouter();
 
@@ -421,6 +433,34 @@ export default function Home({
   const [currentReelIndex, setCurrentReelIndex] = useState<number>(0);
   const [language, setLanguage] = useState<string>("English");
   const [mobileSearchOpen, setMobileSearchOpen] = useState<boolean>(false);
+
+  // Embed & iframe Fitness Detection (zero outer navigation clutter)
+  const [isFramed, setIsFramed] = useState<boolean>(Boolean(initialEmbed));
+  const [videoAspectRatio, setVideoAspectRatio] = useState<number>(9 / 16);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      let framed = false;
+      try {
+        framed = window.self !== window.top;
+      } catch (e) {
+        framed = true;
+      }
+      const isEmbedQuery =
+        router.query.embed === "true" ||
+        router.query.embed === "1" ||
+        window.location.search.includes("embed=true");
+      setIsFramed(framed || isEmbedQuery || Boolean(initialEmbed));
+    }
+  }, [router.query.embed, initialEmbed]);
+
+  const isEmbedMode = isFramed;
+
+  useEffect(() => {
+    if (isEmbedMode) {
+      setCurrentTab("reels");
+    }
+  }, [isEmbedMode]);
 
   // Content Data - 100% Backed by MongoDB Collections (Zero Mock Data)
   const [videos, setVideos] = useState<VideoItem[]>(initialVideos);
@@ -937,15 +977,30 @@ export default function Home({
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+        const requestedVidId = (router.query.videoId as string) || urlParams?.get("videoId") || initialVideoId;
+        const videoEndpoint = requestedVidId
+          ? `client/video/getAllVideos?videoId=${encodeURIComponent(requestedVidId)}&limit=30`
+          : "client/video/getAllVideos?start=1&limit=30";
+
         const [vRes, pRes, hRes, sRes, lRes, gRes] = await Promise.all([
-          axios.get("client/video/getAllVideos?start=1&limit=30", { headers: { key: secretKey } }).catch(() => ({ data: { data: [] } })),
+          axios.get(videoEndpoint, { headers: { key: secretKey } }).catch(() => ({ data: { data: [] } })),
           axios.get("client/post/getAllPosts?start=1&limit=30", { headers: { key: secretKey } }).catch(() => ({ data: { post: [] } })),
           axios.get("client/hashTag/hashtagDrop", { headers: { key: secretKey } }).catch(() => ({ data: { data: [] } })),
           axios.get("client/song/getSongsByUser", { headers: { key: secretKey } }).catch(() => ({ data: { songs: [] } })),
           axios.get("client/liveUser/getliveUserList", { headers: { key: secretKey } }).catch(() => ({ data: { liveUserList: [] } })),
           axios.get("client/gift/getGiftsForUser", { headers: { key: secretKey } }).catch(() => ({ data: { data: [] } })),
         ]);
-        if (vRes.data?.data?.length) setVideos(vRes.data.data);
+        if (vRes.data?.data?.length) {
+          const freshVideos: VideoItem[] = vRes.data.data;
+          setVideos(freshVideos);
+          if (requestedVidId) {
+            const idx = freshVideos.findIndex((v) => v._id === requestedVidId);
+            if (idx !== -1) {
+              setCurrentReelIndex(idx);
+            }
+          }
+        }
         if (pRes.data?.post?.length) setPosts(pRes.data.post);
         if (hRes.data?.data?.length) setHashtags(hRes.data.data);
         if (sRes.data?.songs?.length) setSongs(sRes.data.songs);
@@ -957,6 +1012,37 @@ export default function Home({
     };
     fetchData();
   }, []);
+
+  // Deep-linking: listen for query param changes to instantly jump to target video
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetVideoId = (router.query.videoId as string) || urlParams.get("videoId");
+    if (!targetVideoId) return;
+
+    const foundIdx = videos.findIndex((v) => v._id === targetVideoId);
+    if (foundIdx !== -1) {
+      if (foundIdx !== currentReelIndex) {
+        setCurrentReelIndex(foundIdx);
+      }
+    } else {
+      axios
+        .get(`client/video/getAllVideos?videoId=${encodeURIComponent(targetVideoId)}`, {
+          headers: { key: secretKey },
+        })
+        .then((res) => {
+          if (res.data?.data?.length) {
+            const target = res.data.data[0];
+            setVideos((prev) => {
+              if (prev.some((v) => v._id === target._id)) return prev;
+              return [target, ...prev];
+            });
+            setCurrentReelIndex(0);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [router.query.videoId]);
 
 
   // Keyboard navigation
@@ -1373,6 +1459,42 @@ export default function Home({
     }
   };
 
+  // Sync address bar URL with active reel without page reload
+  useEffect(() => {
+    if (typeof window === "undefined" || isEmbedMode || currentTab !== "reels") return;
+    const curVid = filteredVideos[currentReelIndex];
+    if (curVid && curVid._id) {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("videoId") !== curVid._id) {
+        url.searchParams.set("videoId", curVid._id);
+        window.history.replaceState({}, "", url.toString());
+      }
+    }
+  }, [currentReelIndex, currentTab, filteredVideos, isEmbedMode]);
+
+  // Responsive parent communication for embedded iframes
+  const postResizeToParent = (vid?: HTMLVideoElement | null) => {
+    if (typeof window === "undefined" || window.self === window.top) return;
+    const video = vid || videoRef.current;
+    const curVideo = filteredVideos[currentReelIndex] || filteredVideos[0];
+    const width = video?.videoWidth || 720;
+    const height = video?.videoHeight || 1280;
+    const ratio = width / height;
+    try {
+      window.parent.postMessage(
+        {
+          type: "WUDAO_REEL_RESIZE",
+          videoId: curVideo?._id,
+          width,
+          height,
+          aspectRatio: ratio,
+          isLandscape: ratio > 1.15,
+        },
+        "*"
+      );
+    } catch (e) {}
+  };
+
   const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const target = e.currentTarget;
     if (target.duration && !isNaN(target.duration)) {
@@ -1696,9 +1818,12 @@ export default function Home({
 
   const handleCopyEmbedCode = () => {
     if (!shareTarget) return;
-    const embedCode = `<iframe src="${shareTarget.url}" width="360" height="640" style="border:none;border-radius:16px;overflow:hidden;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    const baseShareUrl = shareTarget.url.includes("?")
+      ? `${shareTarget.url}&embed=true`
+      : `${shareTarget.url}?embed=true`;
+    const embedCode = `<iframe src="${baseShareUrl}" width="100%" height="100%" style="max-width:500px;aspect-ratio:9/16;border:none;border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,0.35);overflow:hidden;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
     navigator.clipboard?.writeText(embedCode);
-    showToast("Embed code copied! 📋");
+    showToast("Responsive Embed code copied! 📋");
   };
 
   const handleToggleMusic = (songUrl?: string) => {
@@ -1747,11 +1872,12 @@ export default function Home({
       )}
 
       {/* APP ROOT */}
-      <div className="app-shell">
+      <div className={`app-shell ${isEmbedMode ? "embed-mode" : ""}`}>
         {/* ==================================================================== */}
         {/* TOP HEADER NAVIGATION                                                */}
         {/* ==================================================================== */}
-        <header className="site-header">
+        {!isEmbedMode && (
+          <header className="site-header">
           <div className="header-left">
             {/* Slide-over menu hamburger button */}
             <button
@@ -1931,9 +2057,10 @@ export default function Home({
             )}
           </div>
         </header>
+        )}
 
         {/* Mobile Search Expandable Bar */}
-        {mobileSearchOpen && (
+        {!isEmbedMode && mobileSearchOpen && (
           <div className="mobile-search-overlay">
             <IconSearch size={16} />
             <input
@@ -1955,7 +2082,7 @@ export default function Home({
         {/* ==================================================================== */}
         {/* SLIDE-OVER NAVIGATION DRAWER (CLEAN, SPACIOUS, ZERO OVERLAPS)        */}
         {/* ==================================================================== */}
-        {isMenuOpen && (
+        {!isEmbedMode && isMenuOpen && (
           <div className="drawer-overlay" onClick={() => setIsMenuOpen(false)}>
             <aside className="nav-drawer" onClick={(e) => e.stopPropagation()}>
               <div className="drawer-top-bar">
@@ -2120,7 +2247,7 @@ export default function Home({
                   <div className="player-presentation-layout">
                     {/* Centered Video Player Card */}
                     <div
-                      className="video-player-card"
+                      className={`video-player-card ${videoAspectRatio > 1.15 ? "is-landscape" : videoAspectRatio > 0.85 ? "is-square" : "is-portrait"} ${isEmbedMode ? "is-embed" : ""}`}
                       style={{
                         transform: dragOffsetY !== 0 ? `translateY(${dragOffsetY}px)` : undefined,
                         transition: isDragging ? "none" : "transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1)",
@@ -2133,60 +2260,97 @@ export default function Home({
                       onTouchEnd={handleTouchEnd}
                     >
                       <>
-                          {/* Video Element */}
-                          <video
-                            ref={videoRef}
-                            key={activeVideo._id}
-                            src={resolveMedia(activeVideo.videoUrl)}
-                            poster={resolveMedia(activeVideo.videoImage)}
-                            autoPlay
-                            loop={!isAutoScroll}
-                            muted={isMuted}
-                            playsInline
-                            preload="auto"
-                            onLoadedData={(e) => {
-                              // Force immediate play as soon as first bytes are decoded
-                              const vid = e.currentTarget;
-                              vid.play().then(() => setIsPlaying(true)).catch(() => {});
-                            }}
-                            onWaiting={() => setIsBuffering(true)}
-                            onCanPlay={() => setIsBuffering(false)}
-                            onPlaying={() => { setIsBuffering(false); setIsPlaying(true); }}
-                            onEnded={handleVideoEnded}
-                            onTimeUpdate={handleTimeUpdate}
-                            className="main-reel-video"
-                          />
+                        {/* Ambient Blurred Backdrop for complete ratio fitness (16:9, 1:1, 9:16) */}
+                        <div
+                          className="ambient-blur-backdrop"
+                          style={{
+                            backgroundImage: `url(${resolveMedia(activeVideo.videoImage)})`,
+                          }}
+                        />
 
-                          {/* Instant Next Reels Preloaders */}
-                          {filteredVideos.length > 1 && (
-                            <>
+                        {/* Video Element */}
+                        <video
+                          ref={videoRef}
+                          key={activeVideo._id}
+                          src={resolveMedia(activeVideo.videoUrl)}
+                          poster={resolveMedia(activeVideo.videoImage)}
+                          autoPlay
+                          loop={!isAutoScroll}
+                          muted={isMuted}
+                          playsInline
+                          preload="auto"
+                          onLoadedMetadata={(e) => {
+                            const vid = e.currentTarget;
+                            if (vid.videoWidth && vid.videoHeight) {
+                              const ratio = vid.videoWidth / vid.videoHeight;
+                              setVideoAspectRatio(ratio);
+                              postResizeToParent(vid);
+                            }
+                            // Instant streaming zero-delay playback trigger
+                            vid.play().then(() => setIsPlaying(true)).catch(() => {
+                              vid.muted = true;
+                              setIsMuted(true);
+                              vid.play().then(() => setIsPlaying(true)).catch(() => {});
+                            });
+                          }}
+                          onLoadedData={(e) => {
+                            // Force immediate play as soon as first bytes are decoded
+                            const vid = e.currentTarget;
+                            vid.play().then(() => setIsPlaying(true)).catch(() => {});
+                          }}
+                          onWaiting={() => setIsBuffering(true)}
+                          onCanPlay={() => setIsBuffering(false)}
+                          onPlaying={() => { setIsBuffering(false); setIsPlaying(true); }}
+                          onEnded={handleVideoEnded}
+                          onTimeUpdate={handleTimeUpdate}
+                          className="main-reel-video"
+                        />
+
+                        {/* Instant Next Reels Preloaders */}
+                        {filteredVideos.length > 1 && (
+                          <>
+                            <video
+                              src={resolveMedia(filteredVideos[(currentReelIndex + 1) % filteredVideos.length]?.videoUrl)}
+                              preload="auto"
+                              muted
+                              playsInline
+                              style={{ display: "none" }}
+                            />
+                            {filteredVideos.length > 2 && (
                               <video
-                                src={resolveMedia(filteredVideos[(currentReelIndex + 1) % filteredVideos.length]?.videoUrl)}
+                                src={resolveMedia(filteredVideos[(currentReelIndex + 2) % filteredVideos.length]?.videoUrl)}
                                 preload="auto"
                                 muted
                                 playsInline
                                 style={{ display: "none" }}
                               />
-                              {filteredVideos.length > 2 && (
-                                <video
-                                  src={resolveMedia(filteredVideos[(currentReelIndex + 2) % filteredVideos.length]?.videoUrl)}
-                                  preload="auto"
-                                  muted
-                                  playsInline
-                                  style={{ display: "none" }}
-                                />
-                              )}
-                            </>
-                          )}
+                            )}
+                          </>
+                        )}
 
-                          {/* Buffering Spinner */}
-                          {isBuffering && (
-                            <div className="buffering-overlay">
-                              <div className="buffering-spinner" />
-                            </div>
-                          )}
+                        {/* Buffering Spinner */}
+                        {isBuffering && (
+                          <div className="buffering-overlay">
+                            <div className="buffering-spinner" />
+                          </div>
+                        )}
 
-                          {/* WUDAO Logo Watermark Overlay */}
+                        {/* In Embed Mode: Watch on WUDAO badge */}
+                        {isEmbedMode ? (
+                          <a
+                            href={`https://wudao.wolinet.com/?videoId=${activeVideo._id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="embed-wudao-badge"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Watch full experience on WUDAO"
+                          >
+                            <img src="/favicon.svg" alt="WUDAO" width={18} height={18} />
+                            <span>Watch on WUDAO</span>
+                            <IconExternalLink size={13} />
+                          </a>
+                        ) : (
+                          /* WUDAO Logo Watermark Overlay */
                           <div className="wudao-reel-watermark">
                             <div className="watermark-logo-wrap">
                               <img
@@ -2201,6 +2365,7 @@ export default function Home({
                             <span className="watermark-sep">·</span>
                             <span className="watermark-author-handle">@{activeVideo.userName || "creator"}</span>
                           </div>
+                        )}
 
                           {/* Floating Hearts Animation from Double-Tap */}
                           {floatingHearts.map((heart) => (
@@ -2368,82 +2533,84 @@ export default function Home({
                     </div>
 
                     {/* Desktop Companion Controls (Clean, Minimalist, No Clutter) */}
-                    <aside className="desktop-companion-rail">
-                      {/* Playlist Switcher */}
-                      <div className="companion-box nav-switcher-box">
-                        <span className="companion-box-label">UP NEXT</span>
-                        <div className="nav-arrow-pair">
-                          <button
-                            onClick={handlePrevReel}
-                            className="arrow-button"
-                            title="Previous (Arrow Up)"
-                          >
-                            <IconChevronUp size={18} />
-                          </button>
-                          <div className="counter-tag">
-                            {currentReelIndex + 1} / {filteredVideos.length}
+                    {!isEmbedMode && (
+                      <aside className="desktop-companion-rail">
+                        {/* Playlist Switcher */}
+                        <div className="companion-box nav-switcher-box">
+                          <span className="companion-box-label">UP NEXT</span>
+                          <div className="nav-arrow-pair">
+                            <button
+                              onClick={handlePrevReel}
+                              className="arrow-button"
+                              title="Previous (Arrow Up)"
+                            >
+                              <IconChevronUp size={18} />
+                            </button>
+                            <div className="counter-tag">
+                              {currentReelIndex + 1} / {filteredVideos.length}
+                            </div>
+                            <button
+                              onClick={handleNextReel}
+                              className="arrow-button"
+                              title="Next (Arrow Down)"
+                            >
+                              <IconChevronDown size={18} />
+                            </button>
                           </div>
-                          <button
-                            onClick={handleNextReel}
-                            className="arrow-button"
-                            title="Next (Arrow Down)"
-                          >
-                            <IconChevronDown size={18} />
-                          </button>
+                          <span className="companion-subtext">Use ↑ and ↓ arrows or spacebar to control</span>
                         </div>
-                        <span className="companion-subtext">Use ↑ and ↓ arrows or spacebar to control</span>
-                      </div>
 
-                      {/* Creator Spotlight */}
-                      <div className="companion-box creator-spotlight-box">
-                        <div className="spotlight-author-row">
-                          <img
-                            src={resolveMedia(activeVideo.userImage)}
-                            alt={activeVideo.name}
-                            className="spotlight-avatar"
-                          />
-                          <div className="spotlight-text">
-                            <h4>{activeVideo.name}</h4>
-                            <p>{activeVideo.userName}</p>
+                        {/* Creator Spotlight */}
+                        <div className="companion-box creator-spotlight-box">
+                          <div className="spotlight-author-row">
+                            <img
+                              src={resolveMedia(activeVideo.userImage)}
+                              alt={activeVideo.name}
+                              className="spotlight-avatar"
+                            />
+                            <div className="spotlight-text">
+                              <h4>{activeVideo.name}</h4>
+                              <p>{activeVideo.userName}</p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="spotlight-stats-row">
-                          <div className="spotlight-stat">
-                            <strong>{activeVideo.totalLikes || 1420}</strong>
-                            <span>Likes</span>
-                          </div>
-                          <div className="spotlight-stat">
-                            <strong>{activeVideo.shareCount || 389}</strong>
-                            <span>Shares</span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => showToast(`Followed ${activeVideo.name}`)}
-                          className="spotlight-follow-btn"
-                        >
-                          Follow Artist
-                        </button>
-                      </div>
-
-                      {/* Sound Track Card */}
-                      {activeVideo.songTitle && (
-                        <div className="companion-box soundtrack-box">
-                          <div className="soundtrack-head">
-                            <IconMusic size={16} />
-                            <div>
-                              <h5>{activeVideo.songTitle}</h5>
-                              <p>{activeVideo.singerName || "WUDAO Audio"}</p>
+                          <div className="spotlight-stats-row">
+                            <div className="spotlight-stat">
+                              <strong>{activeVideo.totalLikes || 1420}</strong>
+                              <span>Likes</span>
+                            </div>
+                            <div className="spotlight-stat">
+                              <strong>{activeVideo.shareCount || 389}</strong>
+                              <span>Shares</span>
                             </div>
                           </div>
                           <button
-                            onClick={() => handleToggleMusic(activeVideo.songLink)}
-                            className="soundtrack-preview-btn"
+                            onClick={() => showToast(`Followed ${activeVideo.name}`)}
+                            className="spotlight-follow-btn"
                           >
-                            {playingAudioUrl === resolveMedia(activeVideo.songLink) ? "Pause Audio" : "Play Soundtrack"}
+                            Follow Artist
                           </button>
                         </div>
-                      )}
-                    </aside>
+
+                        {/* Sound Track Card */}
+                        {activeVideo.songTitle && (
+                          <div className="companion-box soundtrack-box">
+                            <div className="soundtrack-head">
+                              <IconMusic size={16} />
+                              <div>
+                                <h5>{activeVideo.songTitle}</h5>
+                                <p>{activeVideo.singerName || "WUDAO Audio"}</p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleToggleMusic(activeVideo.songLink)}
+                              className="soundtrack-preview-btn"
+                            >
+                              {playingAudioUrl === resolveMedia(activeVideo.songLink) ? "Pause Audio" : "Play Soundtrack"}
+                            </button>
+                          </div>
+                        )}
+                      </aside>
+                    )}
                   </div>
                 )
               )}
@@ -2981,52 +3148,54 @@ export default function Home({
         {/* ==================================================================== */}
         {/* MOBILE BOTTOM NAVIGATION BAR                                         */}
         {/* ==================================================================== */}
-        <nav className="mobile-tab-nav">
-          <button
-            onClick={() => setCurrentTab("reels")}
-            className={`tab-nav-btn ${currentTab === "reels" ? "active" : ""}`}
-          >
-            <IconReels size={20} />
-            <span className="tab-title">Reels</span>
-          </button>
+        {!isEmbedMode && (
+          <nav className="mobile-tab-nav">
+            <button
+              onClick={() => setCurrentTab("reels")}
+              className={`tab-nav-btn ${currentTab === "reels" ? "active" : ""}`}
+            >
+              <IconReels size={20} />
+              <span className="tab-title">Reels</span>
+            </button>
 
-          <button
-            onClick={() => setCurrentTab("live")}
-            className={`tab-nav-btn ${currentTab === "live" ? "active" : ""}`}
-          >
-            <IconLive size={20} />
-            <span className="tab-title">Live</span>
-          </button>
+            <button
+              onClick={() => setCurrentTab("live")}
+              className={`tab-nav-btn ${currentTab === "live" ? "active" : ""}`}
+            >
+              <IconLive size={20} />
+              <span className="tab-title">Live</span>
+            </button>
 
-          <button
-            onClick={() => {
-              if (!requireAuth("create", "Sign in or create an account to upload videos and community posts.")) return;
-              setShowUploadStudio(true);
-            }}
-            className="tab-nav-btn create-tab-btn"
-            title="Create Reel or Post"
-          >
-            <div className="create-bubble-icon">
-              <IconPlus size={18} />
-            </div>
-          </button>
+            <button
+              onClick={() => {
+                if (!requireAuth("create", "Sign in or create an account to upload videos and community posts.")) return;
+                setShowUploadStudio(true);
+              }}
+              className="tab-nav-btn create-tab-btn"
+              title="Create Reel or Post"
+            >
+              <div className="create-bubble-icon">
+                <IconPlus size={18} />
+              </div>
+            </button>
 
-          <button
-            onClick={() => setCurrentTab("social")}
-            className={`tab-nav-btn ${currentTab === "social" ? "active" : ""}`}
-          >
-            <IconCommunity size={20} />
-            <span className="tab-title">Feed</span>
-          </button>
+            <button
+              onClick={() => setCurrentTab("social")}
+              className={`tab-nav-btn ${currentTab === "social" ? "active" : ""}`}
+            >
+              <IconCommunity size={20} />
+              <span className="tab-title">Feed</span>
+            </button>
 
-          <button
-            onClick={() => setCurrentTab("profile")}
-            className={`tab-nav-btn ${currentTab === "profile" ? "active" : ""}`}
-          >
-            <IconUser size={20} />
-            <span className="tab-title">Profile</span>
-          </button>
-        </nav>
+            <button
+              onClick={() => setCurrentTab("profile")}
+              className={`tab-nav-btn ${currentTab === "profile" ? "active" : ""}`}
+            >
+              <IconUser size={20} />
+              <span className="tab-title">Profile</span>
+            </button>
+          </nav>
+        )}
 
         {/* ==================================================================== */}
         {/* COMMENTS BOTTOM SHEET DRAWER                                         */}
@@ -4741,7 +4910,7 @@ export default function Home({
           padding: 16px;
         }
 
-        /* Fluid Video Card — TikTok full-screen fill */
+        /* Fluid Video Card — Auto-responsive fitness for 9:16, 16:9, 1:1 and iframes */
         .video-player-card {
           position: relative;
           width: 100%;
@@ -4759,13 +4928,111 @@ export default function Home({
           touch-action: pan-y;
           user-select: none;
           -webkit-user-select: none;
+          transition: max-width 0.3s cubic-bezier(0.2, 0.9, 0.3, 1), height 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+        }
+
+        /* Landscape Cinema Adaptation for 16:9 widescreen videos on desktop */
+        @media (min-width: 768px) {
+          .video-player-card.is-landscape {
+            max-width: min(860px, 72vw);
+            height: min(calc(100dvh - 84px), 520px);
+            aspect-ratio: 16 / 9;
+          }
+        }
+
+        /* Ambient blurred background layer that fills non-9:16 aspect ratios with glowing colors */
+        .ambient-blur-backdrop {
+          position: absolute;
+          inset: -30px;
+          background-size: cover;
+          background-position: center;
+          filter: blur(36px) brightness(0.42) saturate(1.4);
+          transform: scale(1.15);
+          pointer-events: none;
+          z-index: 1;
+          transition: background-image 0.35s ease;
         }
 
         .main-reel-video {
+          position: relative;
+          z-index: 2;
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
           display: block;
+          background: transparent;
+        }
+
+        /* Embed / Iframe Mode: Clean full-viewport auto-fit player */
+        .embed-mode.app-shell {
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+          height: 100vh !important;
+          width: 100vw !important;
+          max-width: 100vw !important;
+          background: #000000 !important;
+        }
+
+        .embed-mode .content-stage,
+        .embed-mode .reels-stage {
+          margin: 0 !important;
+          padding: 0 !important;
+          height: 100vh !important;
+          width: 100vw !important;
+          max-width: 100vw !important;
+          min-height: 100vh !important;
+        }
+
+        .embed-mode .player-presentation-layout {
+          margin: 0 !important;
+          padding: 0 !important;
+          height: 100vh !important;
+          width: 100vw !important;
+          max-width: 100vw !important;
+          gap: 0 !important;
+        }
+
+        .embed-mode .video-player-card {
+          position: fixed !important;
+          inset: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          max-width: 100vw !important;
+          max-height: 100vh !important;
+          border-radius: 0 !important;
+          border: none !important;
+          margin: 0 !important;
+          box-shadow: none !important;
+        }
+
+        /* Embed Mode Brand Link Badge */
+        .embed-wudao-badge {
+          position: absolute;
+          top: 14px;
+          left: 14px;
+          z-index: 40;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          background: rgba(0, 0, 0, 0.65);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #ffffff;
+          padding: 6px 14px;
+          border-radius: 9999px;
+          font-size: 13px;
+          font-weight: 600;
+          text-decoration: none;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        }
+
+        .embed-wudao-badge:hover {
+          background: rgba(255, 69, 0, 0.88);
+          border-color: rgba(255, 255, 255, 0.4);
+          transform: translateY(-1px);
         }
 
         .buffering-overlay {
@@ -7903,6 +8170,16 @@ export default function Home({
             padding-bottom: 56px;
           }
 
+          .embed-mode .content-stage,
+          .embed-mode .player-presentation-layout,
+          .embed-mode .reels-stage {
+            height: 100vh !important;
+            min-height: 100vh !important;
+            padding: 0 !important;
+            padding-bottom: 0 !important;
+            margin: 0 !important;
+          }
+
           .player-presentation-layout {
             padding: 0;
             width: 100%;
@@ -8363,12 +8640,19 @@ export default function Home({
 }
 
 // Server-Side Props for Instant First Paint - 100% Real Data
-export async function getServerSideProps() {
+export async function getServerSideProps(context: any) {
   try {
     const apiBase = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_BASE_URL || baseURL;
     const cleanBase = apiBase.endsWith("/") ? apiBase : `${apiBase}/`;
+    const requestedVideoId = context.query?.videoId ? String(context.query.videoId).trim() : null;
+    const isEmbed = context.query?.embed === "true" || context.query?.embed === "1";
+
+    const videoEndpoint = requestedVideoId
+      ? `${cleanBase}client/video/getAllVideos?videoId=${encodeURIComponent(requestedVideoId)}&limit=30`
+      : `${cleanBase}client/video/getAllVideos?start=1&limit=30`;
+
     const [videosRes, postsRes, hashtagsRes, songsRes, liveRes, giftsRes] = await Promise.all([
-      fetch(`${cleanBase}client/video/getAllVideos?start=1&limit=30`, {
+      fetch(videoEndpoint, {
         headers: { key: secretKey },
       })
         .then((r) => r.json())
@@ -8400,16 +8684,25 @@ export async function getServerSideProps() {
         .catch(() => ({ data: [] })),
     ]);
 
-    const videoList: VideoItem[] = videosRes.data || [];
+    let videoList: VideoItem[] = videosRes.data || [];
 
-    // Prioritize Tanzanian & African creators first
-    videoList.sort((a, b) => {
-      const aIsTz = (a.userName || "").includes("_tz") || (a.userName || "").includes("_znz");
-      const bIsTz = (b.userName || "").includes("_tz") || (b.userName || "").includes("_znz");
-      if (aIsTz && !bIsTz) return -1;
-      if (!aIsTz && bIsTz) return 1;
-      return 0;
-    });
+    if (requestedVideoId) {
+      // Prioritize requested videoId strictly at index 0 for deep-linking
+      const targetIdx = videoList.findIndex((v) => v._id === requestedVideoId);
+      if (targetIdx > 0) {
+        const [moved] = videoList.splice(targetIdx, 1);
+        videoList.unshift(moved);
+      }
+    } else {
+      // Prioritize Tanzanian & African creators first
+      videoList.sort((a, b) => {
+        const aIsTz = (a.userName || "").includes("_tz") || (a.userName || "").includes("_znz");
+        const bIsTz = (b.userName || "").includes("_tz") || (b.userName || "").includes("_znz");
+        if (aIsTz && !bIsTz) return -1;
+        if (!aIsTz && bIsTz) return 1;
+        return 0;
+      });
+    }
 
     return {
       props: {
@@ -8419,6 +8712,8 @@ export async function getServerSideProps() {
         initialSongs: songsRes.songs || [],
         initialLiveStreams: liveRes.liveUserList || [],
         initialGifts: giftsRes.data || [],
+        initialVideoId: requestedVideoId,
+        initialEmbed: isEmbed,
       },
     };
   } catch (e) {
@@ -8430,6 +8725,8 @@ export async function getServerSideProps() {
         initialSongs: [],
         initialLiveStreams: [],
         initialGifts: [],
+        initialVideoId: null,
+        initialEmbed: false,
       },
     };
   }

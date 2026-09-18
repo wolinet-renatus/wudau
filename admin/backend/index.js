@@ -79,8 +79,16 @@ require("./socket");
 
 // Serve non-video static assets normally
 app.use("/storage", (req, res, next) => {
-  const filePath = path.join(__dirname, "storage", req.path);
-  const ext = path.extname(req.path).toLowerCase();
+  let reqPath = req.path;
+  try {
+    reqPath = decodeURIComponent(req.path);
+  } catch (e) {}
+
+  let filePath = path.join(__dirname, "storage", reqPath);
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(__dirname, "storage", req.path);
+  }
+  const ext = path.extname(filePath).toLowerCase();
   const videoExts = [".mp4", ".webm", ".mov", ".m4v", ".mkv"];
 
   if (!videoExts.includes(ext)) {
