@@ -451,9 +451,15 @@ export default function Home({
   // Auto-Scrolling & Reel Playback Progress
   const [isAutoScroll, setIsAutoScroll] = useState<boolean>(true);
   const [progressPercent, setProgressPercent] = useState<number>(0);
+  const [isUserPaused, setIsUserPaused] = useState<boolean>(false);
+  const [dragOffsetY, setDragOffsetY] = useState<number>(0);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const lastWheelTime = useRef<number>(0);
   const touchStartY = useRef<number | null>(null);
   const touchStartX = useRef<number | null>(null);
+  const touchStartTime = useRef<number>(0);
+  const isSwiping = useRef<boolean>(false);
+  const preventClickUntil = useRef<number>(0);
   const lastTapTime = useRef<number>(0);
 
   // Social Interactions & Modals
@@ -995,11 +1001,15 @@ export default function Home({
     if (videoRef.current.paused) {
       videoRef.current
         .play()
-        .then(() => setIsPlaying(true))
+        .then(() => {
+          setIsPlaying(true);
+          setIsUserPaused(false);
+        })
         .catch(() => {});
     } else {
       videoRef.current.pause();
       setIsPlaying(false);
+      setIsUserPaused(true);
     }
   };
 
@@ -1313,15 +1323,38 @@ export default function Home({
     }
   }, [showCommentsDrawer, activeVideo?._id]);
 
-  // Reset playback progress when switching reel or category
+  // Reset playback progress and start instant streaming playback when switching reel or category
   useEffect(() => {
     setProgressPercent(0);
     setIsBuffering(false);
+    setIsUserPaused(false);
+    const video = videoRef.current;
+    if (video) {
+      video.currentTime = 0;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+            setIsBuffering(false);
+          })
+          .catch(() => {
+            // Autoplay policy fallback: guarantee playback by muting if browser blocks unmuted playback
+            video.muted = true;
+            setIsMuted(true);
+            video.play().then(() => {
+              setIsPlaying(true);
+              setIsBuffering(false);
+            }).catch(() => {});
+          });
+      }
+    }
   }, [currentReelIndex, currentFilter]);
 
   const handleNextReel = () => {
     if (filteredVideos.length === 0) return;
     setProgressPercent(0);
+    setIsUserPaused(false);
     setCurrentReelIndex((prev) => (prev + 1) % filteredVideos.length);
     setIsPlaying(true);
   };
@@ -1329,6 +1362,7 @@ export default function Home({
   const handlePrevReel = () => {
     if (filteredVideos.length === 0) return;
     setProgressPercent(0);
+    setIsUserPaused(false);
     setCurrentReelIndex((prev) => (prev - 1 + filteredVideos.length) % filteredVideos.length);
     setIsPlaying(true);
   };
@@ -1352,8 +1386,8 @@ export default function Home({
 
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     const now = Date.now();
-    if (now - lastWheelTime.current < 350) return;
-    if (Math.abs(e.deltaY) > 20) {
+    if (now - lastWheelTime.current < 240) return;
+    if (Math.abs(e.deltaY) > 15) {
       lastWheelTime.current = now;
       if (e.deltaY > 0) {
         handleNextReel();
@@ -1364,30 +1398,66 @@ export default function Home({
   };
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (showCommentsDrawer || showGiftModal || showAuthModal || showUploadStudio || showShareModal) return;
     touchStartY.current = e.touches[0].clientY;
     touchStartX.current = e.touches[0].clientX;
+    touchStartTime.current = Date.now();
+    isSwiping.current = false;
+    setIsDragging(true);
   };
 
-  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     if (touchStartY.current === null) return;
-    const diffY = touchStartY.current - e.changedTouches[0].clientY;
-    const diffX = (touchStartX.current || 0) - e.changedTouches[0].clientX;
-    touchStartY.current = null;
-    touchStartX.current = null;
+    const currentY = e.touches[0].clientY;
+    const currentX = e.touches[0].clientX;
+    const diffY = currentY - touchStartY.current;
+    const diffX = currentX - (touchStartX.current || 0);
 
-    if (Math.abs(diffY) > 40 && Math.abs(diffY) > Math.abs(diffX)) {
-      if (diffY > 0) {
-        handleNextReel();
-      } else {
-        handlePrevReel();
+    // If gesture is predominantly vertical, track finger movement smoothly
+    if (Math.abs(diffY) > 5 && Math.abs(diffY) > Math.abs(diffX)) {
+      isSwiping.current = true;
+      // Add subtle rubber-band resistance at list edges
+      let offset = diffY;
+      if ((currentReelIndex === 0 && diffY > 0) || (currentReelIndex === filteredVideos.length - 1 && diffY < 0)) {
+        offset = diffY * 0.35;
       }
+      setDragOffsetY(offset);
     }
   };
 
-  // Double tap to like on video surface
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    setIsDragging(false);
+    if (touchStartY.current === null) return;
+    const currentY = e.changedTouches[0].clientY;
+    const diffY = currentY - touchStartY.current;
+    const elapsed = Date.now() - touchStartTime.current;
+    const velocity = Math.abs(diffY) / Math.max(1, elapsed);
+
+    touchStartY.current = null;
+    touchStartX.current = null;
+
+    if (isSwiping.current) {
+      // Suppress synthetic click after touch release so it never pauses playback!
+      preventClickUntil.current = Date.now() + 450;
+      isSwiping.current = false;
+
+      // Effortless swipe threshold: 30px distance or quick flick
+      if (diffY < -30 || (diffY < -15 && velocity > 0.22)) {
+        handleNextReel();
+      } else if (diffY > 30 || (diffY > 15 && velocity > 0.22)) {
+        handlePrevReel();
+      }
+    }
+    setDragOffsetY(0);
+  };
+
+  // Double tap to like on video surface (swipes will never accidentally trigger this)
   const handleSurfaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (Date.now() < preventClickUntil.current || isSwiping.current) {
+      return;
+    }
     const now = Date.now();
-    if (now - lastTapTime.current < 300) {
+    if (now - lastTapTime.current < 280) {
       if (activeVideo) {
         if (!likedReelIds[activeVideo._id]) {
           handleLike(activeVideo._id);
@@ -1409,7 +1479,7 @@ export default function Home({
           togglePlay();
           lastTapTime.current = 0;
         }
-      }, 300);
+      }, 280);
     }
   };
 
@@ -2051,9 +2121,15 @@ export default function Home({
                     {/* Centered Video Player Card */}
                     <div
                       className="video-player-card"
+                      style={{
+                        transform: dragOffsetY !== 0 ? `translateY(${dragOffsetY}px)` : undefined,
+                        transition: isDragging ? "none" : "transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1)",
+                        willChange: "transform",
+                      }}
                       onClick={handleSurfaceClick}
                       onWheel={handleWheel}
                       onTouchStart={handleTouchStart}
+                      onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
                     >
                       <>
@@ -2071,7 +2147,7 @@ export default function Home({
                             onLoadedData={(e) => {
                               // Force immediate play as soon as first bytes are decoded
                               const vid = e.currentTarget;
-                              vid.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+                              vid.play().then(() => setIsPlaying(true)).catch(() => {});
                             }}
                             onWaiting={() => setIsBuffering(true)}
                             onCanPlay={() => setIsBuffering(false)}
@@ -2081,15 +2157,26 @@ export default function Home({
                             className="main-reel-video"
                           />
 
-                          {/* Instant Next Reel Preloader */}
+                          {/* Instant Next Reels Preloaders */}
                           {filteredVideos.length > 1 && (
-                            <video
-                              src={resolveMedia(filteredVideos[(currentReelIndex + 1) % filteredVideos.length]?.videoUrl)}
-                              preload="auto"
-                              muted
-                              playsInline
-                              style={{ display: "none" }}
-                            />
+                            <>
+                              <video
+                                src={resolveMedia(filteredVideos[(currentReelIndex + 1) % filteredVideos.length]?.videoUrl)}
+                                preload="auto"
+                                muted
+                                playsInline
+                                style={{ display: "none" }}
+                              />
+                              {filteredVideos.length > 2 && (
+                                <video
+                                  src={resolveMedia(filteredVideos[(currentReelIndex + 2) % filteredVideos.length]?.videoUrl)}
+                                  preload="auto"
+                                  muted
+                                  playsInline
+                                  style={{ display: "none" }}
+                                />
+                              )}
+                            </>
                           )}
 
                           {/* Buffering Spinner */}
@@ -2139,8 +2226,8 @@ export default function Home({
                             {isMuted ? <IconVolumeX size={18} /> : <IconVolume size={18} />}
                           </button>
 
-                          {/* Pause / Play Fade Indicator */}
-                          {!isPlaying && (
+                          {/* Pause / Play Fade Indicator — only shows when user explicitly tapped to pause */}
+                          {isUserPaused && !isPlaying && (
                             <div className="player-pause-indicator">
                               <div className="pause-icon-pill">
                                 <polygon points="5 3 19 12 5 21 5 3" fill="#ffffff" />
@@ -4669,6 +4756,9 @@ export default function Home({
           justify-content: center;
           cursor: pointer;
           border: 1px solid rgba(255,255,255,0.06);
+          touch-action: pan-y;
+          user-select: none;
+          -webkit-user-select: none;
         }
 
         .main-reel-video {
@@ -7826,6 +7916,9 @@ export default function Home({
             border-radius: 0;
             border: none;
             box-shadow: none;
+            touch-action: pan-y;
+            user-select: none;
+            -webkit-user-select: none;
           }
 
           .player-actions-column {
@@ -7836,7 +7929,8 @@ export default function Home({
 
           .player-bottom-vignette {
             right: 58px;
-            padding: 14px 10px 12px 10px;
+            padding: 16px 12px calc(env(safe-area-inset-bottom, 0px) + 12px) 12px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.94) 0%, rgba(0, 0, 0, 0.65) 50%, rgba(0, 0, 0, 0.15) 80%, transparent 100%);
           }
 
           .mobile-tab-nav {

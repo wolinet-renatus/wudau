@@ -109,7 +109,9 @@ app.use("/storage", (req, res, next) => {
     // Parse Range header (e.g. "bytes=0-1023")
     const parts = range.replace(/bytes=/, "").split("-");
     const start = parseInt(parts[0], 10);
-    const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + 1024 * 1024, fileSize - 1);
+    // Instant streaming burst: default to 10MB chunk so full reel is buffered immediately without roundtrip lag
+    const DEFAULT_CHUNK_SIZE = 10 * 1024 * 1024;
+    const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + DEFAULT_CHUNK_SIZE, fileSize - 1);
     const chunkSize = end - start + 1;
 
     res.writeHead(206, {
