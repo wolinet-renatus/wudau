@@ -249,6 +249,36 @@ const IconCheck = ({ size = 14 }: { size?: number }) => (
   </SvgIcon>
 );
 
+const IconPlay = ({ size = 20, filled = false }: { size?: number; filled?: boolean }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill={filled ? "currentColor" : "none"}
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ flexShrink: 0 }}
+  >
+    <polygon points="5 3 19 12 5 21 5 3" fill={filled ? "currentColor" : "none"} />
+  </svg>
+);
+
+const IconFlame = ({ size = 18 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z" />
+  </SvgIcon>
+);
+
+const IconImage = ({ size = 18 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <polyline points="21 15 16 10 5 21" />
+  </SvgIcon>
+);
+
 const IconLayers = ({ size = 16 }: { size?: number }) => (
   <SvgIcon size={size}>
     <polygon points="12 2 2 7 12 12 22 7 12 2" />
@@ -482,8 +512,15 @@ export default function Home({
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<string>("guest");
 
-  // Video Controls & Audio
-  const [isMuted, setIsMuted] = useState<boolean>(true);
+  // Video Controls & Audio - Defaults to UNMUTED for full audio engagement
+  const [isMuted, setIsMuted] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("wudao_sound_enabled");
+      if (saved === "false") return true;
+      if (saved === "true") return false;
+    }
+    return false;
+  });
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [isBuffering, setIsBuffering] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -557,6 +594,7 @@ export default function Home({
   const [uploadDuration, setUploadDuration] = useState<number>(15);
   const [uploadThumbnailFile, setUploadThumbnailFile] = useState<File | null>(null);
   const [uploadThumbnailPreview, setUploadThumbnailPreview] = useState<string | null>(null);
+  const [candidateThumbnails, setCandidateThumbnails] = useState<{ url: string; file: File }[]>([]);
   const [uploadSelectedHashtags, setUploadSelectedHashtags] = useState<string[]>(["WudauCreatives"]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -564,6 +602,7 @@ export default function Home({
   const [studioCreatorId, setStudioCreatorId] = useState<string>("");
 
   const reelFileInputRef = useRef<HTMLInputElement | null>(null);
+  const customThumbnailInputRef = useRef<HTMLInputElement | null>(null);
   const postFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Available creator profiles for web publishing
@@ -610,17 +649,25 @@ export default function Home({
     setUploadFile(file);
     const url = URL.createObjectURL(file);
     setUploadFilePreview(url);
+    setCandidateThumbnails([]);
 
     try {
       const tempVid = document.createElement("video");
       tempVid.src = url;
       tempVid.muted = true;
       tempVid.playsInline = true;
-      tempVid.currentTime = 0.5;
+      tempVid.crossOrigin = "anonymous";
+      
+      const timestamps = [0.08, 0.32, 0.58, 0.82];
+      const extracted: { url: string; file: File }[] = [];
+      let stepIdx = 0;
+
       tempVid.onloadeddata = () => {
         const dur = Math.round(tempVid.duration);
         if (dur > 0) setUploadDuration(dur);
+        tempVid.currentTime = Math.max(0.3, (tempVid.duration || 1) * timestamps[0]);
       };
+
       tempVid.onseeked = () => {
         try {
           const canvas = document.createElement("canvas");
@@ -658,11 +705,22 @@ export default function Home({
 
             canvas.toBlob((blob) => {
               if (blob) {
-                const thumb = new File([blob], "thumbnail.jpg", { type: "image/jpeg" });
-                setUploadThumbnailFile(thumb);
-                setUploadThumbnailPreview(canvas.toDataURL("image/jpeg"));
+                const thumbFile = new File([blob], `thumbnail_${stepIdx}.jpg`, { type: "image/jpeg" });
+                const dataUrl = canvas.toDataURL("image/jpeg");
+                extracted.push({ url: dataUrl, file: thumbFile });
+                
+                if (stepIdx === 0) {
+                  setUploadThumbnailFile(thumbFile);
+                  setUploadThumbnailPreview(dataUrl);
+                }
+                setCandidateThumbnails([...extracted]);
+
+                stepIdx++;
+                if (stepIdx < timestamps.length && tempVid.duration) {
+                  tempVid.currentTime = tempVid.duration * timestamps[stepIdx];
+                }
               }
-            }, "image/jpeg", 0.88);
+            }, "image/jpeg", 0.9);
           }
         } catch (cvErr) {
           console.warn("Canvas capture note:", cvErr);
@@ -671,6 +729,62 @@ export default function Home({
     } catch (err) {
       console.warn("Video thumbnail extract error:", err);
     }
+  };
+
+  const handleCustomThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || 720;
+        canvas.height = img.naturalHeight || 1280;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          // Stamp Official WUDAO Watermark onto Custom Cover
+          const stampW = Math.min(220, Math.round(canvas.width * 0.38));
+          const stampH = Math.round(stampW * 0.22);
+          const pad = Math.round(canvas.width * 0.04);
+          const bx = canvas.width - stampW - pad;
+          const by = canvas.height - stampH - pad;
+
+          ctx.save();
+          ctx.fillStyle = "rgba(10, 12, 18, 0.75)";
+          if (ctx.roundRect) ctx.roundRect(bx, by, stampW, stampH, Math.round(stampH / 2));
+          else ctx.rect(bx, by, stampW, stampH);
+          ctx.fill();
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+          ctx.stroke();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = `bold ${Math.round(stampH * 0.42)}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const creatorTag = currentUser?.userName ? `@${currentUser.userName}` : "@wudao";
+          ctx.fillText(`WUDAO • ${creatorTag}`, bx + stampW / 2, by + stampH / 2);
+          ctx.restore();
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const thumb = new File([blob], "custom_cover.jpg", { type: "image/jpeg" });
+              setUploadThumbnailFile(thumb);
+              const previewUrl = canvas.toDataURL("image/jpeg");
+              setUploadThumbnailPreview(previewUrl);
+              setCandidateThumbnails((prev) => [{ url: previewUrl, file: thumb }, ...prev]);
+              showToast("Custom cover thumbnail selected ✨");
+            }
+            URL.revokeObjectURL(url);
+          }, "image/jpeg", 0.92);
+        }
+      } catch (err) {
+        console.warn("Custom cover capture note:", err);
+      }
+    };
+    img.src = url;
   };
 
   const handlePostImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -755,6 +869,7 @@ export default function Home({
     setUploadSelectedSongId("");
     setUploadThumbnailFile(null);
     setUploadThumbnailPreview(null);
+    setCandidateThumbnails([]);
     setUploadProgress(0);
     setUploadStatusText("");
   };
@@ -1081,6 +1196,30 @@ export default function Home({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentTab, currentReelIndex, videos.length, showCommentsDrawer, showGiftModal, showAuthModal, showUploadStudio, showShareModal, selectedPost]);
+
+  // Global first-gesture auto-unmute listener (conquers browser strict autoplay restrictions)
+  useEffect(() => {
+    const handleFirstGesture = () => {
+      const saved = typeof window !== "undefined" ? sessionStorage.getItem("wudao_sound_enabled") : null;
+      if (saved !== "false" && videoRef.current && videoRef.current.muted) {
+        videoRef.current.muted = false;
+        setIsMuted(false);
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("wudao_sound_enabled", "true");
+        }
+      }
+    };
+
+    window.addEventListener("click", handleFirstGesture, { passive: true });
+    window.addEventListener("touchstart", handleFirstGesture, { passive: true });
+    window.addEventListener("keydown", handleFirstGesture, { passive: true });
+
+    return () => {
+      window.removeEventListener("click", handleFirstGesture);
+      window.removeEventListener("touchstart", handleFirstGesture);
+      window.removeEventListener("keydown", handleFirstGesture);
+    };
+  }, []);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -1578,6 +1717,16 @@ export default function Home({
     if (Date.now() < preventClickUntil.current || isSwiping.current) {
       return;
     }
+    // Auto-unmute immediately on surface click if video was muted by autoplay policy
+    if (isMuted && videoRef.current) {
+      videoRef.current.muted = false;
+      setIsMuted(false);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("wudao_sound_enabled", "true");
+      }
+      showToast("Sound Enabled 🔊");
+    }
+
     const now = Date.now();
     if (now - lastTapTime.current < 280) {
       if (activeVideo) {
@@ -2378,17 +2527,33 @@ export default function Home({
                             </div>
                           ))}
 
-                          {/* Sound Toggle Floating Button */}
+                          {/* Sound Toggle Floating Button - High Visibility Pulsing Pill */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setIsMuted(!isMuted);
-                              showToast(isMuted ? "Sound Enabled" : "Muted");
+                              const nextMuted = !isMuted;
+                              setIsMuted(nextMuted);
+                              if (videoRef.current) {
+                                videoRef.current.muted = nextMuted;
+                                if (!nextMuted) videoRef.current.play().catch(() => {});
+                              }
+                              if (typeof window !== "undefined") {
+                                sessionStorage.setItem("wudao_sound_enabled", nextMuted ? "false" : "true");
+                              }
+                              showToast(nextMuted ? "Muted" : "Sound Enabled 🔊");
                             }}
-                            className="player-sound-btn"
+                            className={`player-sound-btn ${isMuted ? "is-muted" : "is-unmuted"}`}
                             aria-label="Toggle Sound"
+                            title={isMuted ? "Tap to Unmute Sound" : "Mute Sound"}
                           >
-                            {isMuted ? <IconVolumeX size={18} /> : <IconVolume size={18} />}
+                            {isMuted ? (
+                              <div className="sound-pill-content">
+                                <IconVolumeX size={18} />
+                                <span className="sound-pill-text">Tap for Sound</span>
+                              </div>
+                            ) : (
+                              <IconVolume size={18} />
+                            )}
                           </button>
 
                           {/* Pause / Play Fade Indicator — only shows when user explicitly tapped to pause */}
@@ -3072,6 +3237,70 @@ export default function Home({
                   ))
                 )}
               </div>
+
+              {/* Trending Video Reels Showcase */}
+              {videos.length > 0 && (
+                <div className="explore-reels-section">
+                  <div className="explore-section-header">
+                    <div className="explore-section-title-wrap">
+                      <IconReels size={22} />
+                      <h3>Trending Video Reels</h3>
+                    </div>
+                    <span className="explore-section-badge">{videos.length} Videos</span>
+                  </div>
+
+                  <div className="explore-reels-grid">
+                    {videos.map((vid, vIdx) => (
+                      <div
+                        key={vid._id}
+                        className="explore-reel-card"
+                        onClick={() => {
+                          const targetIdx = filteredVideos.findIndex((v) => v._id === vid._id);
+                          if (targetIdx >= 0) {
+                            setCurrentReelIndex(targetIdx);
+                          } else {
+                            setCurrentFilter("all");
+                            const allIdx = videos.findIndex((v) => v._id === vid._id);
+                            if (allIdx >= 0) setCurrentReelIndex(allIdx);
+                          }
+                          setCurrentTab("reels");
+                          showToast(`Playing "${(vid.caption || "Reel").slice(0, 24)}"`);
+                        }}
+                      >
+                        <div className="explore-reel-thumbnail-wrap">
+                          <img
+                            src={resolveMedia(vid.videoImage)}
+                            alt={vid.caption || "Reel Thumbnail"}
+                            className="explore-reel-img"
+                            loading="lazy"
+                          />
+                          <div className="explore-reel-overlay-gradient" />
+                          <div className="explore-reel-play-icon">
+                            <IconPlay size={18} filled />
+                          </div>
+                          <div className="explore-reel-views-pill">
+                            <IconFlame size={12} />
+                            <span>{vid.totalLikes ? `${vid.totalLikes} likes` : "Trending"}</span>
+                          </div>
+                        </div>
+                        <div className="explore-reel-info">
+                          <div className="explore-reel-creator">
+                            <img
+                              src={resolveMedia(vid.userImage || "storage/male.png")}
+                              alt={vid.name}
+                              className="explore-creator-avatar"
+                            />
+                            <span className="explore-creator-name">{vid.name || "Creator"}</span>
+                          </div>
+                          {vid.caption && (
+                            <p className="explore-reel-caption">{vid.caption}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -3665,6 +3894,44 @@ export default function Home({
                         <div className="studio-preview-badge">
                           {uploadDuration > 0 ? `00:${uploadDuration < 10 ? "0" : ""}${uploadDuration}` : "Reel Preview"}
                         </div>
+
+                        {/* Thumbnail Cover Chooser Strip */}
+                        <div className="studio-thumbnail-selector-panel">
+                          <div className="studio-thumbnail-panel-header">
+                            <span className="studio-thumb-label">Choose Cover Thumbnail:</span>
+                            <button
+                              type="button"
+                              className="studio-custom-cover-btn"
+                              onClick={() => customThumbnailInputRef.current?.click()}
+                              disabled={isUploading}
+                            >
+                              <IconUpload size={12} />
+                              <span>Upload Cover</span>
+                            </button>
+                          </div>
+
+                          <div className="studio-thumbnails-strip">
+                            {candidateThumbnails.map((cand, cIdx) => (
+                              <div
+                                key={cIdx}
+                                className={`thumbnail-candidate-card ${uploadThumbnailPreview === cand.url ? "selected" : ""}`}
+                                onClick={() => {
+                                  setUploadThumbnailFile(cand.file);
+                                  setUploadThumbnailPreview(cand.url);
+                                }}
+                                title={`Frame ${cIdx + 1}`}
+                              >
+                                <img src={cand.url} alt={`Frame ${cIdx + 1}`} />
+                                {uploadThumbnailPreview === cand.url && (
+                                  <div className="thumbnail-selected-check">
+                                    <IconCheck size={12} />
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
                         <button
                           type="button"
                           className="studio-change-media-btn"
@@ -3736,6 +4003,13 @@ export default function Home({
                     accept="video/mp4,video/webm,video/quicktime"
                     style={{ display: "none" }}
                     onChange={handleVideoFileChange}
+                  />
+                  <input
+                    ref={customThumbnailInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={handleCustomThumbnailChange}
                   />
                   <input
                     ref={postFileInputRef}
@@ -5073,24 +5347,325 @@ export default function Home({
           position: absolute;
           top: 14px;
           right: 14px;
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: rgba(0, 0, 0, 0.55);
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          height: 38px;
+          min-width: 38px;
+          padding: 0 10px;
+          border-radius: 20px;
+          background: rgba(15, 23, 42, 0.75);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.22);
           color: #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
           z-index: 30;
-          transition: transform 0.15s ease;
+          transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        }
+
+        .player-sound-btn.is-muted {
+          background: linear-gradient(135deg, rgba(239, 68, 68, 0.92), rgba(220, 38, 38, 0.95));
+          border: 1.5px solid rgba(255, 255, 255, 0.85);
+          padding: 0 13px;
+          gap: 6px;
+          animation: pulseMuteGlow 2.2s infinite;
+        }
+
+        @keyframes pulseMuteGlow {
+          0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.75); transform: scale(1); }
+          50% { box-shadow: 0 0 0 9px rgba(239, 68, 68, 0); transform: scale(1.04); }
+          100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); }
+        }
+
+        .sound-pill-content {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .sound-pill-text {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.4px;
+          text-transform: uppercase;
+          white-space: nowrap;
         }
 
         .player-sound-btn:hover {
-          transform: scale(1.08);
+          transform: scale(1.06);
+        }
+
+        /* Creator Studio Candidate Thumbnails Strip */
+        .studio-thumbnail-selector-panel {
+          width: 100%;
+          margin: 12px 0 6px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .studio-thumbnail-panel-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+        }
+
+        .studio-thumb-label {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--text-secondary);
+        }
+
+        .studio-custom-cover-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          color: #ffffff;
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .studio-custom-cover-btn:hover {
+          background: rgba(255, 255, 255, 0.16);
+          border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .studio-thumbnails-strip {
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+          padding: 4px 2px 8px;
+          scrollbar-width: thin;
+        }
+
+        .thumbnail-candidate-card {
+          position: relative;
+          width: 68px;
+          height: 96px;
+          border-radius: 8px;
+          overflow: hidden;
+          cursor: pointer;
+          flex-shrink: 0;
+          border: 2px solid rgba(255, 255, 255, 0.12);
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .thumbnail-candidate-card:hover {
+          transform: translateY(-2px);
+          border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .thumbnail-candidate-card.selected {
+          border-color: var(--brand-primary);
+          box-shadow: 0 0 0 2px var(--brand-primary), 0 4px 12px rgba(255, 69, 0, 0.3);
+        }
+
+        .thumbnail-candidate-card img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .thumbnail-selected-check {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: var(--brand-primary);
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Explore Tab Video Reels Grid */
+        .explore-reels-section {
+          width: 100%;
+          margin-top: 36px;
+          padding-top: 28px;
+          border-top: 1px solid var(--border-subtle);
+        }
+
+        .explore-section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        }
+
+        .explore-section-title-wrap {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: var(--text-primary);
+        }
+
+        .explore-section-title-wrap h3 {
+          font-size: 20px;
+          font-weight: 700;
+          margin: 0;
+        }
+
+        .explore-section-badge {
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: var(--text-secondary);
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .explore-reels-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 16px;
+        }
+
+        @media (max-width: 640px) {
+          .explore-reels-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+          }
+        }
+
+        .explore-reel-card {
+          background: var(--surface-card);
+          border: 1px solid var(--border-subtle);
+          border-radius: 12px;
+          overflow: hidden;
+          cursor: pointer;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          display: flex;
+          flex-direction: column;
+        }
+
+        .explore-reel-card:hover {
+          transform: translateY(-4px);
+          border-color: rgba(255, 255, 255, 0.22);
+          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+        }
+
+        .explore-reel-thumbnail-wrap {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 9 / 14;
+          background: #0b0f19;
+          overflow: hidden;
+        }
+
+        .explore-reel-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .explore-reel-card:hover .explore-reel-img {
+          transform: scale(1.05);
+        }
+
+        .explore-reel-overlay-gradient {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.65) 100%);
+          pointer-events: none;
+        }
+
+        .explore-reel-play-icon {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) scale(0.9);
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border: 1.5px solid rgba(255, 255, 255, 0.4);
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: all 0.22s ease;
+          pointer-events: none;
+        }
+
+        .explore-reel-card:hover .explore-reel-play-icon {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+
+        .explore-reel-views-pill {
+          position: absolute;
+          bottom: 10px;
+          left: 10px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          color: #ffffff;
+          padding: 3px 8px;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 600;
+        }
+
+        .explore-reel-info {
+          padding: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .explore-reel-creator {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .explore-creator-avatar {
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .explore-creator-name {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--text-secondary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .explore-reel-caption {
+          font-size: 12px;
+          color: var(--text-primary);
+          line-height: 1.4;
+          margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
 
         .player-pause-indicator {
