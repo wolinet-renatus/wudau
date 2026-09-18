@@ -1656,6 +1656,14 @@ export default function Home({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <link rel="icon" href="/favicon.ico" />
+        {/* Preload first reel video for zero-delay autoplay */}
+        {filteredVideos[0]?.videoUrl && (
+          <link
+            rel="preload"
+            as="video"
+            href={resolveMedia(filteredVideos[0].videoUrl)}
+          />
+        )}
       </Head>
 
       {/* Audio preview element */}
@@ -2060,9 +2068,14 @@ export default function Home({
                             muted={isMuted}
                             playsInline
                             preload="auto"
+                            onLoadedData={(e) => {
+                              // Force immediate play as soon as first bytes are decoded
+                              const vid = e.currentTarget;
+                              vid.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+                            }}
                             onWaiting={() => setIsBuffering(true)}
                             onCanPlay={() => setIsBuffering(false)}
-                            onPlaying={() => setIsBuffering(false)}
+                            onPlaying={() => { setIsBuffering(false); setIsPlaying(true); }}
                             onEnded={handleVideoEnded}
                             onTimeUpdate={handleTimeUpdate}
                             className="main-reel-video"
@@ -2086,12 +2099,19 @@ export default function Home({
                             </div>
                           )}
 
-                          {/* WUDAO Watermark Overlay */}
+                          {/* WUDAO Logo Watermark Overlay */}
                           <div className="wudao-reel-watermark">
-                            <div className="watermark-brand-pill">
-                              <span className="watermark-flame-icon">🔥</span>
-                              <span className="watermark-brand-word">WUDAO</span>
+                            <div className="watermark-logo-wrap">
+                              <img
+                                src="/favicon.svg"
+                                alt="WUDAO"
+                                className="watermark-logo-img"
+                                width={18}
+                                height={18}
+                              />
                             </div>
+                            <span className="watermark-brand-word">WUDAO</span>
+                            <span className="watermark-sep">·</span>
                             <span className="watermark-author-handle">@{activeVideo.userName || "creator"}</span>
                           </div>
 
@@ -4634,22 +4654,21 @@ export default function Home({
           padding: 16px;
         }
 
-        /* Fluid Video Card (NO Fake Phone Bezels or Notches) */
+        /* Fluid Video Card — TikTok full-screen fill */
         .video-player-card {
           position: relative;
-          width: 440px;
-          max-width: 100%;
-          height: calc(100vh - 88px);
-          max-height: 820px;
+          width: 100%;
+          max-width: 480px;
+          height: calc(100dvh - 56px);
           background: #000000;
-          border-radius: 16px;
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+          border-radius: 12px;
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
           overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          border: 1px solid var(--border-subtle);
+          border: 1px solid rgba(255,255,255,0.06);
         }
 
         .main-reel-video {
@@ -6849,32 +6868,44 @@ export default function Home({
         /* WUDAO Watermark Floating Badge */
         .wudao-reel-watermark {
           position: absolute;
-          top: 18px;
-          left: 18px;
+          top: 16px;
+          left: 16px;
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 5px 12px;
+          padding: 5px 11px 5px 7px;
           border-radius: 20px;
-          background: rgba(8, 10, 15, 0.65);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.18);
+          background: rgba(8, 10, 15, 0.6);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
           z-index: 15;
           pointer-events: none;
           user-select: none;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
-          animation: fadeIn 0.4s ease;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+          animation: fadeIn 0.3s ease;
         }
 
-        .watermark-brand-pill {
-          display: inline-flex;
+        .watermark-logo-wrap {
+          width: 20px;
+          height: 20px;
+          border-radius: 5px;
+          background: #0c0d12;
+          display: flex;
           align-items: center;
-          gap: 4px;
+          justify-content: center;
+          overflow: hidden;
+          flex-shrink: 0;
         }
 
-        .watermark-flame-icon {
-          font-size: 13px;
+        .watermark-logo-img {
+          display: block;
+          object-fit: contain;
+        }
+
+        .watermark-sep {
+          font-size: 10px;
+          color: rgba(255,255,255,0.35);
         }
 
         .watermark-brand-word {

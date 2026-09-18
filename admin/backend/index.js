@@ -77,7 +77,51 @@ global.io = require("socket.io")(server);
 //socket.js
 require("./socket");
 
-app.use("/storage", express.static(path.join(__dirname, "storage")));
+// Serve non-video static assets normally
+app.use("/storage", (req, res, next) => {
+  const filePath = path.join(__dirname, "storage", req.path);
+  const ext = path.extname(req.path).toLowerCase();
+  const videoExts = [".mp4", ".webm", ".mov", ".m4v", ".mkv"];
+
+  if (!videoExts.includes(ext)) {
+    return express.static(path.join(__dirname, "storage"))(req, res, next);
+  }
+
+  // Byte-range streaming for video — enables instant browser playback
+  fs.stat(filePath, (err, stat) => {
+    if (err || !stat.isFile()) return next();
+
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    if (!range) {
+      // No range header — serve full file with streaming headers
+      res.writeHead(200, {
+        "Content-Type": `video/${ext.slice(1) === "mov" ? "quicktime" : ext.slice(1)}`,
+        "Content-Length": fileSize,
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "public, max-age=86400",
+      });
+      fs.createReadStream(filePath).pipe(res);
+      return;
+    }
+
+    // Parse Range header (e.g. "bytes=0-1023")
+    const parts = range.replace(/bytes=/, "").split("-");
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + 1024 * 1024, fileSize - 1);
+    const chunkSize = end - start + 1;
+
+    res.writeHead(206, {
+      "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": chunkSize,
+      "Content-Type": `video/${ext.slice(1) === "mov" ? "quicktime" : ext.slice(1)}`,
+      "Cache-Control": "public, max-age=86400",
+    });
+    fs.createReadStream(filePath, { start, end }).pipe(res);
+  });
+});
 
 db.on("error", () => {
   console.log("Connection Error: ");
