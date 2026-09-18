@@ -1,6 +1,6 @@
 abstract class Api {
-  static const baseUrl = "http://localhost:5050/"; // Ex :- http://182.168.19.35:5000/
-  static const secretKey = "5TIvw5cpc0"; // Ex :- ssf45sd1fs5d1sdf1s56165s15sdf1s
+  static const baseUrl = "https://wudao.wolinet.com/"; // Production server
+  static const secretKey = "5TIvw5cpc0";
 
   // >>>>> >>>>> Admin Setting Api <<<<< <<<<<
 

@@ -28,7 +28,7 @@
 
 
     <application
-        android:label="WUDAU"
+        android:label="WUDAO"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true"

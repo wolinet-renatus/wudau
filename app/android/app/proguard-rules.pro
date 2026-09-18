@@ -18,3 +18,8 @@
 -keepclasseswithmembers class * {
   public void onPayment*(...);
 }
+
+# Suppress R8 missing class warnings for optional libraries
+-dontwarn com.arthenica.**
+-dontwarn com.stripe.**
+-dontwarn com.reactnativestripesdk.**
