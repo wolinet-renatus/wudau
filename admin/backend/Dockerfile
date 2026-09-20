@@ -7,8 +7,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=5050
 
-# Install curl for container healthcheck
-RUN apk add --no-cache curl
+# Install curl and ffmpeg for container healthcheck and brand video watermarking
+RUN apk add --no-cache curl ffmpeg
 
 # Copy package descriptors
 COPY package*.json ./

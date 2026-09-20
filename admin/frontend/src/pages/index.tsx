@@ -174,6 +174,14 @@ const IconUpload = ({ size = 20 }: { size?: number }) => (
   </SvgIcon>
 );
 
+const IconDownload = ({ size = 20 }: { size?: number }) => (
+  <SvgIcon size={size}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </SvgIcon>
+);
+
 const IconChevronUp = ({ size = 18 }: { size?: number }) => (
   <SvgIcon size={size}>
     <polyline points="18 15 12 9 6 15" />
@@ -1877,6 +1885,29 @@ export default function Home({
     }
   };
 
+  const handleDownloadVideo = async (video: VideoItem) => {
+    if (!video || !video._id) return;
+    showToast("Preparing video with official WUDAO watermark...");
+    try {
+      const cleanUser = (video.userName || "creator").replace(/[@\s]/g, "");
+      const downloadFilename = `WUDAO_${cleanUser}_${video._id}.mp4`;
+      const downloadEndpoint = `${baseURL}client/video/download?videoId=${video._id}&key=${secretKey}`;
+
+      const link = document.createElement("a");
+      link.href = downloadEndpoint;
+      link.setAttribute("download", downloadFilename);
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast("Download started! Contains official WUDAO brand watermark.");
+    } catch (err) {
+      console.error("Video download error:", err);
+      showToast("Failed to initiate video download. Please check network.");
+    }
+  };
+
   const handleSendGift = (gift: GiftItem) => {
     if (!requireAuth("gift", "Sign in to send gifts to live creators.")) return;
     setShowGiftModal(false);
@@ -2730,6 +2761,19 @@ export default function Home({
                         >
                           <IconShare size={22} />
                           <span className="action-pill-count">{activeVideo.shareCount || 0}</span>
+                        </button>
+
+                        {/* Save / Download Video Button (With Official Brand Watermark) */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownloadVideo(activeVideo);
+                          }}
+                          className="action-icon-pill"
+                          title="Save Video (With WUDAO Watermark)"
+                        >
+                          <IconDownload size={21} />
+                          <span className="action-pill-count">Save</span>
                         </button>
 
                         {/* Auto-Scroll Toggle Bubble */}
@@ -4794,6 +4838,16 @@ export default function Home({
 
               {/* Utility / Embed Actions */}
               <div className="share-footer-utilities">
+                <button
+                  onClick={() => {
+                    setShowShareModal(false);
+                    if (activeVideo) handleDownloadVideo(activeVideo);
+                  }}
+                  className="share-util-btn download-highlight"
+                >
+                  <IconDownload size={15} />
+                  <span>Download Video (With Watermark)</span>
+                </button>
                 <button onClick={handleCopyEmbedCode} className="share-util-btn">
                   <IconCode size={15} />
                   <span>Copy Embed Code</span>

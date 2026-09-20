@@ -1528,3 +1528,41 @@ exports.fetchVideosOfParticularSong = async (req, res) => {
     return res.status(500).json({ status: false, error: error.message || "Internal Server Error" });
   }
 };
+
+// Download video with official WUDAO brand watermark
+exports.downloadWatermarkedVideo = async (req, res) => {
+  try {
+    const videoId = req.query.videoId;
+    if (!videoId) {
+      return res.status(400).json({ status: false, message: "videoId is required" });
+    }
+
+    const video = await Video.findById(videoId).populate("userId");
+    if (!video || !video.videoUrl) {
+      return res.status(404).json({ status: false, message: "Video not found" });
+    }
+
+    const userName = video.userId?.userName || video.userName || "creator";
+    const { getWatermarkedVideo } = require("../../util/watermarkVideo");
+
+    const watermarkedPath = await getWatermarkedVideo({
+      videoId: video._id.toString(),
+      relativeVideoPath: video.videoUrl,
+      userName: userName,
+    });
+
+    if (!watermarkedPath || !fs.existsSync(watermarkedPath)) {
+      return res.status(404).json({ status: false, message: "Video media file not found on disk" });
+    }
+
+    const cleanUser = userName.replace(/[@\s]/g, "");
+    const downloadFilename = `WUDAO_${cleanUser}_${video._id}.mp4`;
+
+    res.setHeader("Content-Disposition", `attachment; filename="${downloadFilename}"`);
+    res.setHeader("Content-Type", "video/mp4");
+    return res.download(watermarkedPath, downloadFilename);
+  } catch (err) {
+    console.error("downloadWatermarkedVideo error:", err);
+    return res.status(500).json({ status: false, error: err.message || "Internal server error" });
+  }
+};

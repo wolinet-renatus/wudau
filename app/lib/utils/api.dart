@@ -43,6 +43,7 @@ abstract class Api {
   static const fetchReels = "${baseUrl}client/video/getAllVideos";
   static const reelsLikeDislike = "${baseUrl}client/video/likeOrDislikeOfVideo";
   static const videoShare = "${baseUrl}client/video/shareCountOfVideo";
+  static const downloadVideo = "${baseUrl}client/video/download";
   static const fetchAllSound = "${baseUrl}client/song/getSongsByUser";
   static const fetchFavoriteSound = "${baseUrl}client/song/getFavoriteSongs";
   static const favoriteUnFavorite = "${baseUrl}client/song/favoriteSongByUser";

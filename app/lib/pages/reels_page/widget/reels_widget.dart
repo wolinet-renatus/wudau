@@ -2,9 +2,12 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chewie/chewie.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:readmore/readmore.dart';
 import 'package:wudau/custom/custom_format_number.dart';
 import 'package:wudau/custom/custom_share.dart';
@@ -205,6 +208,34 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
       CustomShare.onShareLink(link: link);
     }
     await ReelsShareApi.callApi(loginUserId: Database.loginUserId, videoId: controller.mainReels[widget.index].id!);
+  }
+
+  Future<void> onClickDownload() async {
+    final reel = controller.mainReels[widget.index];
+    if (reel.id == null || reel.id!.isEmpty) return;
+
+    Get.dialog(const LoadingUi(), barrierDismissible: false);
+    try {
+      final downloadUrl = "${Api.downloadVideo}?videoId=${reel.id}";
+      final dir = await getTemporaryDirectory();
+      final filePath = "${dir.path}/WUDAO_${reel.id}.mp4";
+
+      final dio = Dio();
+      await dio.download(downloadUrl, filePath);
+
+      final success = await GallerySaver.saveVideo(filePath);
+      Get.back(); // Stop Loading...
+
+      if (success == true) {
+        Utils.showToast(EnumLocal.txtDownloadSuccess.name.tr);
+      } else {
+        Utils.showToast(EnumLocal.txtSomeThingWentWrong.name.tr);
+      }
+    } catch (e) {
+      Get.back(); // Stop Loading...
+      Utils.showLog("Download video failed => $e");
+      Utils.showToast(EnumLocal.txtSomeThingWentWrong.name.tr);
+    }
   }
 
   Future<void> onClickLike() async {
@@ -470,7 +501,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                         style: AppFontStyle.styleW700(AppColor.white, 14),
                       ),
                     ),
-                    15.height,
+                    12.height,
                     CustomIconButton(
                       circleSize: 40,
                       // circleColor: Colors.pink,
@@ -483,6 +514,19 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                       "",
                       style: AppFontStyle.styleW700(AppColor.white, 14),
                     ),
+                    12.height,
+                    CustomIconButton(
+                      circleSize: 40,
+                      icon: AppAsset.icDownload,
+                      callback: onClickDownload,
+                      iconSize: 28,
+                      iconColor: AppColor.white,
+                    ),
+                    Text(
+                      "",
+                      style: AppFontStyle.styleW700(AppColor.white, 14),
+                    ),
+                    12.height,
                     GestureDetector(
                       onTap: () {
                         Utils.showLog("Song Id => ${controller.mainReels[widget.index].songId}");

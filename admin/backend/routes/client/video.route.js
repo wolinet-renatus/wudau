@@ -37,6 +37,10 @@ const StreamFeedController = require("../../controllers/client/streamFeed.contro
 route.get("/stream-feed", checkAccessWithSecretKey(), StreamFeedController.getStreamFeed);
 route.post("/stream-feed", checkAccessWithSecretKey(), StreamFeedController.getStreamFeed);
 
+// Download video with official WUDAO brand watermark
+route.get("/download", VideoController.downloadWatermarkedVideo);
+route.get("/downloadVideo", VideoController.downloadWatermarkedVideo);
+
 // Safe Mock Data Cleanup
 route.all("/cleanupMockData", checkAccessWithSecretKey(), async (req, res) => {
   try {
