@@ -103,6 +103,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
       videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(Api.baseUrl + videoPath));
 
       await videoPlayerController?.initialize();
+      await videoPlayerController?.setVolume(1.0);
 
       if (videoPlayerController != null && (videoPlayerController?.value.isInitialized ?? false)) {
         chewieController = ChewieController(
@@ -146,6 +147,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
 
   void onPlayVideo() {
     isPlaying.value = true;
+    videoPlayerController?.setVolume(1.0);
     videoPlayerController?.play();
   }
 

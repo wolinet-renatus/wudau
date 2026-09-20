@@ -531,14 +531,19 @@ export default function Home({
   const [userRole, setUserRole] = useState<string>("guest");
 
   // Video Controls & Audio - Defaults to UNMUTED for full audio engagement
-  const [isMuted, setIsMuted] = useState<boolean>(() => {
+  const [userExplicitlyMuted, setUserExplicitlyMuted] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
-      const saved = sessionStorage.getItem("wudao_sound_enabled");
-      if (saved === "false") return true;
-      if (saved === "true") return false;
+      return sessionStorage.getItem("wudao_user_muted") === "true";
     }
     return false;
   });
+  const [isMuted, setIsMuted] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("wudao_user_muted") === "true";
+    }
+    return false;
+  });
+  const [isAudioRestrictedByAutoplay, setIsAudioRestrictedByAutoplay] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [isBuffering, setIsBuffering] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -1207,37 +1212,54 @@ export default function Home({
           e.preventDefault();
           togglePlay();
         } else if (e.key === "m" || e.key === "M") {
-          setIsMuted((prev) => !prev);
+          e.preventDefault();
+          const nextMuted = !isMuted;
+          setIsMuted(nextMuted);
+          setUserExplicitlyMuted(nextMuted);
+          setIsAudioRestrictedByAutoplay(false);
+          if (videoRef.current) {
+            videoRef.current.muted = nextMuted;
+            videoRef.current.volume = 1.0;
+            if (!nextMuted) videoRef.current.play().catch(() => {});
+          }
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("wudao_user_muted", nextMuted ? "true" : "false");
+          }
+          showToast(nextMuted ? "Muted 🔇" : "Sound Enabled 🔊");
         }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentTab, currentReelIndex, videos.length, showCommentsDrawer, showGiftModal, showAuthModal, showUploadStudio, showShareModal, selectedPost]);
+  }, [currentTab, currentReelIndex, videos.length, showCommentsDrawer, showGiftModal, showAuthModal, showUploadStudio, showShareModal, selectedPost, isMuted]);
 
-  // Global first-gesture auto-unmute listener (conquers browser strict autoplay restrictions)
+  // Global gesture auto-unmute listener (conquers browser strict autoplay restrictions)
   useEffect(() => {
-    const handleFirstGesture = () => {
-      const saved = typeof window !== "undefined" ? sessionStorage.getItem("wudao_sound_enabled") : null;
-      if (saved !== "false" && videoRef.current && videoRef.current.muted) {
+    const handleGesture = () => {
+      if (userExplicitlyMuted) return;
+      if (videoRef.current) {
         videoRef.current.muted = false;
-        setIsMuted(false);
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("wudao_sound_enabled", "true");
-        }
+        videoRef.current.volume = 1.0;
+        videoRef.current.play().catch(() => {});
       }
+      setIsMuted(false);
+      setIsAudioRestrictedByAutoplay(false);
     };
 
-    window.addEventListener("click", handleFirstGesture, { passive: true });
-    window.addEventListener("touchstart", handleFirstGesture, { passive: true });
-    window.addEventListener("keydown", handleFirstGesture, { passive: true });
+    window.addEventListener("click", handleGesture, { passive: true });
+    window.addEventListener("pointerdown", handleGesture, { passive: true });
+    window.addEventListener("touchstart", handleGesture, { passive: true });
+    window.addEventListener("keydown", handleGesture, { passive: true });
+    window.addEventListener("wheel", handleGesture, { passive: true });
 
     return () => {
-      window.removeEventListener("click", handleFirstGesture);
-      window.removeEventListener("touchstart", handleFirstGesture);
-      window.removeEventListener("keydown", handleFirstGesture);
+      window.removeEventListener("click", handleGesture);
+      window.removeEventListener("pointerdown", handleGesture);
+      window.removeEventListener("touchstart", handleGesture);
+      window.removeEventListener("keydown", handleGesture);
+      window.removeEventListener("wheel", handleGesture);
     };
-  }, []);
+  }, [userExplicitlyMuted]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -1657,25 +1679,33 @@ export default function Home({
     const video = videoRef.current;
     if (video) {
       video.currentTime = 0;
+      video.volume = 1.0;
+      if (!userExplicitlyMuted) {
+        video.muted = false;
+        setIsMuted(false);
+      }
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
             setIsPlaying(true);
             setIsBuffering(false);
+            setIsAudioRestrictedByAutoplay(false);
           })
           .catch(() => {
-            // Autoplay policy fallback: guarantee playback by muting if browser blocks unmuted playback
-            video.muted = true;
-            setIsMuted(true);
-            video.play().then(() => {
-              setIsPlaying(true);
-              setIsBuffering(false);
-            }).catch(() => {});
+            // Autoplay policy prevented unmuted playback on cold start without user gesture
+            if (!userExplicitlyMuted) {
+              video.muted = true;
+              setIsAudioRestrictedByAutoplay(true);
+              video.play().then(() => {
+                setIsPlaying(true);
+                setIsBuffering(false);
+              }).catch(() => {});
+            }
           });
       }
     }
-  }, [currentReelIndex, currentFilter]);
+  }, [currentReelIndex, currentFilter, userExplicitlyMuted]);
 
   const handleNextReel = () => {
     if (filteredVideos.length === 0) return;
@@ -1819,13 +1849,17 @@ export default function Home({
       return;
     }
     // Auto-unmute immediately on surface click if video was muted by autoplay policy
-    if (isMuted && videoRef.current) {
-      videoRef.current.muted = false;
-      setIsMuted(false);
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("wudao_sound_enabled", "true");
+    if (videoRef.current) {
+      if ((videoRef.current.muted || isAudioRestrictedByAutoplay) && !userExplicitlyMuted) {
+        videoRef.current.muted = false;
+        videoRef.current.volume = 1.0;
+        setIsMuted(false);
+        setIsAudioRestrictedByAutoplay(false);
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("wudao_user_muted", "false");
+        }
+        showToast("Sound Enabled 🔊");
       }
-      showToast("Sound Enabled 🔊");
     }
 
     const now = Date.now();
@@ -2563,27 +2597,44 @@ export default function Home({
                           poster={resolveMedia(activeVideo.videoImage)}
                           autoPlay
                           loop={!isAutoScroll}
-                          muted={isMuted}
+                          muted={userExplicitlyMuted ? true : isMuted}
                           playsInline
                           preload="auto"
                           onLoadedMetadata={(e) => {
                             const vid = e.currentTarget;
+                            vid.volume = 1.0;
                             if (vid.videoWidth && vid.videoHeight) {
                               const ratio = vid.videoWidth / vid.videoHeight;
                               setVideoAspectRatio(ratio);
                               postResizeToParent(vid);
                             }
+                            if (!userExplicitlyMuted) {
+                              vid.muted = false;
+                            }
                             // Instant streaming zero-delay playback trigger
-                            vid.play().then(() => setIsPlaying(true)).catch(() => {
-                              vid.muted = true;
-                              setIsMuted(true);
-                              vid.play().then(() => setIsPlaying(true)).catch(() => {});
+                            vid.play().then(() => {
+                              setIsPlaying(true);
+                              setIsBuffering(false);
+                              setIsAudioRestrictedByAutoplay(false);
+                            }).catch(() => {
+                              // Autoplay policy prevented unmuted playback without user gesture
+                              if (!userExplicitlyMuted) {
+                                vid.muted = true;
+                                setIsAudioRestrictedByAutoplay(true);
+                                vid.play().then(() => {
+                                  setIsPlaying(true);
+                                  setIsBuffering(false);
+                                }).catch(() => {});
+                              }
                             });
                           }}
                           onLoadedData={(e) => {
                             // Force immediate play as soon as first bytes are decoded
                             const vid = e.currentTarget;
-                            vid.play().then(() => setIsPlaying(true)).catch(() => {});
+                            vid.volume = 1.0;
+                            if (!userExplicitlyMuted && !vid.muted) {
+                              vid.play().then(() => setIsPlaying(true)).catch(() => {});
+                            }
                           }}
                           onWaiting={() => setIsBuffering(true)}
                           onCanPlay={() => setIsBuffering(false)}
@@ -2654,26 +2705,52 @@ export default function Home({
                             </div>
                           ))}
 
+                          {/* Autoplay Sound Indicator Banner: shown only if browser policy delayed unmuted playback on cold start */}
+                          {isAudioRestrictedByAutoplay && !userExplicitlyMuted && (
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (videoRef.current) {
+                                  videoRef.current.muted = false;
+                                  videoRef.current.volume = 1.0;
+                                  videoRef.current.play().catch(() => {});
+                                }
+                                setIsMuted(false);
+                                setIsAudioRestrictedByAutoplay(false);
+                                setUserExplicitlyMuted(false);
+                                showToast("Sound Enabled 🔊");
+                              }}
+                              className="autoplay-sound-banner"
+                              title="Click to enable video sound"
+                            >
+                              <IconVolume size={15} />
+                              <span>Sound Ready • Tap to Unmute</span>
+                            </div>
+                          )}
+
                           {/* Sound Toggle Floating Button - High Visibility Pulsing Pill */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              const nextMuted = !isMuted;
+                              const nextMuted = isAudioRestrictedByAutoplay ? false : !isMuted;
                               setIsMuted(nextMuted);
+                              setUserExplicitlyMuted(nextMuted);
+                              setIsAudioRestrictedByAutoplay(false);
                               if (videoRef.current) {
                                 videoRef.current.muted = nextMuted;
+                                videoRef.current.volume = 1.0;
                                 if (!nextMuted) videoRef.current.play().catch(() => {});
                               }
                               if (typeof window !== "undefined") {
-                                sessionStorage.setItem("wudao_sound_enabled", nextMuted ? "false" : "true");
+                                sessionStorage.setItem("wudao_user_muted", nextMuted ? "true" : "false");
                               }
-                              showToast(nextMuted ? "Muted" : "Sound Enabled 🔊");
+                              showToast(nextMuted ? "Muted 🔇" : "Sound Enabled 🔊");
                             }}
-                            className={`player-sound-btn ${isMuted ? "is-muted" : "is-unmuted"}`}
+                            className={`player-sound-btn ${isMuted || isAudioRestrictedByAutoplay ? "is-muted" : "is-unmuted"}`}
                             aria-label="Toggle Sound"
-                            title={isMuted ? "Tap to Unmute Sound" : "Mute Sound"}
+                            title={isMuted || isAudioRestrictedByAutoplay ? "Tap to Unmute Sound" : "Mute Sound"}
                           >
-                            {isMuted ? (
+                            {isMuted || isAudioRestrictedByAutoplay ? (
                               <div className="sound-pill-content">
                                 <IconVolumeX size={18} />
                                 <span className="sound-pill-text">Tap for Sound</span>
@@ -5810,6 +5887,38 @@ export default function Home({
           40% { transform: scale(1.3); opacity: 1; }
           70% { transform: scale(1); opacity: 0.9; }
           100% { transform: scale(1.4) translateY(-30px); opacity: 0; }
+        }
+
+        .autoplay-sound-banner {
+          position: absolute;
+          top: 14px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          padding: 7px 15px;
+          border-radius: 9999px;
+          background: rgba(15, 23, 42, 0.88);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          color: #ffffff;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.3px;
+          cursor: pointer;
+          z-index: 35;
+          animation: pulseMuteGlow 2.5s infinite;
+          box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+          white-space: nowrap;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .autoplay-sound-banner:hover {
+          background: rgba(30, 41, 59, 0.96);
+          border-color: rgba(255, 255, 255, 0.6);
+          transform: translateX(-50%) scale(1.04);
         }
 
         .player-sound-btn {
