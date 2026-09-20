@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { baseURL, secretKey, projectName } from "@/util/config";
+import MobileAuthCard from "@/component/auth/MobileAuthCard";
 
 // ============================================================================
 // SLEEK VECTOR SVG ICONS (NO AMATEUR EMOJIS)
@@ -572,6 +573,7 @@ export default function Home({
   const [authModalTitle, setAuthModalTitle] = useState<string>("");
   const [authModalSubtitle, setAuthModalSubtitle] = useState<string>("");
   const [authModalAction, setAuthModalAction] = useState<string>("");
+  const [authModalMode, setAuthModalMode] = useState<"login" | "signup">("login");
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
   const [shareTarget, setShareTarget] = useState<{
     url: string;
@@ -2368,12 +2370,26 @@ export default function Home({
               </div>
             ) : (
               <div className="guest-auth-actions">
-                <Link href="/login" className="nav-login-btn">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthModalMode("login");
+                    setShowAuthModal(true);
+                  }}
+                  className="nav-login-btn"
+                >
                   Log in
-                </Link>
-                <Link href="/Registration" className="nav-signup-btn">
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthModalMode("signup");
+                    setShowAuthModal(true);
+                  }}
+                  className="nav-signup-btn"
+                >
                   Sign up
-                </Link>
+                </button>
               </div>
             )}
           </div>
@@ -2441,12 +2457,28 @@ export default function Home({
                     <p className="guest-prompt-title">Sign in to WUDAO</p>
                     <p className="guest-prompt-sub">Follow creators, like reels, and share your talent.</p>
                     <div className="drawer-guest-btn-row">
-                      <Link href="/login" onClick={() => setIsMenuOpen(false)} className="drawer-btn primary">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setAuthModalMode("login");
+                          setShowAuthModal(true);
+                        }}
+                        className="drawer-btn primary"
+                      >
                         Log in
-                      </Link>
-                      <Link href="/Registration" onClick={() => setIsMenuOpen(false)} className="drawer-btn secondary">
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          setAuthModalMode("signup");
+                          setShowAuthModal(true);
+                        }}
+                        className="drawer-btn secondary"
+                      >
                         Sign up
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -3598,12 +3630,26 @@ export default function Home({
                       </>
                     ) : (
                       <>
-                        <Link href="/login" className="action-accent-btn full">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAuthModalMode("login");
+                            setShowAuthModal(true);
+                          }}
+                          className="action-accent-btn full"
+                        >
                           Sign In
-                        </Link>
-                        <Link href="/Registration" className="action-hollow-btn full">
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAuthModalMode("signup");
+                            setShowAuthModal(true);
+                          }}
+                          className="action-hollow-btn full"
+                        >
                           Create Account
-                        </Link>
+                        </button>
                       </>
                     )}
                   </div>
@@ -4731,65 +4777,22 @@ export default function Home({
         )}
 
         {/* ==================================================================== */}
-        {/* AUTH PROMPT MODAL                                                    */}
+        {/* AUTH PROMPT MODAL (Identical to Mobile App)                          */}
         {/* ==================================================================== */}
         {showAuthModal && (
           <div className="drawer-overlay" onClick={() => setShowAuthModal(false)}>
-            <div className="auth-prompt-modal-card" onClick={(e) => e.stopPropagation()}>
-              <button
-                onClick={() => setShowAuthModal(false)}
-                className="auth-modal-close-btn"
-                aria-label="Close"
-              >
-                ✕
-              </button>
-              <div className="auth-modal-top-brand">
-                <span className="auth-modal-flame">🔥</span>
-                <span className="auth-modal-brand-name">WUDAO</span>
-              </div>
-              <h3 className="auth-modal-title">{authModalTitle || "Join the WUDAO Community"}</h3>
-              <p className="auth-modal-subtitle">
-                {authModalSubtitle || "Log in or create an account to like, comment, and interact with creators across Africa."}
-              </p>
-
-              <div className="auth-modal-perks-list">
-                <div className="auth-perk-row">
-                  <span className="perk-bullet">✦</span>
-                  <span>Unlimited streaming of African reels, songs & stories</span>
-                </div>
-                <div className="auth-perk-row">
-                  <span className="perk-bullet">✦</span>
-                  <span>Like posts, comment on moments, and talk with creators</span>
-                </div>
-                <div className="auth-perk-row">
-                  <span className="perk-bullet">✦</span>
-                  <span>Upload your own vertical reels and community photos</span>
-                </div>
-              </div>
-
-              <div className="auth-modal-actions-box">
-                <Link
-                  href="/login"
-                  onClick={() => setShowAuthModal(false)}
-                  className="auth-action-btn primary"
-                >
-                  Log In to WUDAO
-                </Link>
-                <Link
-                  href="/Registration"
-                  onClick={() => setShowAuthModal(false)}
-                  className="auth-action-btn secondary"
-                >
-                  Create Free Account
-                </Link>
-                <button
-                  onClick={() => setShowAuthModal(false)}
-                  className="auth-action-dismiss"
-                >
-                  Continue Viewing as Guest
-                </button>
-              </div>
-            </div>
+            <MobileAuthCard
+              isModal={true}
+              mode={authModalMode}
+              onClose={() => setShowAuthModal(false)}
+              onSuccess={(user) => {
+                setCurrentUser(user);
+                setIsAuth(true);
+                setUserRole("user");
+                setShowAuthModal(false);
+                showToast("Welcome to WUDAO!");
+              }}
+            />
           </div>
         )}
 
@@ -5351,6 +5354,10 @@ export default function Home({
           font-size: 12px;
           font-weight: 700;
           color: #ffffff;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          font-family: inherit;
           text-decoration: none;
           padding: 6px 12px;
           border-radius: 18px;
@@ -5361,6 +5368,9 @@ export default function Home({
           font-size: 12px;
           font-weight: 700;
           color: #ffffff;
+          border: none;
+          cursor: pointer;
+          font-family: inherit;
           text-decoration: none;
           padding: 6px 14px;
           border-radius: 18px;
@@ -5541,6 +5551,9 @@ export default function Home({
           font-size: 12px;
           font-weight: 700;
           text-decoration: none;
+          cursor: pointer;
+          font-family: inherit;
+          border: none;
         }
 
         .drawer-btn.primary {
