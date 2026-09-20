@@ -21,7 +21,7 @@ class FillProfileController extends GetxController {
   TextEditingController idCodeController = TextEditingController();
   TextEditingController bioDetailsController = TextEditingController();
 
-  Map<String, String> selectedCountry = {"flag": "🇮🇳", "name": "India"};
+  Map<String, String> selectedCountry = {"flag": "🇹🇿", "name": "Tanzania"};
 
   String selectedGender = "male";
 
@@ -49,8 +49,8 @@ class FillProfileController extends GetxController {
 
     selectedCountry = {
       "flag":
-          (profile?.countryFlagImage == null || profile?.countryFlagImage == "") ? "🇮🇳" : profile!.countryFlagImage!,
-      "name": (profile?.country == null || profile?.country == "") ? "India" : profile!.country!,
+          (profile?.countryFlagImage == null || profile?.countryFlagImage == "") ? "🇹🇿" : profile!.countryFlagImage!,
+      "name": (profile?.country == null || profile?.country == "") ? "Tanzania" : profile!.country!,
     };
   }
 

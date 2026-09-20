@@ -33,8 +33,8 @@ abstract class Utils {
   static bool get isShowWaterMark => AdminSettingsApi.adminSettingModel?.data?.isWatermarkOn ?? false;
   static String get waterMarkIcon => AdminSettingsApi.adminSettingModel?.data?.watermarkIcon ?? "";
 
-  static TextEditingController countryController = TextEditingController(text: "India");
-  static TextEditingController flagController = TextEditingController(text: "🇮🇳");
+  static TextEditingController countryController = TextEditingController(text: "Tanzania");
+  static TextEditingController flagController = TextEditingController(text: "🇹🇿");
 
   // >>>>> >>>>> Show Reels Effect <<<<< <<<<<
 

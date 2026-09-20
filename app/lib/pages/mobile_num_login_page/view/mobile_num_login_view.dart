@@ -123,7 +123,7 @@ class MobileLoginFieldUi extends StatelessWidget {
           searchFieldPadding: EdgeInsets.all(10),
           searchFieldInputDecoration: InputDecoration(
             contentPadding: EdgeInsets.only(left: 40),
-            hintText: "Search",
+            hintText: "Search country or code (e.g. Tanzania, +255)",
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(color: AppColor.black),
@@ -143,7 +143,7 @@ class MobileLoginFieldUi extends StatelessWidget {
           border: InputBorder.none,
         ),
         autovalidateMode: AutovalidateMode.disabled,
-        initialCountryCode: 'IN',
+        initialCountryCode: 'TZ',
         validator: (p0) => null,
       ),
     );

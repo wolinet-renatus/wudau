@@ -12,7 +12,7 @@ import 'package:wudau/utils/utils.dart';
 class MobileNumLoginController extends GetxController {
   TextEditingController mobileController = TextEditingController();
 
-  String countryCode = "91";
+  String countryCode = "255";
 
   String verificationId = "";
 

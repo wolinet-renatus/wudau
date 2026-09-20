@@ -66,7 +66,7 @@ class StreamView extends StatelessWidget {
                                         name: liveUser.name ?? "",
                                         userName: liveUser.userName ?? "",
                                         views: liveUser.view ?? 0,
-                                        countryFlag: (liveUser.countryFlagImage != null && liveUser.countryFlagImage != "") ? liveUser.countryFlagImage! : "🇮🇳",
+                                        countryFlag: (liveUser.countryFlagImage != null && liveUser.countryFlagImage != "") ? liveUser.countryFlagImage! : "🇹🇿",
                                         roomId: liveUser.liveHistoryId ?? "",
                                         liveUserId: liveUser.id ?? "",
                                         isFollow: liveUser.isFollow ?? false,

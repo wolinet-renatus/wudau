@@ -48,11 +48,11 @@ class EditProfileController extends GetxController {
 
     Utils.flagController = TextEditingController(
         text: (profile?.countryFlagImage == null || profile?.countryFlagImage == "")
-            ? "🇮🇳"
+            ? "🇹🇿"
             : profile!.countryFlagImage!);
 
     Utils.countryController =
-        TextEditingController(text: (profile?.country == null || profile?.country == "") ? "India" : profile!.country!);
+        TextEditingController(text: (profile?.country == null || profile?.country == "") ? "Tanzania" : profile!.country!);
   }
 
   Future<void> onPickImage(BuildContext context) async {

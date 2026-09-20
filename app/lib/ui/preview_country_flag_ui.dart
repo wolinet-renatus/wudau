@@ -11,7 +11,7 @@ class PreviewCountryFlagUi {
       );
     } else {
       return Text(
-        "🇮🇳",
+        "🇹🇿",
         style: AppFontStyle.styleW700(AppColor.primary, 22),
       );
     }

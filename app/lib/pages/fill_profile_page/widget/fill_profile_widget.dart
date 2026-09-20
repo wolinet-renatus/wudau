@@ -237,6 +237,7 @@ class FillProfileCountryPicker {
   static void pickCountry(BuildContext context) {
     showCountryPicker(
       context: context,
+      favorite: <String>['TZ'],
       countryListTheme: CountryListThemeData(
         flagSize: 25,
         backgroundColor: AppColor.white,
@@ -249,7 +250,7 @@ class FillProfileCountryPicker {
         inputDecoration: InputDecoration(
           contentPadding: EdgeInsets.zero,
           labelText: EnumLocal.txtSearch.name.tr,
-          hintText: EnumLocal.txtTypeSomething.name.tr,
+          hintText: "Search country or code (e.g. Tanzania, +255)",
           prefixIcon: const Icon(Icons.search),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25),
