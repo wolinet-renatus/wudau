@@ -1921,7 +1921,7 @@ export default function Home({
 
   const handleDownloadVideo = async (video: VideoItem) => {
     if (!video || !video._id) return;
-    showToast("Preparing video with official WUDAO watermark...");
+    showToast("Preparing download...");
     try {
       const cleanUser = (video.userName || "creator").replace(/[@\s]/g, "");
       const downloadFilename = `WUDAO_${cleanUser}_${video._id}.mp4`;
@@ -1935,7 +1935,7 @@ export default function Home({
       link.click();
       document.body.removeChild(link);
 
-      showToast("Download started! Contains official WUDAO brand watermark.");
+      showToast("Download started!");
     } catch (err) {
       console.error("Video download error:", err);
       showToast("Failed to initiate video download. Please check network.");
@@ -2840,14 +2840,14 @@ export default function Home({
                           <span className="action-pill-count">{activeVideo.shareCount || 0}</span>
                         </button>
 
-                        {/* Save / Download Video Button (With Official Brand Watermark) */}
+                        {/* Save / Download Video Button */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDownloadVideo(activeVideo);
                           }}
                           className="action-icon-pill"
-                          title="Save Video (With WUDAO Watermark)"
+                          title="Save Video"
                         >
                           <IconDownload size={21} />
                           <span className="action-pill-count">Save</span>
@@ -4923,7 +4923,7 @@ export default function Home({
                   className="share-util-btn download-highlight"
                 >
                   <IconDownload size={15} />
-                  <span>Download Video (With Watermark)</span>
+                  <span>Download Video</span>
                 </button>
                 <button onClick={handleCopyEmbedCode} className="share-util-btn">
                   <IconCode size={15} />
