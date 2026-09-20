@@ -1113,17 +1113,27 @@ exports.getAllVideos = async (req, res, next) => {
         },
       ];
 
-      let allVideos;
-      if (settingJSON.isFakeData) {
-        const [realVideoOfUser, fakeVideoOfUser] = await Promise.all([Video.aggregate([{ $match: { isFake: false } }, ...data]), Video.aggregate([{ $match: { isFake: true } }, ...data])]);
-        allVideos = [...(realVideoOfUser || []), ...(fakeVideoOfUser || [])];
-        allVideos.sort((a, b) => calculateTalentDiscoveryScore(b, userId) - calculateTalentDiscoveryScore(a, userId));
-      } else {
-        allVideos = await Video.aggregate([{ $match: { isFake: false } }, ...data]);
-        allVideos.sort((a, b) => calculateTalentDiscoveryScore(b, userId) - calculateTalentDiscoveryScore(a, userId));
+      // High-performance indexed pagination: pick candidate IDs first to prevent joining 10,000+ videos
+      const queryFilter = { isBanned: false };
+      if (!settingJSON.isFakeData) {
+        queryFilter.isFake = false;
       }
 
-      const paginatedVideos = allVideos.slice((start - 1) * limit, start * limit);
+      const candidateDocs = await Video.find(queryFilter)
+        .sort({ createdAt: -1 })
+        .skip((start - 1) * limit)
+        .limit(limit)
+        .select("_id");
+
+      const targetIds = candidateDocs.map((v) => v._id);
+      let paginatedVideos = [];
+      if (targetIds.length > 0) {
+        paginatedVideos = await Video.aggregate([
+          { $match: { _id: { $in: targetIds } } },
+          ...data,
+        ]);
+        paginatedVideos.sort((a, b) => calculateTalentDiscoveryScore(b, userId) - calculateTalentDiscoveryScore(a, userId));
+      }
 
       return res.status(200).json({
         status: true,

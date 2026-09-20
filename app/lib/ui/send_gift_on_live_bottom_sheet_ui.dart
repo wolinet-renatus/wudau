@@ -76,6 +76,7 @@ class SendGiftOnLiveBottomSheetUi {
   }
 
   static void show({required BuildContext context}) {
+    if (!Database.checkUserLogin()) return;
     onGetGift();
     CustomFetchUserCoin.init();
     showModalBottomSheet(

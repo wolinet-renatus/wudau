@@ -354,7 +354,10 @@ class UserLiveUi extends StatelessWidget {
                     child: GetBuilder<LiveController>(
                       builder: (controller) => CommentTextFieldUi(
                         controller: controller.commentController,
-                        callback: () => controller.onSendComment(),
+                        callback: () {
+                          if (!Database.checkUserLogin()) return;
+                          controller.onSendComment();
+                        },
                       ),
                     ),
                   ),
@@ -365,6 +368,7 @@ class UserLiveUi extends StatelessWidget {
                     color: AppColor.black.withOpacity(0.3),
                     icon: AppAsset.icGift,
                     callback: () {
+                      if (!Database.checkUserLogin()) return;
                       LiveUserSendGiftBottomSheetUi.show(
                         context: context,
                         liveRoomId: liveRoomId,

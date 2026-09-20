@@ -45,6 +45,7 @@ class CommentBottomSheetUi {
     required int commentType,
     required String commentTypeId,
   }) async {
+    if (!Database.checkUserLogin()) return;
     if (commentController.text.trim().isNotEmpty) {
       final commentText = commentController.text;
 

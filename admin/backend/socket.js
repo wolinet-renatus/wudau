@@ -503,6 +503,88 @@ io.on("connection", async (socket) => {
     }
   });
 
+  // =========================================================================
+  // ZERO-DELAY REAL-TIME STREAMING PROTOCOL (WebSocket Low-Latency Bus)
+  // =========================================================================
+
+  // Join a live stream / reel room for instant real-time events
+  socket.on("stream:join", async (payload) => {
+    try {
+      const data = typeof payload === "string" ? JSON.parse(payload) : payload;
+      const streamRoom = `stream:${data.streamId}`;
+      socket.join(streamRoom);
+      const sockets = await io.in(streamRoom).fetchSockets();
+      const viewerCount = sockets.length;
+
+      // Broadcast instant viewer count to all clients in room
+      io.in(streamRoom).emit("stream:viewer_count", {
+        streamId: data.streamId,
+        viewers: viewerCount,
+        timestamp: Date.now(),
+      });
+      socket.emit("stream:joined", { streamId: data.streamId, viewers: viewerCount, success: true });
+    } catch (err) {
+      console.error("Error in stream:join:", err);
+    }
+  });
+
+  // Leave stream room
+  socket.on("stream:leave", async (payload) => {
+    try {
+      const data = typeof payload === "string" ? JSON.parse(payload) : payload;
+      const streamRoom = `stream:${data.streamId}`;
+      socket.leave(streamRoom);
+      const sockets = await io.in(streamRoom).fetchSockets();
+      io.in(streamRoom).emit("stream:viewer_count", {
+        streamId: data.streamId,
+        viewers: sockets.length,
+        timestamp: Date.now(),
+      });
+    } catch (err) {
+      console.error("Error in stream:leave:", err);
+    }
+  });
+
+  // Zero-delay reactions (floating hearts, applause, fire) broadcast instantly
+  socket.on("stream:reaction", (payload) => {
+    try {
+      const data = typeof payload === "string" ? JSON.parse(payload) : payload;
+      const streamRoom = `stream:${data.streamId}`;
+      // Sub-millisecond broadcast to all viewers in the room
+      io.in(streamRoom).emit("stream:reaction_received", {
+        type: data.type || "heart",
+        userId: data.userId,
+        userName: data.userName,
+        timestamp: Date.now(),
+      });
+    } catch (err) {
+      console.error("Error in stream:reaction:", err);
+    }
+  });
+
+  // Zero-delay live comment broadcast
+  socket.on("stream:comment", (payload) => {
+    try {
+      const data = typeof payload === "string" ? JSON.parse(payload) : payload;
+      const streamRoom = `stream:${data.streamId}`;
+      io.in(streamRoom).emit("stream:comment_received", {
+        commentId: new mongoose.Types.ObjectId().toString(),
+        userId: data.userId,
+        userName: data.userName,
+        userImage: data.userImage,
+        text: data.text,
+        timestamp: Date.now(),
+      });
+    } catch (err) {
+      console.error("Error in stream:comment:", err);
+    }
+  });
+
+  // Real-time latency ping
+  socket.on("stream:heartbeat", (data) => {
+    socket.emit("stream:heartbeat_ack", { clientTs: data?.ts, serverTs: Date.now() });
+  });
+
   socket.on("disconnect", async (reason) => {
     console.log(`socket disconnect ===============`, id, socket?.id, reason);
 

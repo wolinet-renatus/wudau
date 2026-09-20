@@ -117,8 +117,8 @@ app.use("/storage", (req, res, next) => {
     // Parse Range header (e.g. "bytes=0-1023")
     const parts = range.replace(/bytes=/, "").split("-");
     const start = parseInt(parts[0], 10);
-    // Instant streaming burst: default to 10MB chunk so full reel is buffered immediately without roundtrip lag
-    const DEFAULT_CHUNK_SIZE = 10 * 1024 * 1024;
+    // Instant streaming burst: default to 4MB chunk so reel starts playing in sub-50ms without waiting for full download
+    const DEFAULT_CHUNK_SIZE = 4 * 1024 * 1024;
     const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + DEFAULT_CHUNK_SIZE, fileSize - 1);
     const chunkSize = end - start + 1;
 
@@ -127,9 +127,12 @@ app.use("/storage", (req, res, next) => {
       "Accept-Ranges": "bytes",
       "Content-Length": chunkSize,
       "Content-Type": `video/${ext.slice(1) === "mov" ? "quicktime" : ext.slice(1)}`,
-      "Cache-Control": "public, max-age=86400",
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "X-Content-Type-Options": "nosniff",
     });
-    fs.createReadStream(filePath, { start, end }).pipe(res);
+    const stream = fs.createReadStream(filePath, { start, end });
+    stream.on("error", () => {});
+    stream.pipe(res);
   });
 });
 
@@ -137,14 +140,17 @@ db.on("error", () => {
   console.log("Connection Error: ");
 });
 
-const { seedDemoData } = require("./util/seedDemoData");
+const { ensureDefaultAdmins, cleanMockData } = require("./util/cleanMockData");
 
 db.once("open", async () => {
   console.log("Mongo: successfully connected to db");
   try {
-    await seedDemoData();
+    await ensureDefaultAdmins();
+    if (process.env.CLEAN_MOCK_DATA === "true" || process.env.AUTO_PURGE_MOCKS === "true") {
+      await cleanMockData();
+    }
   } catch (err) {
-    console.error("Failed to run demo data migration:", err);
+    console.error("Database startup check error:", err);
   }
 });
 

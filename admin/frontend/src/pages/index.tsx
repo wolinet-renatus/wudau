@@ -500,6 +500,16 @@ export default function Home({
   const [liveStreams, setLiveStreams] = useState<LiveStreamItem[]>(initialLiveStreams);
   const [gifts, setGifts] = useState<GiftItem[]>(initialGifts || []);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [searchTab, setSearchTab] = useState<"all" | "reels" | "creators" | "hashtags" | "sounds">("all");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 150);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   // Continuous Infinite Scroll for Home Social Feed
   const [postPage, setPostPage] = useState<number>(1);
@@ -1366,6 +1376,89 @@ export default function Home({
     return list;
   }, [videos, currentFilter, searchQuery]);
 
+  // Redesigned Search: Categorized Results with Instant Debounced Matching
+  const searchCreators = useMemo(() => {
+    if (!debouncedSearchQuery.trim()) return [];
+    const q = debouncedSearchQuery.toLowerCase().trim();
+    const userMap = new Map<string, any>();
+
+    (videos || []).forEach((v) => {
+      const uId = v.userId ? v.userId.toString() : v.userName;
+      if (
+        (v.name && v.name.toLowerCase().includes(q)) ||
+        (v.userName && v.userName.toLowerCase().includes(q))
+      ) {
+        if (!userMap.has(uId)) {
+          userMap.set(uId, {
+            id: v.userId,
+            name: v.name,
+            userName: v.userName,
+            image: v.userImage,
+            isVerified: v.isVerified,
+            reelsCount: 1,
+          });
+        } else {
+          userMap.get(uId).reelsCount += 1;
+        }
+      }
+    });
+
+    (posts || []).forEach((p) => {
+      const uId = p.userId ? p.userId.toString() : p.userName;
+      if (
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.userName && p.userName.toLowerCase().includes(q))
+      ) {
+        if (!userMap.has(uId)) {
+          userMap.set(uId, {
+            id: p.userId,
+            name: p.name,
+            userName: p.userName,
+            image: p.userImage,
+            isVerified: p.isVerified,
+            reelsCount: 0,
+          });
+        }
+      }
+    });
+
+    return Array.from(userMap.values()).slice(0, 10);
+  }, [videos, posts, debouncedSearchQuery]);
+
+  const searchSounds = useMemo(() => {
+    if (!debouncedSearchQuery.trim()) return [];
+    const q = debouncedSearchQuery.toLowerCase().trim();
+    return (songs || [])
+      .filter(
+        (s) =>
+          (s.songTitle && s.songTitle.toLowerCase().includes(q)) ||
+          (s.singerName && s.singerName.toLowerCase().includes(q))
+      )
+      .slice(0, 8);
+  }, [songs, debouncedSearchQuery]);
+
+  const searchHashtags = useMemo(() => {
+    if (!debouncedSearchQuery.trim()) return [];
+    const q = debouncedSearchQuery.toLowerCase().replace("#", "").trim();
+    return (hashtags || [])
+      .filter((h) => h.hashTag && h.hashTag.toLowerCase().includes(q))
+      .slice(0, 10);
+  }, [hashtags, debouncedSearchQuery]);
+
+  const searchReels = useMemo(() => {
+    if (!debouncedSearchQuery.trim()) return [];
+    const q = debouncedSearchQuery.toLowerCase().trim();
+    return (videos || [])
+      .filter(
+        (v) =>
+          (v.caption && v.caption.toLowerCase().includes(q)) ||
+          (v.name && v.name.toLowerCase().includes(q)) ||
+          (v.userName && v.userName.toLowerCase().includes(q)) ||
+          (Array.isArray(v.hashTag) && v.hashTag.some((t: string) => t.toLowerCase().includes(q)))
+      )
+      .slice(0, 12);
+  }, [videos, debouncedSearchQuery]);
+
   // Fully Dynamic Filter for Posts (Home Feed)
   const filteredPosts = useMemo(() => {
     let list = posts;
@@ -1993,7 +2086,7 @@ export default function Home({
   return (
     <>
       <Head>
-        <title>{projectName} — Watch & Discover Short Videos</title>
+        <title key="title">{`${projectName || "WUDAU"} — Watch and Discover Short Videos`}</title>
         <meta
           name="description"
           content="Discover trending Tanzanian street dance, Bongo Flava, Singeli 300BPM, Serengeti wildlife, and global creative reels on WUDAO."
@@ -2123,19 +2216,33 @@ export default function Home({
           {/* Header Right Tools */}
           <div className="header-right">
             {/* Desktop Search Bar */}
-            <div className="header-search-bar">
+            <div
+              className="header-search-bar"
+              onClick={() => setIsSearchOpen(true)}
+              role="button"
+              tabIndex={0}
+            >
               <IconSearch size={16} />
               <input
                 type="text"
-                placeholder="Search reels, sounds, creators..."
+                placeholder="Search reels, creators, hashtags..."
                 value={searchQuery}
+                onFocus={() => setIsSearchOpen(true)}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
+                  if (!isSearchOpen) setIsSearchOpen(true);
                   setCurrentReelIndex(0);
                 }}
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className="search-clear-btn" aria-label="Clear search">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSearchQuery("");
+                  }}
+                  className="search-clear-btn"
+                  aria-label="Clear search"
+                >
                   ✕
                 </button>
               )}
@@ -2143,7 +2250,7 @@ export default function Home({
 
             {/* Mobile Search Icon Toggle */}
             <button
-              onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+              onClick={() => setIsSearchOpen(true)}
               className="icon-action-btn mobile-only"
               aria-label="Search"
               title="Search"
@@ -2455,26 +2562,15 @@ export default function Home({
                           className="main-reel-video"
                         />
 
-                        {/* Instant Next Reels Preloaders */}
+                        {/* Zero-Delay Preloader: buffer metadata of next reel without bandwidth congestion */}
                         {filteredVideos.length > 1 && (
-                          <>
-                            <video
-                              src={resolveMedia(filteredVideos[(currentReelIndex + 1) % filteredVideos.length]?.videoUrl)}
-                              preload="auto"
-                              muted
-                              playsInline
-                              style={{ display: "none" }}
-                            />
-                            {filteredVideos.length > 2 && (
-                              <video
-                                src={resolveMedia(filteredVideos[(currentReelIndex + 2) % filteredVideos.length]?.videoUrl)}
-                                preload="auto"
-                                muted
-                                playsInline
-                                style={{ display: "none" }}
-                              />
-                            )}
-                          </>
+                          <video
+                            src={resolveMedia(filteredVideos[(currentReelIndex + 1) % filteredVideos.length]?.videoUrl)}
+                            preload="metadata"
+                            muted
+                            playsInline
+                            style={{ display: "none" }}
+                          />
                         )}
 
                         {/* Buffering Spinner */}
@@ -3782,6 +3878,291 @@ export default function Home({
                     Post
                   </button>
                 </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================================== */}
+        {/* REDESIGNED SEARCH MODAL (INSTANT, GLASSMORPHIC, ZERO-DELAY)          */}
+        {/* ==================================================================== */}
+        {isSearchOpen && (
+          <div
+            className="search-modal-overlay"
+            onClick={() => setIsSearchOpen(false)}
+          >
+            <div className="search-modal-container" onClick={(e) => e.stopPropagation()}>
+              {/* Search Bar Input Row */}
+              <div className="search-modal-input-row">
+                <div className="search-input-wrapper">
+                  <IconSearch size={18} />
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Search reels, creators, hashtags, sounds..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentReelIndex(0);
+                    }}
+                    className="search-modal-input"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="search-modal-clear"
+                      aria-label="Clear query"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsSearchOpen(false)}
+                  className="search-modal-close"
+                  aria-label="Close search"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Category Filter Tabs */}
+              <div className="search-modal-tabs">
+                <button
+                  className={`search-tab-btn ${searchTab === "all" ? "active" : ""}`}
+                  onClick={() => setSearchTab("all")}
+                >
+                  ✦ Top Results
+                </button>
+                <button
+                  className={`search-tab-btn ${searchTab === "reels" ? "active" : ""}`}
+                  onClick={() => setSearchTab("reels")}
+                >
+                  🎬 Reels ({searchReels.length})
+                </button>
+                <button
+                  className={`search-tab-btn ${searchTab === "creators" ? "active" : ""}`}
+                  onClick={() => setSearchTab("creators")}
+                >
+                  👤 Creators ({searchCreators.length})
+                </button>
+                <button
+                  className={`search-tab-btn ${searchTab === "hashtags" ? "active" : ""}`}
+                  onClick={() => setSearchTab("hashtags")}
+                >
+                  🏷️ Hashtags ({searchHashtags.length})
+                </button>
+                <button
+                  className={`search-tab-btn ${searchTab === "sounds" ? "active" : ""}`}
+                  onClick={() => setSearchTab("sounds")}
+                >
+                  🎵 Sounds ({searchSounds.length})
+                </button>
+              </div>
+
+              {/* Search Results Area */}
+              <div className="search-modal-content">
+                {!debouncedSearchQuery.trim() ? (
+                  <div className="search-empty-suggestions">
+                    <div className="search-suggestion-section">
+                      <h4>🔥 Trending Topics & Hashtags</h4>
+                      <div className="search-tag-pills">
+                        {hashtags.slice(0, 10).map((h) => (
+                          <button
+                            key={h._id}
+                            className="search-tag-pill"
+                            onClick={() => {
+                              setSearchQuery(h.hashTag);
+                              setCurrentFilter(h.hashTag.toLowerCase());
+                            }}
+                          >
+                            #{h.hashTag}
+                            {h.totalHashTagUsedCount > 1 && (
+                              <span className="tag-count">{h.totalHashTagUsedCount}</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="search-suggestion-section">
+                      <h4>⭐ Suggested Creators</h4>
+                      <div className="suggested-creators-grid">
+                        {videos.slice(0, 4).map((v) => (
+                          <div
+                            key={v._id}
+                            className="suggested-creator-chip"
+                            onClick={() => {
+                              setSearchQuery(v.userName || v.name || "");
+                              setCurrentTab("reels");
+                              setIsSearchOpen(false);
+                            }}
+                          >
+                            <img
+                              src={resolveMedia(v.userImage)}
+                              alt={v.name}
+                              className="creator-chip-avatar"
+                            />
+                            <div className="creator-chip-info">
+                              <span className="creator-chip-name">{v.name || v.userName}</span>
+                              <span className="creator-chip-handle">{v.userName}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* CREATORS SECTION */}
+                    {(searchTab === "all" || searchTab === "creators") && searchCreators.length > 0 && (
+                      <div className="search-results-section">
+                        <div className="section-head">
+                          <h4>Creators</h4>
+                          {searchTab === "all" && searchCreators.length > 3 && (
+                            <button onClick={() => setSearchTab("creators")} className="see-all-btn">
+                              See all ({searchCreators.length})
+                            </button>
+                          )}
+                        </div>
+                        <div className="creators-results-list">
+                          {(searchTab === "all" ? searchCreators.slice(0, 4) : searchCreators).map((c) => (
+                            <div
+                              key={c.id || c.userName}
+                              className="creator-result-card"
+                              onClick={() => {
+                                setSearchQuery(c.userName || c.name || "");
+                                setCurrentTab("reels");
+                                setIsSearchOpen(false);
+                              }}
+                            >
+                              <img src={resolveMedia(c.image)} alt={c.name} className="creator-res-avatar" />
+                              <div className="creator-res-info">
+                                <div className="creator-res-name-row">
+                                  <span className="creator-res-name">{c.name || c.userName}</span>
+                                  {c.isVerified && <span className="verified-badge-mini">✓</span>}
+                                </div>
+                                <span className="creator-res-handle">{c.userName}</span>
+                              </div>
+                              <button className="creator-view-btn">View</button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* REELS SECTION */}
+                    {(searchTab === "all" || searchTab === "reels") && searchReels.length > 0 && (
+                      <div className="search-results-section">
+                        <div className="section-head">
+                          <h4>Reels & Videos</h4>
+                          {searchTab === "all" && searchReels.length > 6 && (
+                            <button onClick={() => setSearchTab("reels")} className="see-all-btn">
+                              See all ({searchReels.length})
+                            </button>
+                          )}
+                        </div>
+                        <div className="reels-results-grid">
+                          {(searchTab === "all" ? searchReels.slice(0, 6) : searchReels).map((v) => {
+                            const idx = filteredVideos.findIndex((fv) => fv._id === v._id);
+                            return (
+                              <div
+                                key={v._id}
+                                className="search-reel-card"
+                                onClick={() => {
+                                  if (idx !== -1) {
+                                    setCurrentReelIndex(idx);
+                                  }
+                                  setCurrentTab("reels");
+                                  setIsSearchOpen(false);
+                                  window.scrollTo({ top: 0, behavior: "smooth" });
+                                }}
+                              >
+                                <div className="search-reel-thumb-wrap">
+                                  <img
+                                    src={resolveMedia(v.videoImage)}
+                                    alt={v.caption || "Reel"}
+                                    className="search-reel-thumb"
+                                  />
+                                  <div className="search-reel-overlay-badge">
+                                    <IconPlay size={12} filled />
+                                    <span>{v.totalLikes || 1}</span>
+                                  </div>
+                                </div>
+                                <div className="search-reel-meta">
+                                  <p className="search-reel-caption">{v.caption || "WUDAU Reel"}</p>
+                                  <span className="search-reel-user">{v.userName || v.name}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* HASHTAGS SECTION */}
+                    {(searchTab === "all" || searchTab === "hashtags") && searchHashtags.length > 0 && (
+                      <div className="search-results-section">
+                        <div className="section-head">
+                          <h4>Hashtags</h4>
+                        </div>
+                        <div className="search-tag-pills">
+                          {searchHashtags.map((h) => (
+                            <button
+                              key={h._id}
+                              className="search-tag-pill"
+                              onClick={() => {
+                                setCurrentFilter(h.hashTag.toLowerCase());
+                                setCurrentTab("reels");
+                                setIsSearchOpen(false);
+                              }}
+                            >
+                              #{h.hashTag}
+                              {h.totalHashTagUsedCount > 0 && (
+                                <span className="tag-count">{h.totalHashTagUsedCount}</span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SOUNDS SECTION */}
+                    {(searchTab === "all" || searchTab === "sounds") && searchSounds.length > 0 && (
+                      <div className="search-results-section">
+                        <div className="section-head">
+                          <h4>Original Sounds</h4>
+                        </div>
+                        <div className="search-sounds-list">
+                          {searchSounds.map((s) => (
+                            <div key={s._id} className="search-sound-row">
+                              <img src={resolveMedia(s.songImage)} alt={s.songTitle} className="sound-row-img" />
+                              <div className="sound-row-details">
+                                <span className="sound-row-title">{s.songTitle}</span>
+                                <span className="sound-row-artist">{s.singerName}</span>
+                              </div>
+                              <button
+                                onClick={() => handleToggleMusic(s.songLink)}
+                                className="sound-play-preview-btn"
+                              >
+                                {playingAudioUrl === resolveMedia(s.songLink) ? "⏸ Pause" : "▶ Play"}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ZERO RESULTS FALLBACK */}
+                    {searchCreators.length === 0 && searchReels.length === 0 && searchHashtags.length === 0 && searchSounds.length === 0 && (
+                      <div className="search-no-results">
+                        <IconSearch size={36} />
+                        <h3>No results found for &ldquo;{debouncedSearchQuery}&rdquo;</h3>
+                        <p>Check your spelling or search for broader keywords like dance, music, or travel.</p>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -8812,6 +9193,450 @@ export default function Home({
         @keyframes dropIn {
           from { transform: translate(-50%, -15px); opacity: 0; }
           to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        /* ==================================================================== */
+        /* REDESIGNED SEARCH MODAL STYLING (GLASSMORPHIC, ZERO-DELAY)           */
+        /* ==================================================================== */
+        .search-modal-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 3200;
+          background: rgba(5, 7, 15, 0.88);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          padding: 40px 16px 20px;
+        }
+
+        .search-modal-container {
+          background: rgba(18, 20, 30, 0.96);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 20px;
+          width: 780px;
+          max-width: 100%;
+          max-height: 85vh;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.95);
+          overflow: hidden;
+        }
+
+        .search-modal-input-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px 20px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.02);
+        }
+
+        .search-input-wrapper {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 14px;
+          padding: 10px 16px;
+          color: #fff;
+        }
+
+        .search-modal-input {
+          background: transparent;
+          border: none;
+          outline: none;
+          font-size: 15px;
+          color: #fff;
+          width: 100%;
+          font-weight: 500;
+        }
+
+        .search-modal-input::placeholder {
+          color: rgba(255, 255, 255, 0.4);
+        }
+
+        .search-modal-clear {
+          border: none;
+          background: rgba(255, 255, 255, 0.12);
+          color: #fff;
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 11px;
+        }
+
+        .search-modal-close {
+          border: none;
+          background: rgba(255, 255, 255, 0.08);
+          color: #fff;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 14px;
+          transition: background 0.15s;
+        }
+
+        .search-modal-close:hover {
+          background: rgba(255, 255, 255, 0.16);
+        }
+
+        .search-modal-tabs {
+          display: flex;
+          gap: 8px;
+          padding: 12px 20px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          overflow-x: auto;
+          scrollbar-width: none;
+          flex-shrink: 0;
+        }
+
+        .search-modal-tabs::-webkit-scrollbar {
+          display: none;
+        }
+
+        .search-tab-btn {
+          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.7);
+          border-radius: 20px;
+          padding: 6px 14px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.15s;
+          white-space: nowrap;
+        }
+
+        .search-tab-btn:hover {
+          color: #fff;
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .search-tab-btn.active {
+          background: #ff5722;
+          border-color: #ff5722;
+          color: #fff;
+          box-shadow: 0 2px 10px rgba(255, 87, 34, 0.35);
+        }
+
+        .search-modal-content {
+          padding: 20px;
+          overflow-y: auto;
+          flex: 1;
+        }
+
+        .search-empty-suggestions h4,
+        .search-results-section h4 {
+          font-size: 13px;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          color: rgba(255, 255, 255, 0.5);
+          margin: 0 0 12px;
+          font-weight: 700;
+        }
+
+        .search-tag-pills {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-bottom: 24px;
+        }
+
+        .search-tag-pill {
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #fff;
+          border-radius: 20px;
+          padding: 6px 14px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          transition: all 0.15s;
+        }
+
+        .search-tag-pill:hover {
+          background: rgba(255, 87, 34, 0.15);
+          border-color: #ff5722;
+          color: #ff5722;
+        }
+
+        .tag-count {
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 10px;
+          padding: 1px 6px;
+          font-size: 10px;
+        }
+
+        .suggested-creators-grid,
+        .creators-results-list {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          gap: 12px;
+          margin-bottom: 24px;
+        }
+
+        .suggested-creator-chip,
+        .creator-result-card {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 14px;
+          padding: 10px 14px;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+
+        .suggested-creator-chip:hover,
+        .creator-result-card:hover {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .creator-chip-avatar,
+        .creator-res-avatar {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid rgba(255, 87, 34, 0.3);
+          flex-shrink: 0;
+        }
+
+        .creator-chip-info,
+        .creator-res-info {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        .creator-chip-name,
+        .creator-res-name {
+          font-size: 13px;
+          font-weight: 700;
+          color: #fff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .creator-chip-handle,
+        .creator-res-handle {
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.5);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .verified-badge-mini {
+          color: #3897f0;
+          font-size: 11px;
+          margin-left: 4px;
+        }
+
+        .creator-view-btn {
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.06);
+          color: #fff;
+          border-radius: 14px;
+          padding: 4px 10px;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .reels-results-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+          gap: 12px;
+          margin-bottom: 24px;
+        }
+
+        .search-reel-card {
+          border-radius: 12px;
+          overflow: hidden;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          cursor: pointer;
+          transition: transform 0.15s, border-color 0.15s;
+        }
+
+        .search-reel-card:hover {
+          transform: translateY(-2px);
+          border-color: rgba(255, 87, 34, 0.4);
+        }
+
+        .search-reel-thumb-wrap {
+          position: relative;
+          aspect-ratio: 9/16;
+          overflow: hidden;
+          background: #000;
+        }
+
+        .search-reel-thumb {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.25s;
+        }
+
+        .search-reel-card:hover .search-reel-thumb {
+          transform: scale(1.05);
+        }
+
+        .search-reel-overlay-badge {
+          position: absolute;
+          bottom: 6px;
+          left: 6px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(0, 0, 0, 0.65);
+          backdrop-filter: blur(8px);
+          border-radius: 10px;
+          padding: 2px 6px;
+          font-size: 10px;
+          font-weight: 700;
+          color: #fff;
+        }
+
+        .search-reel-meta {
+          padding: 8px;
+        }
+
+        .search-reel-caption {
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.9);
+          margin: 0 0 3px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          line-height: 1.3;
+        }
+
+        .search-reel-user {
+          font-size: 10px;
+          color: #ff5722;
+          font-weight: 600;
+        }
+
+        .search-sounds-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .search-sound-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 8px 12px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sound-row-img {
+          width: 38px;
+          height: 38px;
+          border-radius: 8px;
+          object-fit: cover;
+          flex-shrink: 0;
+        }
+
+        .sound-row-details {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        .sound-row-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: #fff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .sound-row-artist {
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.5);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .sound-play-preview-btn {
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: #fff;
+          border-radius: 14px;
+          padding: 4px 12px;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .search-no-results {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 40px 20px;
+          text-align: center;
+          color: rgba(255, 255, 255, 0.4);
+          gap: 8px;
+        }
+
+        .search-no-results h3 {
+          font-size: 16px;
+          font-weight: 700;
+          color: #fff;
+          margin: 4px 0 0;
+        }
+
+        .search-no-results p {
+          font-size: 13px;
+          margin: 0;
+          max-width: 360px;
+        }
+
+        .section-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 12px;
+        }
+
+        .see-all-btn {
+          background: transparent;
+          border: none;
+          color: #ff5722;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
         }
 
         /* ==================================================================== */

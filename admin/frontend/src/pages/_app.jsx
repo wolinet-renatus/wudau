@@ -26,7 +26,7 @@ export default function App({ Component, pageProps }) {
   return getLayout(
     <AuthCheck>
       <Head>
-        <title>WUDAU</title>
+        <title key="title">WUDAU</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
       </Head>
       <Providers>

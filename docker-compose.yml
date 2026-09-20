@@ -59,6 +59,7 @@ services:
       - EMAIL=${EMAIL:-kodebookapp@gmail.com}
       - APP_PASSWORD=${APP_PASSWORD:-nohwrpybgiuhqjfy}
       - MongoDb_Connection_String=${MONGO_URI:-mongodb://mongo:27017/shortie}
+      - AUTO_PURGE_MOCKS=true
     volumes:
       # Persistent storage for uploaded reels, music, and avatars
       - backend_storage:/app/storage

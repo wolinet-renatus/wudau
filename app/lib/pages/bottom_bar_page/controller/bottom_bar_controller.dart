@@ -51,8 +51,7 @@ class BottomBarController extends GetxController {
   ];
 
   void onChangeBottomBar(int index) {
-    if ((index == 3 || index == 4) && (Database.loginUserId.isEmpty || Database.fetchLoginUserProfileModel?.user?.id == null)) {
-      Get.toNamed(AppRoutes.loginPage);
+    if ((index == 3 || index == 4) && !Database.checkUserLogin()) {
       return;
     }
     if (index != selectedTabIndex) {

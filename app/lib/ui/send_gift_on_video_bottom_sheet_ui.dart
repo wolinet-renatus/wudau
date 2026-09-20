@@ -77,6 +77,7 @@ class SendGiftOnVideoBottomSheetUi {
   }
 
   static void show({required BuildContext context, required String videoId}) {
+    if (!Database.checkUserLogin()) return;
     Utils.showLog("Selected Video Id => $videoId");
     onGetGift();
     CustomFetchUserCoin.init();

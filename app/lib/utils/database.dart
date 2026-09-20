@@ -40,6 +40,16 @@ class Database {
   static int get loginType => localStorage.read("loginType") ?? 0;
   static String get loginUserId => localStorage.read("loginUserId") ?? "";
 
+  static bool get isUserLoggedIn => loginUserId.isNotEmpty && fetchLoginUserProfileModel?.user?.id != null;
+
+  static bool checkUserLogin() {
+    if (!isUserLoggedIn) {
+      Get.toNamed(AppRoutes.loginPage);
+      return false;
+    }
+    return true;
+  }
+
   // >>>>> >>>>> Set Language Database <<<<< <<<<<
 
   static onSetSelectedLanguage(String language) async => await localStorage.write("language", language);

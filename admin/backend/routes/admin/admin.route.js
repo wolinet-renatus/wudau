@@ -33,4 +33,22 @@ route.patch("/updatePassword", AdminMiddleware, AdminController.updatePassword);
 //set password
 route.patch("/setPassword", AdminMiddleware, AdminController.setPassword);
 
+// Mock data cleanup endpoint
+const { cleanMockData } = require("../../util/cleanMockData");
+const handleCleanup = async (req, res) => {
+  try {
+    const key = req.headers.key || req.query.key;
+    const expectedKey = process.env.secretKey || "5TIvw5cpc0";
+    if (key !== expectedKey) {
+      return res.status(403).json({ status: false, message: "Unauthorized: Invalid secret key" });
+    }
+    const result = await cleanMockData();
+    return res.status(200).json({ status: true, message: "Mock data purged successfully from database", data: result });
+  } catch (error) {
+    return res.status(500).json({ status: false, error: error.message });
+  }
+};
+route.post("/cleanupMockData", handleCleanup);
+route.get("/cleanupMockData", handleCleanup);
+
 module.exports = route;

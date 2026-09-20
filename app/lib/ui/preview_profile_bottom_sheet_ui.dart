@@ -33,6 +33,7 @@ class PreviewProfileBottomSheetUi {
   }
 
   static Future<void> onClickFollow(String userId) async {
+    if (!Database.checkUserLogin()) return;
     if (userId != Database.loginUserId) {
       isFollow.value = !isFollow.value;
       await FollowUnfollowApi.callApi(loginUserId: Database.loginUserId, userId: userId);

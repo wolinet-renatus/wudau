@@ -208,6 +208,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
   }
 
   Future<void> onClickLike() async {
+    if (!Database.checkUserLogin()) return;
     if (isLike.value) {
       isLike.value = false;
       customChanges["like"]--;
@@ -227,6 +228,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
   }
 
   Future<void> onDoubleClick() async {
+    if (!Database.checkUserLogin()) return;
     if (isLike.value) {
       isLike.value = false;
       customChanges["like"]--;
@@ -379,6 +381,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                       iconSize: 25,
                       icon: AppAsset.icCreate,
                       callback: () {
+                        if (!Database.checkUserLogin()) return;
                         isReelsPage.value = false;
                         VideoPickerBottomSheetUi.show(context: context);
                       },
@@ -386,6 +389,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                     5.width,
                     GestureDetector(
                       onTap: () {
+                        if (!Database.checkUserLogin()) return;
                         isReelsPage.value = false;
                         ReportBottomSheetUi.show(context: context, eventId: controller.mainReels[widget.index].id ?? "", eventType: 1);
                       },
@@ -417,6 +421,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                     const Spacer(),
                     GestureDetector(
                       onTap: () {
+                        if (!Database.checkUserLogin()) return;
                         Utils.showLog("Video User Id => ${controller.mainReels[widget.index].userId} => ${Database.loginUserId}");
                         if (controller.mainReels[widget.index].userId != Database.loginUserId) {
                           isReelsPage.value = false;

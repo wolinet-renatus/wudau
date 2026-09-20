@@ -89,6 +89,7 @@ class _PostViewState extends State<PostView> {
   }
 
   Future<void> onClickLike() async {
+    if (!Database.checkUserLogin()) return;
     if (isLike.value) {
       isLike.value = false;
       likes--;
@@ -105,6 +106,7 @@ class _PostViewState extends State<PostView> {
   }
 
   Future<void> onClickFollow() async {
+    if (!Database.checkUserLogin()) return;
     if (Database.loginUserId != widget.userId) {
       isFollow.value = !isFollow.value;
       await FollowUnfollowApi.callApi(loginUserId: Database.loginUserId, userId: widget.userId);
@@ -596,7 +598,10 @@ class FeedAppBarView extends GetView<FeedController> {
                   ),
                   10.width,
                   GestureDetector(
-                    onTap: () => controller.onPickPost(context),
+                    onTap: () {
+                      if (!Database.checkUserLogin()) return;
+                      controller.onPickPost(context);
+                    },
                     child: Container(
                       height: 42,
                       width: 100,

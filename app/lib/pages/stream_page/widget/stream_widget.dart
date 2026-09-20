@@ -9,6 +9,7 @@ import 'package:wudau/pages/stream_page/controller/stream_controller.dart';
 import 'package:wudau/routes/app_routes.dart';
 import 'package:wudau/utils/asset.dart';
 import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/database.dart';
 import 'package:wudau/utils/enums.dart';
 import 'package:wudau/utils/font_style.dart';
 import 'package:wudau/utils/utils.dart';
@@ -49,6 +50,7 @@ class StreamAppBarUi extends StatelessWidget {
                   8.width,
                   GestureDetector(
                     onTap: () {
+                      if (!Database.checkUserLogin()) return;
                       Get.toNamed(AppRoutes.goLivePage);
                     },
                     child: Container(

@@ -11,6 +11,7 @@ import 'package:wudau/ui/video_picker_bottom_sheet_ui.dart';
 import 'package:wudau/utils/color.dart';
 import 'package:preload_page_view/preload_page_view.dart';
 import 'package:wudau/utils/constant.dart';
+import 'package:wudau/utils/database.dart';
 import 'package:wudau/utils/enums.dart';
 import 'package:wudau/utils/font_style.dart';
 
@@ -64,6 +65,7 @@ class ReelsView extends GetView<ReelsController> {
                                   15.height,
                                   GestureDetector(
                                     onTap: () {
+                                      if (!Database.checkUserLogin()) return;
                                       VideoPickerBottomSheetUi.show(context: context);
                                     },
                                     child: Container(

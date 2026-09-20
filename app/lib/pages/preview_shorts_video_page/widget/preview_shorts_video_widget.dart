@@ -216,6 +216,7 @@ class _PreviewShortsViewState extends State<PreviewShortsView> with SingleTicker
   }
 
   Future<void> onClickLike() async {
+    if (!Database.checkUserLogin()) return;
     if (controller.mainShorts[widget.index].isBanned == false) {
       if (isLike.value) {
         isLike.value = false;
@@ -237,6 +238,7 @@ class _PreviewShortsViewState extends State<PreviewShortsView> with SingleTicker
   }
 
   Future<void> onDoubleClick() async {
+    if (!Database.checkUserLogin()) return;
     if (controller.mainShorts[widget.index].isBanned == false) {
       if (isLike.value) {
         isLike.value = false;
@@ -535,6 +537,7 @@ class _PreviewShortsViewState extends State<PreviewShortsView> with SingleTicker
                     const Spacer(),
                     GestureDetector(
                       onTap: () {
+                        if (!Database.checkUserLogin()) return;
                         Utils.showLog("Video User Id => ${controller.mainShorts[widget.index].userId} => ${Database.loginUserId}");
                         if (controller.mainShorts[widget.index].userId != Database.loginUserId) {
                           if (controller.mainShorts[widget.index].isBanned == false) {

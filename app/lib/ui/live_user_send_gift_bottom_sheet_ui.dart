@@ -11,6 +11,7 @@ import 'package:wudau/ui/preview_network_image_ui.dart';
 import 'package:wudau/utils/api.dart';
 import 'package:wudau/utils/asset.dart';
 import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/database.dart';
 import 'package:wudau/utils/enums.dart';
 import 'package:wudau/utils/font_style.dart';
 import 'package:wudau/utils/socket_services.dart';
@@ -78,6 +79,7 @@ class LiveUserSendGiftBottomSheetUi {
     required String senderUserId,
     required String receiverUserId,
   }) {
+    if (!Database.checkUserLogin()) return;
     Utils.showLog("Live Room-User Id  => $liveRoomId => $senderUserId => $receiverUserId");
 
     onGetGift();

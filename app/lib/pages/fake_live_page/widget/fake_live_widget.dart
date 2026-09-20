@@ -14,6 +14,7 @@ import 'package:wudau/ui/stop_live_streaming_dialog_ui.dart';
 
 import 'package:wudau/utils/asset.dart';
 import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/database.dart';
 import 'package:wudau/utils/enums.dart';
 import 'package:wudau/utils/font_style.dart';
 import 'package:wudau/utils/socket_services.dart';
@@ -378,7 +379,10 @@ class UserLiveUi extends StatelessWidget {
                     child: GetBuilder<FakeLiveController>(
                       builder: (controller) => CommentTextFieldUi(
                         controller: controller.commentController,
-                        callback: () => controller.onSendComment(),
+                        callback: () {
+                          if (!Database.checkUserLogin()) return;
+                          controller.onSendComment();
+                        },
                       ),
                     ),
                   ),
@@ -389,6 +393,7 @@ class UserLiveUi extends StatelessWidget {
                     color: AppColor.black.withOpacity(0.3),
                     icon: AppAsset.icGift,
                     callback: () {
+                      if (!Database.checkUserLogin()) return;
                       SendGiftOnLiveBottomSheetUi.show(context: context);
                     },
                   ),

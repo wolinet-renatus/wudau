@@ -10,6 +10,7 @@ import 'package:wudau/pages/preview_user_profile_page/widget/preview_user_profil
 import 'package:wudau/shimmer/preview_user_profile_shimmer_ui.dart';
 import 'package:wudau/utils/asset.dart';
 import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/database.dart';
 import 'package:wudau/utils/enums.dart';
 import 'package:wudau/utils/font_style.dart';
 
@@ -21,6 +22,7 @@ class PreviewUserProfileView extends GetView<PreviewUserProfileController> {
     return Scaffold(
       floatingActionButton: GestureDetector(
         onTap: () {
+          if (!Database.checkUserLogin()) return;
           if (controller.fetchProfileModel?.userProfileData?.user?.isFake == true) {
             Get.toNamed(
               AppRoutes.fakeChatPage,

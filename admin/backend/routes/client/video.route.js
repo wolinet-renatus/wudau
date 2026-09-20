@@ -32,6 +32,11 @@ route.get("/videosOfUser", checkAccessWithSecretKey(), VideoController.videosOfU
 //if isFakeData on then real+fake videos otherwise fake videos
 route.get("/getAllVideos", checkAccessWithSecretKey(), VideoController.getAllVideos);
 
+// High-efficiency zero-delay cursor-based stream feed
+const StreamFeedController = require("../../controllers/client/streamFeed.controller");
+route.get("/stream-feed", checkAccessWithSecretKey(), StreamFeedController.getStreamFeed);
+route.post("/stream-feed", checkAccessWithSecretKey(), StreamFeedController.getStreamFeed);
+
 //delete video
 route.delete("/deleteVideoOfUser", checkAccessWithSecretKey(), VideoController.deleteVideoOfUser);
 

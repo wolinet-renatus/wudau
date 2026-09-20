@@ -150,6 +150,7 @@ class PreviewUserProfileController extends GetxController with GetTickerProvider
   }
 
   Future<void> onClickFollow() async {
+    if (!Database.checkUserLogin()) return;
     if (userId != Database.loginUserId) {
       isFollow = !isFollow;
       update(["onClickFollow"]);
