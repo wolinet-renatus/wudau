@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:get/get.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/verification_otp_page/controller/verification_otp_controller.dart';
-import 'package:shortie/ui/simple_app_bar_ui.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/constant.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/verification_otp_page/controller/verification_otp_controller.dart';
+import 'package:wudau/ui/simple_app_bar_ui.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/constant.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class VerificationOtpView extends GetView<VerificationOtpController> {
   const VerificationOtpView({super.key});

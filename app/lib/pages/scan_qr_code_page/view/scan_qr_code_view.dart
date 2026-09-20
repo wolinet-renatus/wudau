@@ -2,17 +2,17 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/bottom_bar_page/controller/bottom_bar_controller.dart';
-import 'package:shortie/pages/scan_qr_code_page/controller/scan_qr_code_controller.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/ui/simple_app_bar_ui.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/bottom_bar_page/controller/bottom_bar_controller.dart';
+import 'package:wudau/pages/scan_qr_code_page/controller/scan_qr_code_controller.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/ui/simple_app_bar_ui.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
+import 'package:wudau/utils/utils.dart';
 
 class ScanQrCodeView extends GetView<ScanQrCodeController> {
   const ScanQrCodeView({super.key});

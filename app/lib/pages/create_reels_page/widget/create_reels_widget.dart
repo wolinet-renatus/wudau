@@ -3,19 +3,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_rx/src/rx_typedefs/rx_typedefs.dart';
-import 'package:shortie/custom/custom_format_time.dart';
-import 'package:shortie/ui/no_data_found_ui.dart';
-import 'package:shortie/ui/preview_network_image_ui.dart';
-import 'package:shortie/shimmer/sound_shimmer_ui.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/create_reels_page/api/favorite_unfavorite_api.dart';
-import 'package:shortie/pages/create_reels_page/controller/create_reels_controller.dart';
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/custom/custom_format_time.dart';
+import 'package:wudau/ui/no_data_found_ui.dart';
+import 'package:wudau/ui/preview_network_image_ui.dart';
+import 'package:wudau/shimmer/sound_shimmer_ui.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/create_reels_page/api/favorite_unfavorite_api.dart';
+import 'package:wudau/pages/create_reels_page/controller/create_reels_controller.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class AddMusicBottomSheet {
   static void show({required BuildContext context}) {

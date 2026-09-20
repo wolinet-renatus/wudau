@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:shortie/pages/edit_post_page/model/edit_post_model.dart';
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/edit_post_page/model/edit_post_model.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/utils.dart';
 
 class EditPostApi {
   static Future<EditPostModel?> callApi({

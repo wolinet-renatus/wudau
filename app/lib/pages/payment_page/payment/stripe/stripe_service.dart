@@ -3,10 +3,10 @@ import 'dart:developer';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:get/get_rx/src/rx_typedefs/rx_typedefs.dart';
 import 'package:http/http.dart' as http;
-import 'package:shortie/pages/payment_page/payment/stripe/stripe_pay_model.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/payment_page/payment/stripe/stripe_pay_model.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/utils.dart';
 //
 // class StripeService {
 //   bool isTest = false;

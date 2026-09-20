@@ -1,20 +1,18 @@
-import 'dart:developer';
-
 import 'package:camera/camera.dart';
 import 'package:deepar_flutter/deepar_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:shortie/ui/circle_icon_button_ui.dart';
-import 'package:shortie/ui/preview_network_image_ui.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/create_reels_page/controller/create_reels_controller.dart';
-import 'package:shortie/pages/create_reels_page/widget/create_reels_widget.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/ui/circle_icon_button_ui.dart';
+import 'package:wudau/ui/preview_network_image_ui.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/create_reels_page/controller/create_reels_controller.dart';
+import 'package:wudau/pages/create_reels_page/widget/create_reels_widget.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class CreateReelsView extends GetView<CreateReelsController> {
   const CreateReelsView({super.key});

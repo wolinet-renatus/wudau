@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:shortie/pages/edit_reels_page/model/edit_reels_model.dart';
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/edit_reels_page/model/edit_reels_model.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/utils.dart';
 
 class EditReelsApi {
   static Future<EditReelsModel?> callApi({

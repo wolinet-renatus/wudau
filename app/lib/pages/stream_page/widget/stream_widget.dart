@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
-import 'package:shortie/custom/custom_format_number.dart';
-import 'package:shortie/ui/gradient_text_ui.dart';
-import 'package:shortie/ui/preview_network_image_ui.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/stream_page/controller/stream_controller.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/custom/custom_format_number.dart';
+import 'package:wudau/ui/gradient_text_ui.dart';
+import 'package:wudau/ui/preview_network_image_ui.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/stream_page/controller/stream_controller.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
+import 'package:wudau/utils/utils.dart';
 
 class StreamAppBarUi extends StatelessWidget {
   const StreamAppBarUi({super.key});

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/custom/custom_thumbnail.dart';
-import 'package:shortie/custom/custom_video_picker.dart';
-import 'package:shortie/custom/custom_video_time.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
-import 'package:shortie/utils/internet_connection.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/custom/custom_thumbnail.dart';
+import 'package:wudau/custom/custom_video_picker.dart';
+import 'package:wudau/custom/custom_video_time.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
+import 'package:wudau/utils/internet_connection.dart';
+import 'package:wudau/utils/utils.dart';
 
 class VideoPickerBottomSheetUi {
   static Future<void> show({required BuildContext context}) async {

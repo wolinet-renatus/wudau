@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/on_boarding_page/controller/on_boarding_controller.dart';
-import 'package:shortie/pages/on_boarding_page/widget/on_boarding_widget.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/ui/gradient_text_ui.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/constant.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/on_boarding_page/controller/on_boarding_controller.dart';
+import 'package:wudau/pages/on_boarding_page/widget/on_boarding_widget.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/ui/gradient_text_ui.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/constant.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class OnBoardingView extends GetView<OnBoardingController> {
   const OnBoardingView({super.key});

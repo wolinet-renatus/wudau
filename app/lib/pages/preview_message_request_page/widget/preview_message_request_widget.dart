@@ -3,17 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
-import 'package:shortie/custom/custom_format_audio_time.dart';
-import 'package:shortie/custom/custom_format_chat_time.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/preview_message_request_page/controller/preview_message_request_controller.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/ui/preview_network_image_ui.dart';
-import 'package:shortie/ui/preview_profile_bottom_sheet_ui.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/font_style.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/custom/custom_format_audio_time.dart';
+import 'package:wudau/custom/custom_format_chat_time.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/preview_message_request_page/controller/preview_message_request_controller.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/ui/preview_network_image_ui.dart';
+import 'package:wudau/ui/preview_profile_bottom_sheet_ui.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/font_style.dart';
+import 'package:wudau/utils/utils.dart';
 
 class RequestUserAppBarUi extends GetView<PreviewMessageRequestController> {
   const RequestUserAppBarUi({super.key});

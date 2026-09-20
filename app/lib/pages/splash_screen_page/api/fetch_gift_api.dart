@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:shortie/pages/splash_screen_page/model/fetch_gift_model.dart';
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/splash_screen_page/model/fetch_gift_model.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/utils.dart';
 
 class FetchGiftApi {
   static Future<FetchGiftModel?> callApi() async {

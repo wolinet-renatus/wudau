@@ -1,19 +1,17 @@
-import 'dart:developer';
-
 import 'package:blurrycontainer/blurrycontainer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:shortie/custom/custom_dot_indicator.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/profile_page/controller/profile_controller.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/ui/preview_network_image_ui.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
+import 'package:wudau/custom/custom_dot_indicator.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/profile_page/controller/profile_controller.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/ui/preview_network_image_ui.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
 
 class PreviewImageUi extends StatefulWidget {
-  PreviewImageUi({
+  const PreviewImageUi({
     super.key,
     this.id,
     required this.name,
@@ -28,7 +26,7 @@ class PreviewImageUi extends StatefulWidget {
   final String name;
   final String userName;
   final String userImage;
-  String? caption;
+  final String? caption;
   final List images;
   final int? selectedIndex;
 

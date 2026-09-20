@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shortie/pages/profile_page/model/fetch_profile_post_model.dart';
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/profile_page/model/fetch_profile_post_model.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/utils.dart';
 
 class FetchProfilePostApi {
   static Future<FetchProfilePostModel?> callApi({required String userId}) async {

@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
 import 'package:preload_page_view/preload_page_view.dart';
-import 'package:shortie/pages/reels_page/api/fetch_reels_api.dart';
-import 'package:shortie/pages/reels_page/model/fetch_reels_model.dart';
-import 'package:shortie/utils/branch_io_services.dart';
-import 'package:shortie/utils/database.dart';
+import 'package:wudau/pages/reels_page/api/fetch_reels_api.dart';
+import 'package:wudau/pages/reels_page/model/fetch_reels_model.dart';
+import 'package:wudau/utils/branch_io_services.dart';
+import 'package:wudau/utils/database.dart';
 
 class ReelsController extends GetxController {
   PreloadPageController preloadPageController = PreloadPageController();

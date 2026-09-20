@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shortie/pages/stream_page/model/fetch_live_user_model.dart';
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/stream_page/model/fetch_live_user_model.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/utils.dart';
 
 class FetchLiveUserApi {
   static int startPagination = 0;

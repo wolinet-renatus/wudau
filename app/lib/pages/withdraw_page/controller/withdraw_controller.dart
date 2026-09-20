@@ -1,17 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/custom/custom_fetch_user_coin.dart';
-import 'package:shortie/ui/confirm_withdraw_dialog_ui.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/pages/splash_screen_page/api/admin_setting_api.dart';
-import 'package:shortie/pages/withdraw_page/api/create_withdraw_request_api.dart';
-import 'package:shortie/pages/withdraw_page/api/fetch_withdraw_method_api.dart';
-import 'package:shortie/pages/withdraw_page/model/create_withdraw_request_model.dart';
-import 'package:shortie/pages/withdraw_page/model/fetch_withdraw_method_model.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/custom/custom_fetch_user_coin.dart';
+import 'package:wudau/ui/confirm_withdraw_dialog_ui.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/pages/splash_screen_page/api/admin_setting_api.dart';
+import 'package:wudau/pages/withdraw_page/api/create_withdraw_request_api.dart';
+import 'package:wudau/pages/withdraw_page/api/fetch_withdraw_method_api.dart';
+import 'package:wudau/pages/withdraw_page/model/create_withdraw_request_model.dart';
+import 'package:wudau/pages/withdraw_page/model/fetch_withdraw_method_model.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/utils.dart';
 
 class WithdrawController extends GetxController {
   TextEditingController coinController = TextEditingController();

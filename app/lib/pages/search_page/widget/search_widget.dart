@@ -2,20 +2,20 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_rx/src/rx_typedefs/rx_typedefs.dart';
-import 'package:shortie/custom/custom_check_string_is_text_or_emoji.dart';
-import 'package:shortie/custom/custom_format_number.dart';
-import 'package:shortie/ui/no_data_found_ui.dart';
-import 'package:shortie/ui/preview_network_image_ui.dart';
-import 'package:shortie/ui/preview_profile_bottom_sheet_ui.dart';
-import 'package:shortie/shimmer/hash_tag_shimmer_ui.dart';
-import 'package:shortie/shimmer/user_list_shimmer_ui.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/pages/search_page/controller/search_controller.dart' as controller;
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/custom/custom_check_string_is_text_or_emoji.dart';
+import 'package:wudau/custom/custom_format_number.dart';
+import 'package:wudau/ui/no_data_found_ui.dart';
+import 'package:wudau/ui/preview_network_image_ui.dart';
+import 'package:wudau/ui/preview_profile_bottom_sheet_ui.dart';
+import 'package:wudau/shimmer/hash_tag_shimmer_ui.dart';
+import 'package:wudau/shimmer/user_list_shimmer_ui.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/pages/search_page/controller/search_controller.dart' as controller;
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class SearchAppBar extends StatelessWidget {
   const SearchAppBar({super.key, required this.title});

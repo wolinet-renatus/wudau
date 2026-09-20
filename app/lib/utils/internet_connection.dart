@@ -1,6 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/utils/utils.dart';
 
 class InternetConnection {
   static RxBool isConnect = true.obs;

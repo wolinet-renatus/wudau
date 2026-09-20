@@ -6,31 +6,31 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:readmore/readmore.dart';
-import 'package:shortie/custom/custom_format_number.dart';
-import 'package:shortie/custom/custom_share.dart';
-import 'package:shortie/pages/bottom_bar_page/controller/bottom_bar_controller.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/ui/preview_network_image_ui.dart';
-import 'package:shortie/ui/preview_profile_bottom_sheet_ui.dart';
-import 'package:shortie/custom/custom_icon_button.dart';
-import 'package:shortie/ui/comment_bottom_sheet_ui.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/reels_page/api/reels_like_dislike_api.dart';
-import 'package:shortie/pages/reels_page/api/reels_share_api.dart';
-import 'package:shortie/pages/reels_page/controller/reels_controller.dart';
-import 'package:shortie/ui/report_bottom_sheet_ui.dart';
-import 'package:shortie/ui/send_gift_on_video_bottom_sheet_ui.dart';
-import 'package:shortie/ui/video_picker_bottom_sheet_ui.dart';
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/branch_io_services.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/constant.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/custom/custom_format_number.dart';
+import 'package:wudau/custom/custom_share.dart';
+import 'package:wudau/pages/bottom_bar_page/controller/bottom_bar_controller.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/ui/preview_network_image_ui.dart';
+import 'package:wudau/ui/preview_profile_bottom_sheet_ui.dart';
+import 'package:wudau/custom/custom_icon_button.dart';
+import 'package:wudau/ui/comment_bottom_sheet_ui.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/reels_page/api/reels_like_dislike_api.dart';
+import 'package:wudau/pages/reels_page/api/reels_share_api.dart';
+import 'package:wudau/pages/reels_page/controller/reels_controller.dart';
+import 'package:wudau/ui/report_bottom_sheet_ui.dart';
+import 'package:wudau/ui/send_gift_on_video_bottom_sheet_ui.dart';
+import 'package:wudau/ui/video_picker_bottom_sheet_ui.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/branch_io_services.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/constant.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
+import 'package:wudau/utils/utils.dart';
 import 'package:vibration/vibration.dart';
 import 'package:video_player/video_player.dart';
 
@@ -350,7 +350,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
               bottom: 0,
               child: Obx(
                 () => Visibility(
-                  visible: (isVideoLoading == false),
+                  visible: (!isVideoLoading.value),
                   child: Container(
                     height: Get.height / 4,
                     width: Get.width,

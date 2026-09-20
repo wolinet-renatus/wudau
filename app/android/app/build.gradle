@@ -64,6 +64,30 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    packagingOptions {
+        // 16KB page-size: keep .so embedded but NOT compressed; linker aligns them correctly.
+        jniLibs.useLegacyPackaging = false
+        // Resolve any duplicate native lib conflicts from ffmpeg_kit, zego, deepar etc.
+        pickFirst 'lib/x86_64/libavcodec.so'
+        pickFirst 'lib/x86_64/libavfilter.so'
+        pickFirst 'lib/x86_64/libavformat.so'
+        pickFirst 'lib/x86_64/libavutil.so'
+        pickFirst 'lib/x86_64/libswresample.so'
+        pickFirst 'lib/x86_64/libswscale.so'
+        pickFirst 'lib/arm64-v8a/libavcodec.so'
+        pickFirst 'lib/arm64-v8a/libavfilter.so'
+        pickFirst 'lib/arm64-v8a/libavformat.so'
+        pickFirst 'lib/arm64-v8a/libavutil.so'
+        pickFirst 'lib/arm64-v8a/libswresample.so'
+        pickFirst 'lib/arm64-v8a/libswscale.so'
+        pickFirst 'lib/armeabi-v7a/libavcodec.so'
+        pickFirst 'lib/armeabi-v7a/libavfilter.so'
+        pickFirst 'lib/armeabi-v7a/libavformat.so'
+        pickFirst 'lib/armeabi-v7a/libavutil.so'
+        pickFirst 'lib/armeabi-v7a/libswresample.so'
+        pickFirst 'lib/armeabi-v7a/libswscale.so'
+    }
 }
 
 flutter {
@@ -80,7 +104,5 @@ dependencies {
     implementation "com.google.android.exoplayer:exoplayer-smoothstreaming:$exoplayer_version"
     implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
     implementation 'com.android.billingclient:billing:5.0.0'
-
-
-
+    implementation 'com.arthenica:smart-exception-java:0.2.1'
 }

@@ -4,13 +4,13 @@ import 'dart:developer';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
-import 'package:shortie/pages/connection_page/api/follow_unfollow_api.dart';
-import 'package:shortie/pages/fake_live_page/widget/fake_comment_data.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/connection_page/api/follow_unfollow_api.dart';
+import 'package:wudau/pages/fake_live_page/widget/fake_comment_data.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/utils.dart';
 import 'package:video_player/video_player.dart';
 import 'package:zego_express_engine/zego_express_engine.dart';
 
@@ -131,7 +131,7 @@ class FakeLiveController extends GetxController {
       fakeHostCommentListBlank.add(HostComment(
         message: commentController.text.toString(),
         user: Database.fetchLoginUserProfileModel?.user?.name ?? "",
-        image: (Api.baseUrl + (Database.fetchLoginUserProfileModel?.user?.image ?? "")) ?? "",
+        image: Api.baseUrl + (Database.fetchLoginUserProfileModel?.user?.image ?? ""),
       ));
     }
     commentController.clear();

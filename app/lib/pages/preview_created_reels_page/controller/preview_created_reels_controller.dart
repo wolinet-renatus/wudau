@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:chewie/chewie.dart';
 import 'package:get/get.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/utils/utils.dart';
 import 'package:video_player/video_player.dart';
 
 class PreviewCreatedReelsController extends GetxController {

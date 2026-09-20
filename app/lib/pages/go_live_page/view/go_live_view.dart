@@ -5,15 +5,15 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:shortie/ui/circle_icon_button_ui.dart';
+import 'package:wudau/ui/circle_icon_button_ui.dart';
 
-import 'package:shortie/ui/app_button_ui.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/go_live_page/controller/go_live_controller.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/enums.dart';
+import 'package:wudau/ui/app_button_ui.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/go_live_page/controller/go_live_controller.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/enums.dart';
 
 class GoLiveView extends StatelessWidget {
   const GoLiveView({super.key});

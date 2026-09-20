@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/bottom_bar_page/controller/bottom_bar_controller.dart';
-import 'package:shortie/ui/no_data_found_ui.dart';
-import 'package:shortie/shimmer/user_list_shimmer_ui.dart';
-import 'package:shortie/pages/message_page/controller/message_controller.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/pages/message_page/widget/message_widget.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/constant.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/bottom_bar_page/controller/bottom_bar_controller.dart';
+import 'package:wudau/ui/no_data_found_ui.dart';
+import 'package:wudau/shimmer/user_list_shimmer_ui.dart';
+import 'package:wudau/pages/message_page/controller/message_controller.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/pages/message_page/widget/message_widget.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/constant.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class MessageView extends GetView<MessageController> {
   const MessageView({super.key});

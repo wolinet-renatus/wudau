@@ -4,16 +4,16 @@ import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:shortie/custom/custom_icon_button.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/ui/app_button_ui.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/preview_created_reels_page/controller/preview_created_reels_controller.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/custom/custom_icon_button.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/ui/app_button_ui.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/preview_created_reels_page/controller/preview_created_reels_controller.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class PreviewCreatedReelsView extends GetView<PreviewCreatedReelsController> {
   const PreviewCreatedReelsView({super.key});

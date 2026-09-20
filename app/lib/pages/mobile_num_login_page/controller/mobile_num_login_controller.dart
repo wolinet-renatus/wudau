@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/utils.dart';
 
 class MobileNumLoginController extends GetxController {
   TextEditingController mobileController = TextEditingController();

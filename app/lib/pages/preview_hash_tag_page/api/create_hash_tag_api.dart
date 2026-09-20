@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:shortie/pages/preview_hash_tag_page/model/create_hash_tag_model.dart';
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/internet_connection.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/preview_hash_tag_page/model/create_hash_tag_model.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/internet_connection.dart';
+import 'package:wudau/utils/utils.dart';
 
 class CreateHashTagApi {
   static Future<CreateHashTagModel?> callApi({required String hashTag}) async {

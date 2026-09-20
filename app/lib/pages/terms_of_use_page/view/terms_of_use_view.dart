@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/pages/terms_of_use_page/controller/terms_of_use_controller.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/ui/simple_app_bar_ui.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/enums.dart';
+import 'package:wudau/pages/terms_of_use_page/controller/terms_of_use_controller.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/ui/simple_app_bar_ui.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/enums.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class TermsOfUseView extends StatelessWidget {

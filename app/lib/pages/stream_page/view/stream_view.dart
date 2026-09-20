@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/pages/bottom_bar_page/controller/bottom_bar_controller.dart';
-import 'package:shortie/ui/no_data_found_ui.dart';
-import 'package:shortie/shimmer/stream_shimmer_ui.dart';
-import 'package:shortie/pages/stream_page/controller/stream_controller.dart';
-import 'package:shortie/pages/stream_page/widget/stream_widget.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/constant.dart';
+import 'package:wudau/pages/bottom_bar_page/controller/bottom_bar_controller.dart';
+import 'package:wudau/ui/no_data_found_ui.dart';
+import 'package:wudau/shimmer/stream_shimmer_ui.dart';
+import 'package:wudau/pages/stream_page/controller/stream_controller.dart';
+import 'package:wudau/pages/stream_page/widget/stream_widget.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/constant.dart';
 
 class StreamView extends StatelessWidget {
   const StreamView({super.key});

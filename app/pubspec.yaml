@@ -1,4 +1,4 @@
-name: shortie
+name: wudau
 description: "WUDAU – The ultimate short-video stage built to launch the next generation of creators."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
@@ -83,6 +83,7 @@ dependency_overrides:
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
+  flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
 

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shortie/pages/recharge_page/model/fetch_coin_plan_model.dart';
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/recharge_page/model/fetch_coin_plan_model.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/utils.dart';
 
 class FetchCoinPlanApi {
   static Future<FetchCoinPlanModel?> callApi() async {

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/ui/app_button_ui.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/payment_page/controller/payment_controller.dart';
-import 'package:shortie/pages/payment_page/widget/payment_widget.dart';
-import 'package:shortie/ui/simple_app_bar_ui.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/ui/app_button_ui.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/payment_page/controller/payment_controller.dart';
+import 'package:wudau/pages/payment_page/widget/payment_widget.dart';
+import 'package:wudau/ui/simple_app_bar_ui.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
+import 'package:wudau/utils/utils.dart';
 
 class PaymentView extends StatelessWidget {
   const PaymentView({super.key});

@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/utils.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class PrivacyPolicyController extends GetxController {

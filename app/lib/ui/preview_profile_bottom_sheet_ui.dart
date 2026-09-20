@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/ui/preview_country_flag_ui.dart';
-import 'package:shortie/ui/preview_network_image_ui.dart';
-import 'package:shortie/shimmer/preview_profile_bottom_sheet_shimmer_ui.dart';
-import 'package:shortie/ui/app_button_ui.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/connection_page/api/follow_unfollow_api.dart';
-import 'package:shortie/pages/profile_page/api/fetch_profile_api.dart';
-import 'package:shortie/pages/profile_page/model/fetch_profile_model.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/ui/preview_country_flag_ui.dart';
+import 'package:wudau/ui/preview_network_image_ui.dart';
+import 'package:wudau/shimmer/preview_profile_bottom_sheet_shimmer_ui.dart';
+import 'package:wudau/ui/app_button_ui.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/connection_page/api/follow_unfollow_api.dart';
+import 'package:wudau/pages/profile_page/api/fetch_profile_api.dart';
+import 'package:wudau/pages/profile_page/model/fetch_profile_model.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
+import 'package:wudau/utils/utils.dart';
 
 class PreviewProfileBottomSheetUi {
   static FetchProfileModel? fetchProfileModel;

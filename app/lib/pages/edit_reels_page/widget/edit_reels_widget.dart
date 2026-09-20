@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/custom/custom_format_number.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/edit_reels_page/controller/edit_reels_controller.dart';
-import 'package:shortie/shimmer/hash_tag_bottom_sheet_shimmer_ui.dart';
-import 'package:shortie/ui/no_data_found_ui.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/custom/custom_format_number.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/edit_reels_page/controller/edit_reels_controller.dart';
+import 'package:wudau/shimmer/hash_tag_bottom_sheet_shimmer_ui.dart';
+import 'package:wudau/ui/no_data_found_ui.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class EditPreviewReelsCaptionUi extends StatefulWidget {
   const EditPreviewReelsCaptionUi({super.key});

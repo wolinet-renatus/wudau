@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/custom/custom_format_number.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/audio_wise_videos_page/controller/audio_wise_videos_controller.dart';
-import 'package:shortie/shimmer/audio_wise_videos_shimmer_ui.dart';
-import 'package:shortie/ui/no_data_found_ui.dart';
-import 'package:shortie/ui/preview_network_image_ui.dart';
-import 'package:shortie/ui/simple_app_bar_ui.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/custom/custom_format_number.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/audio_wise_videos_page/controller/audio_wise_videos_controller.dart';
+import 'package:wudau/shimmer/audio_wise_videos_shimmer_ui.dart';
+import 'package:wudau/ui/no_data_found_ui.dart';
+import 'package:wudau/ui/preview_network_image_ui.dart';
+import 'package:wudau/ui/simple_app_bar_ui.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class AudioWiseVideosView extends GetView<AudioWiseVideosController> {
   const AudioWiseVideosView({super.key});

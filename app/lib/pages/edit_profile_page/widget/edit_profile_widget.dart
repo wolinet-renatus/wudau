@@ -1,14 +1,14 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:get/get_rx/src/rx_typedefs/rx_typedefs.dart';
-import 'package:shortie/pages/edit_profile_page/controller/edit_profile_controller.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/edit_profile_page/controller/edit_profile_controller.dart';
+import 'package:wudau/utils/utils.dart';
 
 class EditProfileFieldUi extends StatelessWidget {
   const EditProfileFieldUi({

@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/custom/custom_fetch_user_coin.dart';
-import 'package:shortie/custom/custom_format_number.dart';
-import 'package:shortie/ui/app_button_ui.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/splash_screen_page/api/admin_setting_api.dart';
-import 'package:shortie/pages/withdraw_page/controller/withdraw_controller.dart';
-import 'package:shortie/shimmer/withdraw_shimmer_ui.dart';
-import 'package:shortie/ui/preview_network_image_ui.dart';
-import 'package:shortie/ui/simple_app_bar_ui.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
-import 'package:shortie/pages/withdraw_page/widget/withdraw_widget.dart';
+import 'package:wudau/custom/custom_fetch_user_coin.dart';
+import 'package:wudau/custom/custom_format_number.dart';
+import 'package:wudau/ui/app_button_ui.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/splash_screen_page/api/admin_setting_api.dart';
+import 'package:wudau/pages/withdraw_page/controller/withdraw_controller.dart';
+import 'package:wudau/shimmer/withdraw_shimmer_ui.dart';
+import 'package:wudau/ui/preview_network_image_ui.dart';
+import 'package:wudau/ui/simple_app_bar_ui.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
+import 'package:wudau/pages/withdraw_page/widget/withdraw_widget.dart';
 
 class WithdrawView extends GetView<WithdrawController> {
   const WithdrawView({super.key});

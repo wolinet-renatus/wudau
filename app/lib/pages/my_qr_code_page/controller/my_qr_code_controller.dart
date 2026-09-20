@@ -5,12 +5,12 @@ import 'package:gallery_saver/gallery_saver.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
-import 'package:shortie/custom/custom_share.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/utils/branch_io_services.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/custom/custom_share.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/utils/branch_io_services.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class MyQrCodeController extends GetxController {

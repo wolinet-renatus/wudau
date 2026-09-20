@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:get/get_rx/src/rx_typedefs/rx_typedefs.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class ItemsView extends StatelessWidget {
   const ItemsView({

@@ -1,16 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/ui/preview_network_image_ui.dart';
-import 'package:shortie/ui/app_button_ui.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/fill_profile_page/controller/fill_profile_controller.dart';
-import 'package:shortie/pages/fill_profile_page/widget/fill_profile_widget.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/ui/preview_network_image_ui.dart';
+import 'package:wudau/ui/app_button_ui.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/fill_profile_page/controller/fill_profile_controller.dart';
+import 'package:wudau/pages/fill_profile_page/widget/fill_profile_widget.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class FillProfileView extends GetView<FillProfileController> {
   const FillProfileView({super.key});

@@ -2,9 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/utils.dart';
 
 class PreviewNetworkImageUi extends StatelessWidget {
   const PreviewNetworkImageUi({super.key, this.image});

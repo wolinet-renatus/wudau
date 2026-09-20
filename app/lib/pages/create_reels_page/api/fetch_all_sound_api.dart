@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:shortie/pages/create_reels_page/model/fetch_all_sound_model.dart';
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/create_reels_page/model/fetch_all_sound_model.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/utils.dart';
 
 class FetchAllSoundApi {
   static Future<FetchAllSoundModel?> callApi({required String loginUserId}) async {

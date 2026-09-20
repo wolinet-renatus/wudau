@@ -21,5 +21,6 @@
 
 # Suppress R8 missing class warnings for optional libraries
 -dontwarn com.arthenica.**
+-keep class com.arthenica.** { *; }
 -dontwarn com.stripe.**
 -dontwarn com.reactnativestripesdk.**

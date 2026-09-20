@@ -2,13 +2,13 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/pages/go_live_page/api/create_live_user_api.dart';
-import 'package:shortie/pages/go_live_page/model/create_live_user_model.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/pages/go_live_page/api/create_live_user_api.dart';
+import 'package:wudau/pages/go_live_page/model/create_live_user_model.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/utils.dart';
 
 class GoLiveController extends GetxController {
   CameraController? cameraController;

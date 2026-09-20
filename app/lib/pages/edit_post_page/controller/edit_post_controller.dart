@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/pages/edit_post_page/api/edit_post_api.dart';
-import 'package:shortie/pages/preview_hash_tag_page/api/create_hash_tag_api.dart';
-import 'package:shortie/pages/preview_hash_tag_page/api/fetch_hash_tag_api.dart';
-import 'package:shortie/pages/preview_hash_tag_page/model/create_hash_tag_model.dart';
-import 'package:shortie/pages/preview_hash_tag_page/model/fetch_hash_tag_model.dart';
-import 'package:shortie/pages/edit_post_page/model/edit_post_model.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/internet_connection.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/edit_post_page/api/edit_post_api.dart';
+import 'package:wudau/pages/preview_hash_tag_page/api/create_hash_tag_api.dart';
+import 'package:wudau/pages/preview_hash_tag_page/api/fetch_hash_tag_api.dart';
+import 'package:wudau/pages/preview_hash_tag_page/model/create_hash_tag_model.dart';
+import 'package:wudau/pages/preview_hash_tag_page/model/fetch_hash_tag_model.dart';
+import 'package:wudau/pages/edit_post_page/model/edit_post_model.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/internet_connection.dart';
+import 'package:wudau/utils/utils.dart';
 
 class EditPostController extends GetxController {
   List<String> selectedImages = [];

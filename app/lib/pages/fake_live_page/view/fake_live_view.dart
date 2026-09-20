@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:shortie/pages/fake_live_page/controller/fake_live_controller.dart';
-import 'package:shortie/pages/fake_live_page/widget/fake_live_widget.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/socket_services.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/fake_live_page/controller/fake_live_controller.dart';
+import 'package:wudau/pages/fake_live_page/widget/fake_live_widget.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/socket_services.dart';
+import 'package:wudau/utils/utils.dart';
 
 class FakeLiveView extends StatefulWidget {
   const FakeLiveView({super.key});

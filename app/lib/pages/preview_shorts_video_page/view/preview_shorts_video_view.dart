@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:shortie/ui/no_data_found_ui.dart';
-import 'package:shortie/pages/preview_shorts_video_page/controller/preview_shorts_video_controller.dart';
-import 'package:shortie/pages/preview_shorts_video_page/widget/preview_shorts_video_widget.dart';
-import 'package:shortie/shimmer/preview_shorts_video_shimmer_ui.dart';
-import 'package:shortie/utils/color.dart';
+import 'package:wudau/ui/no_data_found_ui.dart';
+import 'package:wudau/pages/preview_shorts_video_page/controller/preview_shorts_video_controller.dart';
+import 'package:wudau/pages/preview_shorts_video_page/widget/preview_shorts_video_widget.dart';
+import 'package:wudau/shimmer/preview_shorts_video_shimmer_ui.dart';
+import 'package:wudau/utils/color.dart';
 import 'package:preload_page_view/preload_page_view.dart';
 
 class PreviewShortsVideoView extends GetView<PreviewShortsVideoController> {

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/pages/feed_page/view/feed_view.dart';
-import 'package:shortie/pages/message_page/view/message_view.dart';
-import 'package:shortie/pages/profile_page/view/profile_view.dart';
-import 'package:shortie/pages/reels_page/view/reels_view.dart';
-import 'package:shortie/pages/stream_page/view/stream_view.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/ui/send_gift_on_video_bottom_sheet_ui.dart';
-import 'package:shortie/utils/branch_io_services.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/socket_services.dart';
+import 'package:wudau/pages/feed_page/view/feed_view.dart';
+import 'package:wudau/pages/message_page/view/message_view.dart';
+import 'package:wudau/pages/profile_page/view/profile_view.dart';
+import 'package:wudau/pages/reels_page/view/reels_view.dart';
+import 'package:wudau/pages/stream_page/view/stream_view.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/ui/send_gift_on_video_bottom_sheet_ui.dart';
+import 'package:wudau/utils/branch_io_services.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/socket_services.dart';
 
 class BottomBarController extends GetxController {
   int selectedTabIndex = 0;

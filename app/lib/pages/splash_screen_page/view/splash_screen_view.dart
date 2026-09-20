@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:shortie/pages/splash_screen_page/controller/splash_screen_controller.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
+import 'package:wudau/pages/splash_screen_page/controller/splash_screen_controller.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
 
 class SplashScreenView extends GetView<SplashScreenController> {
   const SplashScreenView({super.key});

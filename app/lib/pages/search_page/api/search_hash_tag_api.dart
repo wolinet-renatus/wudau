@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:shortie/pages/search_page/model/search_hash_tag_model.dart';
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/search_page/model/search_hash_tag_model.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/utils.dart';
 
 class SearchHashTagApi {
   static Future<SearchHashTagModel?> callApi({required String loginUserId, required String searchText}) async {

@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/ui/no_data_found_ui.dart';
-import 'package:shortie/pages/reels_page/controller/reels_controller.dart';
-import 'package:shortie/pages/reels_page/widget/reels_widget.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/shimmer/reels_shimmer_ui.dart';
-import 'package:shortie/ui/video_picker_bottom_sheet_ui.dart';
-import 'package:shortie/utils/color.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/ui/no_data_found_ui.dart';
+import 'package:wudau/pages/reels_page/controller/reels_controller.dart';
+import 'package:wudau/pages/reels_page/widget/reels_widget.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/shimmer/reels_shimmer_ui.dart';
+import 'package:wudau/ui/video_picker_bottom_sheet_ui.dart';
+import 'package:wudau/utils/color.dart';
 import 'package:preload_page_view/preload_page_view.dart';
-import 'package:shortie/utils/constant.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/utils/constant.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class ReelsView extends GetView<ReelsController> {
   const ReelsView({super.key});

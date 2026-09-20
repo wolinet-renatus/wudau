@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shortie/pages/create_reels_page/model/search_sound_model.dart';
-import 'package:shortie/utils/api.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/create_reels_page/model/search_sound_model.dart';
+import 'package:wudau/utils/api.dart';
+import 'package:wudau/utils/utils.dart';
 
 class SearchSoundApi {
   static Future<SearchSoundModel?> callApi({required String loginUserId, required String searchText}) async {

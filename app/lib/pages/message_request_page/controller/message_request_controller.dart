@@ -1,11 +1,11 @@
 import 'package:get/get.dart';
-import 'package:shortie/pages/message_request_page/api/delete_all_message_request_api.dart';
-import 'package:shortie/pages/message_request_page/api/fetch_message_request_api.dart';
-import 'package:shortie/pages/message_request_page/model/delete_all_message_request_model.dart';
-import 'package:shortie/pages/message_request_page/model/fetch_message_request_model.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/message_request_page/api/delete_all_message_request_api.dart';
+import 'package:wudau/pages/message_request_page/api/fetch_message_request_api.dart';
+import 'package:wudau/pages/message_request_page/model/delete_all_message_request_model.dart';
+import 'package:wudau/pages/message_request_page/model/fetch_message_request_model.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/utils.dart';
 
 class MessageRequestController extends GetxController {
   FetchMessageRequestModel? fetchMessageRequestModel;

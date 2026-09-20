@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:shimmer/shimmer.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/constant.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/constant.dart';
 
 class ReelsShimmerUi extends StatelessWidget {
   const ReelsShimmerUi({super.key});

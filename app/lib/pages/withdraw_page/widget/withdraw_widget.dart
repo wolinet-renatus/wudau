@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:shortie/pages/splash_screen_page/api/admin_setting_api.dart';
-import 'package:shortie/utils/color.dart';
+import 'package:wudau/pages/splash_screen_page/api/admin_setting_api.dart';
+import 'package:wudau/utils/color.dart';
 import 'package:get/get.dart';
-import 'package:shortie/custom/custom_capitalize_first_letter.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/withdraw_page/controller/withdraw_controller.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/custom/custom_capitalize_first_letter.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/withdraw_page/controller/withdraw_controller.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class RadioItem extends StatelessWidget {
   const RadioItem({super.key, required this.isSelected});

@@ -2,16 +2,16 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shortie/ui/preview_network_image_ui.dart';
-import 'package:shortie/ui/app_button_ui.dart';
-import 'package:shortie/main.dart';
-import 'package:shortie/pages/edit_profile_page/controller/edit_profile_controller.dart';
-import 'package:shortie/ui/simple_app_bar_ui.dart';
-import 'package:shortie/utils/asset.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/pages/edit_profile_page/widget/edit_profile_widget.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/ui/preview_network_image_ui.dart';
+import 'package:wudau/ui/app_button_ui.dart';
+import 'package:wudau/main.dart';
+import 'package:wudau/pages/edit_profile_page/controller/edit_profile_controller.dart';
+import 'package:wudau/ui/simple_app_bar_ui.dart';
+import 'package:wudau/utils/asset.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/pages/edit_profile_page/widget/edit_profile_widget.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class EditProfileView extends GetView<EditProfileController> {
   const EditProfileView({super.key});

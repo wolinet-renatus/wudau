@@ -1,4 +1,4 @@
-import 'package:shortie/utils/enums.dart';
+import 'package:wudau/utils/enums.dart';
 
 final Map<String, String> esES = {
   EnumLocal.txtAppName.name: "bajito",

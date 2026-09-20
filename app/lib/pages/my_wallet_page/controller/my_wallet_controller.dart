@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
-import 'package:shortie/custom/custom_fetch_user_coin.dart';
-import 'package:shortie/pages/my_wallet_page/api/fetch_coin_history_api.dart';
-import 'package:shortie/pages/my_wallet_page/model/fetch_coin_history_model.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/custom/custom_fetch_user_coin.dart';
+import 'package:wudau/pages/my_wallet_page/api/fetch_coin_history_api.dart';
+import 'package:wudau/pages/my_wallet_page/model/fetch_coin_history_model.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/utils.dart';
 
 class MyWalletController extends GetxController {
   bool isLoading = false;

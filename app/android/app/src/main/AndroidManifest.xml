@@ -32,7 +32,8 @@
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true"
-        android:requestLegacyExternalStorage="true">
+        android:requestLegacyExternalStorage="true"
+        android:extractNativeLibs="false">
 
         <activity
             android:name=".MainActivity"

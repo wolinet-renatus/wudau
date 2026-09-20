@@ -2,13 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:shortie/pages/live_page/controller/live_controller.dart';
-import 'package:shortie/pages/live_page/widget/live_widget.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/database.dart';
-import 'package:shortie/utils/socket_services.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/pages/live_page/controller/live_controller.dart';
+import 'package:wudau/pages/live_page/widget/live_widget.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/database.dart';
+import 'package:wudau/utils/socket_services.dart';
+import 'package:wudau/utils/utils.dart';
 import 'package:zego_express_engine/zego_express_engine.dart';
 
 class LiveView extends StatefulWidget {

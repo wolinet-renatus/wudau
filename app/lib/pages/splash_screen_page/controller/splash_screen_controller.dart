@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/pages/splash_screen_page/api/admin_setting_api.dart';
-import 'package:shortie/utils/branch_io_services.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/internet_connection.dart';
-import 'package:shortie/utils/request.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/pages/splash_screen_page/api/admin_setting_api.dart';
+import 'package:wudau/utils/branch_io_services.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/internet_connection.dart';
+import 'package:wudau/utils/request.dart';
+import 'package:wudau/utils/utils.dart';
 
 class SplashScreenController extends GetxController {
   @override

@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:shortie/utils/color.dart';
-import 'package:shortie/utils/font_style.dart';
+import 'package:wudau/utils/color.dart';
+import 'package:wudau/utils/font_style.dart';
 
 class PreviewCountryFlagUi {
   static Widget show(String? flag) {

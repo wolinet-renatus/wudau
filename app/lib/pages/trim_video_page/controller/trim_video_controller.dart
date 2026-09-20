@@ -1,12 +1,12 @@
 import 'dart:io';
 
 import 'package:get/get.dart';
-import 'package:shortie/custom/custom_thumbnail.dart';
-import 'package:shortie/custom/custom_video_time.dart';
-import 'package:shortie/routes/app_routes.dart';
-import 'package:shortie/ui/loading_ui.dart';
-import 'package:shortie/utils/enums.dart';
-import 'package:shortie/utils/utils.dart';
+import 'package:wudau/custom/custom_thumbnail.dart';
+import 'package:wudau/custom/custom_video_time.dart';
+import 'package:wudau/routes/app_routes.dart';
+import 'package:wudau/ui/loading_ui.dart';
+import 'package:wudau/utils/enums.dart';
+import 'package:wudau/utils/utils.dart';
 import 'package:video_trimmer/video_trimmer.dart';
 
 class TrimVideoController extends GetxController {
