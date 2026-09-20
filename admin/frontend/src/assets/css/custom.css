@@ -397,7 +397,7 @@ thead {
   width: 16px;
   height: 18px;
 }
-.active {
+.page-btn.active {
   height: 45px;
   width: 45px;
   /* padding: 10px 17px; */
@@ -406,7 +406,7 @@ thead {
   border: none;
   margin-top: 15px;
 }
-.active svg path {
+.page-btn.active svg path {
   color: white;
 }
 .active-btn {

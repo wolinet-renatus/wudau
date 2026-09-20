@@ -2160,10 +2160,10 @@ export default function Home({
                   setCurrentTab("reels");
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
-                className={`header-nav-tab ${currentTab === "reels" ? "active" : ""}`}
+                className={`header-nav-tab ${currentTab === "reels" ? "active is-active" : ""}`}
                 title="Vertical Reels"
               >
-                <IconReels size={16} />
+                <IconReels size={17} />
                 <span>Reels</span>
               </button>
               <button
@@ -2171,10 +2171,10 @@ export default function Home({
                   setCurrentTab("social");
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
-                className={`header-nav-tab ${currentTab === "social" ? "active" : ""}`}
+                className={`header-nav-tab ${currentTab === "social" ? "active is-active" : ""}`}
                 title="Community Feed"
               >
-                <IconCommunity size={16} />
+                <IconCommunity size={17} />
                 <span>Feed</span>
               </button>
               <button
@@ -2182,10 +2182,10 @@ export default function Home({
                   setCurrentTab("explore");
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
-                className={`header-nav-tab ${currentTab === "explore" ? "active" : ""}`}
+                className={`header-nav-tab ${currentTab === "explore" ? "active is-active" : ""}`}
                 title="Explore Topics"
               >
-                <IconCompass size={16} />
+                <IconCompass size={17} />
                 <span>Explore</span>
               </button>
               <button
@@ -2193,10 +2193,10 @@ export default function Home({
                   setCurrentTab("live");
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
-                className={`header-nav-tab ${currentTab === "live" ? "active" : ""}`}
+                className={`header-nav-tab ${currentTab === "live" ? "active is-active" : ""}`}
                 title="Live Broadcasts"
               >
-                <IconLive size={16} />
+                <IconLive size={17} />
                 <span>Live</span>
               </button>
               <button
@@ -2204,10 +2204,10 @@ export default function Home({
                   setCurrentTab("music");
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
-                className={`header-nav-tab ${currentTab === "music" ? "active" : ""}`}
+                className={`header-nav-tab ${currentTab === "music" ? "active is-active" : ""}`}
                 title="Soundtracks & Music"
               >
-                <IconMusic size={16} />
+                <IconMusic size={17} />
                 <span>Music</span>
               </button>
             </nav>
@@ -4979,55 +4979,84 @@ export default function Home({
         .header-main-nav {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          background: rgba(255, 255, 255, 0.04);
-          padding: 5px 8px;
-          border-radius: 26px;
-          border: 1px solid rgba(255, 255, 255, 0.09);
+          gap: 6px;
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          padding: 4px 6px;
+          border-radius: 9999px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
           flex-shrink: 0;
         }
 
         .header-nav-tab {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 7px;
-          padding: 7px 16px;
-          margin: 0;
-          border: 1px solid transparent;
-          outline: none;
-          -webkit-appearance: none;
-          appearance: none;
-          background: transparent;
-          color: var(--text-secondary);
-          font-size: 13px;
-          font-weight: 600;
-          line-height: 1;
-          cursor: pointer;
-          border-radius: 20px;
-          white-space: nowrap;
-          flex-shrink: 0;
-          user-select: none;
-          transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 9px !important;
+          padding: 8px 18px !important;
+          margin: 0 !important;
+          margin-top: 0 !important;
+          width: auto !important;
+          height: auto !important;
+          min-width: 0 !important;
+          max-width: none !important;
+          border: 1px solid transparent !important;
+          outline: none !important;
+          -webkit-appearance: none !important;
+          appearance: none !important;
+          background: transparent !important;
+          color: var(--text-secondary) !important;
+          font-size: 13.5px !important;
+          font-weight: 600 !important;
+          line-height: 1.2 !important;
+          cursor: pointer !important;
+          border-radius: 9999px !important;
+          white-space: nowrap !important;
+          flex-shrink: 0 !important;
+          user-select: none !important;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+
+        .header-nav-tab svg {
+          flex-shrink: 0 !important;
+          display: block !important;
+          transition: transform 0.2s ease, stroke 0.2s ease !important;
         }
 
         .header-nav-tab:focus,
         .header-nav-tab:focus-visible {
           outline: none !important;
-          box-shadow: none;
+          box-shadow: none !important;
         }
 
         .header-nav-tab:hover {
-          color: #ffffff;
-          background: rgba(255, 255, 255, 0.06);
+          color: #ffffff !important;
+          background: rgba(255, 255, 255, 0.08) !important;
         }
 
-        .header-nav-tab.active {
-          color: #ffffff;
-          background: rgba(255, 255, 255, 0.14);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          font-weight: 700;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+        .header-nav-tab:hover svg {
+          transform: scale(1.08);
+        }
+
+        .header-nav-tab.active,
+        .header-nav-tab.is-active {
+          color: #ffffff !important;
+          background: rgba(255, 255, 255, 0.16) !important;
+          border: 1px solid rgba(255, 255, 255, 0.24) !important;
+          font-weight: 700 !important;
+          box-shadow: 0 2px 14px rgba(0, 0, 0, 0.4) !important;
+          border-radius: 9999px !important;
+          width: auto !important;
+          height: auto !important;
+          margin-top: 0 !important;
+        }
+
+        .header-nav-tab.active svg,
+        .header-nav-tab.is-active svg {
+          color: #ffffff !important;
+          stroke: #ffffff !important;
         }
 
         /* Header Right Controls */
@@ -5543,6 +5572,7 @@ export default function Home({
           align-items: center;
           position: relative;
           width: 100%;
+          height: calc(100vh - 56px);
           min-height: calc(100vh - 56px);
           overflow: hidden;
         }
@@ -5559,39 +5589,43 @@ export default function Home({
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 24px;
+          gap: 28px;
           width: 100%;
           height: 100%;
-          padding: 16px;
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 12px 20px;
+          box-sizing: border-box;
         }
 
         /* Fluid Video Card — Auto-responsive fitness for 9:16, 16:9, 1:1 and iframes */
         .video-player-card {
           position: relative;
           width: 100%;
-          max-width: 480px;
-          height: calc(100dvh - 56px);
+          max-width: 440px;
+          height: min(calc(100vh - 84px), 740px);
           background: #000000;
-          border-radius: 12px;
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+          border-radius: 16px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
           overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          border: 1px solid rgba(255,255,255,0.06);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           touch-action: pan-y;
           user-select: none;
           -webkit-user-select: none;
-          transition: max-width 0.3s cubic-bezier(0.2, 0.9, 0.3, 1), height 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+          transition: max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         /* Landscape Cinema Adaptation for 16:9 widescreen videos on desktop */
         @media (min-width: 768px) {
           .video-player-card.is-landscape {
-            max-width: min(860px, 72vw);
-            height: min(calc(100dvh - 84px), 520px);
+            max-width: min(840px, 66vw);
+            height: min(calc(100vh - 84px), 520px);
             aspect-ratio: 16 / 9;
+            border-radius: 16px;
           }
         }
 
@@ -6074,12 +6108,12 @@ export default function Home({
         /* Floating Right Actions Rail */
         .player-actions-column {
           position: absolute;
-          right: 10px;
+          right: 12px;
           bottom: 84px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 12px;
+          gap: 18px;
           z-index: 35;
         }
 
@@ -6152,8 +6186,8 @@ export default function Home({
 
         .action-pill-count {
           position: absolute;
-          bottom: -14px;
-          font-size: 9px;
+          bottom: -13px;
+          font-size: 10px;
           font-weight: 700;
           color: #ffffff;
           text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
@@ -6293,13 +6327,33 @@ export default function Home({
           display: flex;
           flex-direction: column;
           gap: 14px;
+          flex-shrink: 0;
         }
 
         .companion-box {
-          background: var(--bg-card);
-          border-radius: 14px;
-          border: 1px solid var(--border-subtle);
-          padding: 14px;
+          background: rgba(20, 22, 31, 0.88);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 16px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        @media (max-width: 1120px) {
+          .desktop-companion-rail {
+            width: 230px;
+          }
+          .player-presentation-layout {
+            gap: 16px;
+            padding: 10px;
+          }
+        }
+
+        @media (max-width: 960px) {
+          .desktop-companion-rail {
+            display: none;
+          }
         }
 
         .companion-box-label {
