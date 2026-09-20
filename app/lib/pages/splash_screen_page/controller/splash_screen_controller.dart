@@ -16,24 +16,36 @@ class SplashScreenController extends GetxController {
   }
 
   Future<void> init() async {
-    await AppRequest.notificationPermission();
+    try {
+      await AppRequest.notificationPermission();
 
-    if (InternetConnection.isConnect.value) {
-      await AdminSettingsApi.callApi(); // Get Admin Setting Data...
+      if (InternetConnection.isConnect.value) {
+        await AdminSettingsApi.callApi(); // Get Admin Setting Data...
 
-      if (AdminSettingsApi.adminSettingModel?.data != null) {
-        await Utils.onInitCreateEngine(); // Init Live...
+        if (AdminSettingsApi.adminSettingModel?.data != null) {
+          try {
+            await Utils.onInitCreateEngine(); // Init Live...
+          } catch (e) {
+            Utils.showLog("onInitCreateEngine error: $e");
+          }
 
-        await Utils.onInitPayment(); // Init Payment...
-
-        await splashScreen();
+          try {
+            await Utils.onInitPayment(); // Init Payment...
+          } catch (e) {
+            Utils.showLog("onInitPayment error: $e");
+          }
+        } else {
+          Utils.showToast(EnumLocal.txtSomeThingWentWrong.name.tr);
+          Utils.showLog("Admin Setting Api Calling Failed !!");
+        }
       } else {
-        Utils.showToast(EnumLocal.txtSomeThingWentWrong.name.tr);
-        Utils.showLog("Admin Setting Api Calling Failed !!");
+        Utils.showToast(EnumLocal.txtConnectionLost.name.tr);
+        Utils.showLog("Internet Connection Lost !!");
       }
-    } else {
-      Utils.showToast(EnumLocal.txtConnectionLost.name.tr);
-      Utils.showLog("Internet Connection Lost !!");
+    } catch (e) {
+      Utils.showLog("SplashScreenController init error: $e");
+    } finally {
+      await splashScreen();
     }
   }
 

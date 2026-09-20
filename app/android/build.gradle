@@ -17,14 +17,6 @@ allprojects {
         google()
         mavenCentral()
     }
-    configurations.all {
-        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-            if (details.requested.group == 'com.arthenica' && details.requested.name.startsWith('ffmpeg-kit')) {
-                details.useTarget("dev.ffmpegkit-maintained:${details.requested.name}:6.0.3")
-                details.because("com.arthenica was retired, using dev.ffmpegkit-maintained")
-            }
-        }
-    }
 }
 
 rootProject.buildDir = '../build'

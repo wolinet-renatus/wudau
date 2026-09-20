@@ -30,79 +30,96 @@ abstract class Utils {
   // >>>>> >>>>> Edit Profile Page <<<<< <<<<<
 
   static int waterMarkSize = 25;
-  static bool isShowWaterMark = AdminSettingsApi.adminSettingModel?.data?.isWatermarkOn ?? false;
-  static String waterMarkIcon = AdminSettingsApi.adminSettingModel?.data?.watermarkIcon ?? "";
+  static bool get isShowWaterMark => AdminSettingsApi.adminSettingModel?.data?.isWatermarkOn ?? false;
+  static String get waterMarkIcon => AdminSettingsApi.adminSettingModel?.data?.watermarkIcon ?? "";
 
   static TextEditingController countryController = TextEditingController(text: "India");
   static TextEditingController flagController = TextEditingController(text: "🇮🇳");
 
   // >>>>> >>>>> Show Reels Effect <<<<< <<<<<
 
-  static final bool isShowReelsEffect = AdminSettingsApi.adminSettingModel?.data?.isEffectActive ?? false;
+  static bool get isShowReelsEffect => AdminSettingsApi.adminSettingModel?.data?.isEffectActive ?? false;
 
   // >>>>> >>>>> Upload Shorts Limit <<<<< <<<<<
 
-  static final int shortsDuration = AdminSettingsApi.adminSettingModel?.data?.durationOfShorts ?? 0;
+  static int get shortsDuration => AdminSettingsApi.adminSettingModel?.data?.durationOfShorts ?? 0;
 
-  static final String effectAndroidLicenseKey = AdminSettingsApi.adminSettingModel?.data?.androidLicenseKey ?? "";
-  static final String effectIosLicenseKey = AdminSettingsApi.adminSettingModel?.data?.iosLicenseKey ?? "";
+  static String get effectAndroidLicenseKey => AdminSettingsApi.adminSettingModel?.data?.androidLicenseKey ?? "";
+  static String get effectIosLicenseKey => AdminSettingsApi.adminSettingModel?.data?.iosLicenseKey ?? "";
 
   // >>>>> >>>>> Web View Url <<<<< <<<<<
 
-  static final String privacyPolicyLink = AdminSettingsApi.adminSettingModel?.data?.privacyPolicyLink ?? "";
-  static final String termsOfUseLink = AdminSettingsApi.adminSettingModel?.data?.termsOfUsePolicyLink ?? "";
+  static String get privacyPolicyLink => AdminSettingsApi.adminSettingModel?.data?.privacyPolicyLink ?? "";
+  static String get termsOfUseLink => AdminSettingsApi.adminSettingModel?.data?.termsOfUsePolicyLink ?? "";
 
   // >>>>> >>>>> Show Payment Method <<<<< <<<<<
 
-  static final bool isShowStripePaymentMethod = AdminSettingsApi.adminSettingModel?.data?.stripeSwitch ?? false;
-  static final bool isShowRazorPayPaymentMethod = AdminSettingsApi.adminSettingModel?.data?.razorPaySwitch ?? false;
-  static final bool isShowFlutterWavePaymentMethod = AdminSettingsApi.adminSettingModel?.data?.flutterWaveSwitch ?? false;
-  static final bool isShowInAppPurchasePaymentMethod = AdminSettingsApi.adminSettingModel?.data?.googlePlaySwitch ?? false;
+  static bool get isShowStripePaymentMethod => AdminSettingsApi.adminSettingModel?.data?.stripeSwitch ?? false;
+  static bool get isShowRazorPayPaymentMethod => AdminSettingsApi.adminSettingModel?.data?.razorPaySwitch ?? false;
+  static bool get isShowFlutterWavePaymentMethod => AdminSettingsApi.adminSettingModel?.data?.flutterWaveSwitch ?? false;
+  static bool get isShowInAppPurchasePaymentMethod => AdminSettingsApi.adminSettingModel?.data?.googlePlaySwitch ?? false;
 
   // >>>>> >>>>> Live Streaming Credential <<<<< <<<<<
 
-  static final String serverSecret = "";
-  static final String liveAppSign = AdminSettingsApi.adminSettingModel?.data?.zegoAppSignIn ?? "";
-  static final int liveAppId = int.parse(AdminSettingsApi.adminSettingModel?.data?.zegoAppId?.toString() ?? "00");
+  static const String serverSecret = "";
+  static String get liveAppSign => AdminSettingsApi.adminSettingModel?.data?.zegoAppSignIn ?? "";
+  static int get liveAppId => int.tryParse(AdminSettingsApi.adminSettingModel?.data?.zegoAppId?.toString() ?? "0") ?? 0;
 
   // >>>>> >>>>> RazorPay Payment Credential <<<<< <<<<<
 
-  static String razorpayTestKey = AdminSettingsApi.adminSettingModel?.data?.razorSecretKey ?? "";
-  static String razorpayCurrencyCode = AdminSettingsApi.adminSettingModel?.data?.currency?.currencyCode ?? "";
+  static String get razorpayTestKey => AdminSettingsApi.adminSettingModel?.data?.razorSecretKey ?? "";
+  static String get razorpayCurrencyCode => AdminSettingsApi.adminSettingModel?.data?.currency?.currencyCode ?? "";
 
   // >>>>> >>>>> Stripe Payment Credential <<<<< <<<<<
 
   static const String stripeUrl = "https://api.stripe.com/v1/payment_intents";
 
-  static String stripeMerchantCountryCode = AdminSettingsApi.adminSettingModel?.data?.currency?.countryCode ?? "";
-  static String stripeCurrencyCode = AdminSettingsApi.adminSettingModel?.data?.currency?.currencyCode ?? "";
-  static String stripeTestSecretKey = AdminSettingsApi.adminSettingModel?.data?.stripeSecretKey ?? "";
-  static String stripeTestPublicKey = AdminSettingsApi.adminSettingModel?.data?.stripePublishableKey ?? "";
+  static String get stripeMerchantCountryCode => AdminSettingsApi.adminSettingModel?.data?.currency?.countryCode ?? "";
+  static String get stripeCurrencyCode => AdminSettingsApi.adminSettingModel?.data?.currency?.currencyCode ?? "";
+  static String get stripeTestSecretKey => AdminSettingsApi.adminSettingModel?.data?.stripeSecretKey ?? "";
+  static String get stripeTestPublicKey => AdminSettingsApi.adminSettingModel?.data?.stripePublishableKey ?? "";
 
   // >>>>> >>>>> Flutter Wave Credential <<<<< <<<<<
 
-  static String flutterWaveId = AdminSettingsApi.adminSettingModel?.data?.flutterWaveId ?? "";
-  static String flutterWaveCurrencyCode = AdminSettingsApi.adminSettingModel?.data?.currency?.currencyCode ?? "";
+  static String get flutterWaveId => AdminSettingsApi.adminSettingModel?.data?.flutterWaveId ?? "";
+  static String get flutterWaveCurrencyCode => AdminSettingsApi.adminSettingModel?.data?.currency?.currencyCode ?? "";
 
-  // >>>>>> >>>>>> Initialize Live Steaming <<<<<< <<<<<<
+  // >>>>>> >>>>>> Initialize Live Streaming <<<<<< <<<<<<
 
   static Future<void> onInitCreateEngine() async {
-    await ZegoExpressEngine.createEngineWithProfile(
-      ZegoEngineProfile(
-        Utils.liveAppId,
-        ZegoScenario.Broadcast,
-        appSign: kIsWeb ? null : Utils.liveAppSign,
-      ),
-    );
+    try {
+      final appId = Utils.liveAppId;
+      final appSign = Utils.liveAppSign;
+      if (appId > 0 && appSign.isNotEmpty && !appSign.contains("YOUR_ZEGO")) {
+        await ZegoExpressEngine.createEngineWithProfile(
+          ZegoEngineProfile(
+            appId,
+            ZegoScenario.Broadcast,
+            appSign: kIsWeb ? null : appSign,
+          ),
+        );
+      } else {
+        Utils.showLog("Skip Zego initialization: invalid or placeholder credentials (appId: $appId)");
+      }
+    } catch (e) {
+      Utils.showLog("Zego initialization error: $e");
+    }
   }
 
   // >>>>>> >>>>>> Initialize Payment <<<<<< <<<<<<
 
   static Future<void> onInitPayment() async {
-    if (InternetConnection.isConnect.value) {
-      Stripe.publishableKey = Utils.stripeTestPublicKey;
-      await Stripe.instance.applySettings();
-      InAppPurchaseAndroidPlatformAddition.enablePendingPurchases();
+    try {
+      if (InternetConnection.isConnect.value) {
+        final pubKey = Utils.stripeTestPublicKey;
+        if (pubKey.isNotEmpty && !pubKey.contains("PLACEHOLDER")) {
+          Stripe.publishableKey = pubKey;
+          await Stripe.instance.applySettings();
+        }
+        InAppPurchaseAndroidPlatformAddition.enablePendingPurchases();
+      }
+    } catch (e) {
+      Utils.showLog("Payment initialization error: $e");
     }
   }
 }
