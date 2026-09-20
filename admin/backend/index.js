@@ -69,6 +69,21 @@ const db = require("./util/connection");
 const routes = require("./routes/route");
 app.use(routes);
 
+// Top-level mock data purge route
+app.all(["/cleanupMockData", "/admin/cleanupMockData", "/client/cleanupMockData"], async (req, res) => {
+  const key = req.headers.key || req.query.key;
+  if (key !== (process.env.secretKey || "5TIvw5cpc0")) {
+    return res.status(403).json({ status: false, message: "Unauthorized: Invalid secret key" });
+  }
+  try {
+    const { cleanMockData } = require("./util/cleanMockData");
+    const result = await cleanMockData();
+    return res.status(200).json({ status: true, message: "Mock data purged successfully", data: result });
+  } catch (err) {
+    return res.status(500).json({ status: false, error: err.message });
+  }
+});
+
 //socket io
 const http = require("http");
 const server = http.createServer(app);
