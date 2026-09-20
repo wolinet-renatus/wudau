@@ -2128,9 +2128,9 @@ export default function Home({
     const baseShareUrl = shareTarget.url.includes("?")
       ? `${shareTarget.url}&embed=true`
       : `${shareTarget.url}?embed=true`;
-    const embedCode = `<iframe src="${baseShareUrl}" width="100%" height="100%" style="max-width:500px;aspect-ratio:9/16;border:none;border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,0.35);overflow:hidden;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+    const embedCode = `<iframe src="${baseShareUrl}" width="100%" height="700" style="width:100%;max-width:380px;height:700px;aspect-ratio:9/16;border:none;border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,0.35);display:block;margin:0 auto;overflow:hidden;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
     navigator.clipboard?.writeText(embedCode);
-    showToast("Responsive Embed code copied! 📋");
+    showToast("Embed code copied! 📋");
   };
 
   const handleToggleMusic = (songUrl?: string) => {
@@ -2662,20 +2662,42 @@ export default function Home({
                           </div>
                         )}
 
-                        {/* In Embed Mode: Watch on WUDAO badge */}
+                        {/* In Embed Mode: TikTok-style Header with Creator & Watch on WUDAO */}
                         {isEmbedMode ? (
-                          <a
-                            href={`https://wudao.wolinet.com/?videoId=${activeVideo._id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="embed-wudao-badge"
-                            onClick={(e) => e.stopPropagation()}
-                            title="Watch full experience on WUDAO"
-                          >
-                            <img src="/favicon.svg" alt="WUDAO" width={18} height={18} />
-                            <span>Watch on WUDAO</span>
-                            <IconExternalLink size={13} />
-                          </a>
+                          <div className="embed-tiktok-header" onClick={(e) => e.stopPropagation()}>
+                            <a
+                              href={`https://wudao.wolinet.com/?videoId=${activeVideo._id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="embed-author-info"
+                              title={`Watch @${activeVideo.userName || "creator"} on WUDAO`}
+                            >
+                              <img
+                                src={resolveMedia(activeVideo.userImage)}
+                                alt={activeVideo.name || "Creator"}
+                                className="embed-author-avatar"
+                              />
+                              <div className="embed-author-names">
+                                <div className="embed-author-display">
+                                  <span>{activeVideo.name || "Creator"}</span>
+                                  {activeVideo.isVerified && <span className="verified-check">✓</span>}
+                                </div>
+                                <span className="embed-author-handle">@{activeVideo.userName || "creator"}</span>
+                              </div>
+                            </a>
+
+                            <a
+                              href={`https://wudao.wolinet.com/?videoId=${activeVideo._id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="embed-wudao-pill"
+                              title="Watch full experience on WUDAO"
+                            >
+                              <img src="/favicon.svg" alt="WUDAO" width={16} height={16} />
+                              <span>Watch on WUDAO</span>
+                              <IconExternalLink size={12} />
+                            </a>
+                          </div>
                         ) : (
                           /* WUDAO Logo Watermark Overlay */
                           <div className="wudao-reel-watermark">
@@ -5778,52 +5800,192 @@ export default function Home({
           z-index: 2;
           width: 100%;
           height: 100%;
-          object-fit: contain;
+          object-fit: cover;
+          object-position: center;
           display: block;
           background: transparent;
         }
 
-        /* Embed / Iframe Mode: Clean full-viewport auto-fit player */
+        .video-player-card.is-landscape .main-reel-video {
+          object-fit: contain;
+        }
+
+        /* Embed / Iframe Mode: Clean full-viewport auto-fit player (TikTok-style) */
         .embed-mode.app-shell {
+          position: fixed !important;
+          inset: 0 !important;
           margin: 0 !important;
           padding: 0 !important;
           overflow: hidden !important;
-          height: 100vh !important;
-          width: 100vw !important;
-          max-width: 100vw !important;
+          height: 100% !important;
+          width: 100% !important;
+          max-width: 100% !important;
           background: #000000 !important;
+          display: flex !important;
+          flex-direction: column !important;
         }
 
         .embed-mode .content-stage,
-        .embed-mode .reels-stage {
-          margin: 0 !important;
-          padding: 0 !important;
-          height: 100vh !important;
-          width: 100vw !important;
-          max-width: 100vw !important;
-          min-height: 100vh !important;
-        }
-
+        .embed-mode .reels-stage,
         .embed-mode .player-presentation-layout {
+          position: absolute !important;
+          inset: 0 !important;
           margin: 0 !important;
           padding: 0 !important;
-          height: 100vh !important;
-          width: 100vw !important;
-          max-width: 100vw !important;
+          height: 100% !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-height: 100% !important;
           gap: 0 !important;
         }
 
-        .embed-mode .video-player-card {
-          position: fixed !important;
+        .embed-mode .video-player-card,
+        .embed-mode .video-player-card.is-landscape,
+        .embed-mode .video-player-card.is-square,
+        .embed-mode .video-player-card.is-portrait {
+          position: absolute !important;
           inset: 0 !important;
-          width: 100vw !important;
-          height: 100vh !important;
-          max-width: 100vw !important;
-          max-height: 100vh !important;
+          width: 100% !important;
+          height: 100% !important;
+          max-width: 100% !important;
+          max-height: 100% !important;
           border-radius: 0 !important;
           border: none !important;
           margin: 0 !important;
           box-shadow: none !important;
+          aspect-ratio: auto !important;
+          background: #000000 !important;
+        }
+
+        /* Seamless edge-to-edge video coverage without empty space left behind, similar to TikTok */
+        .embed-mode .main-reel-video {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          object-position: center !important;
+          display: block !important;
+          background: #000000 !important;
+        }
+
+        .embed-mode .player-sound-btn {
+          top: 56px !important;
+          right: 12px !important;
+        }
+
+        .embed-mode .autoplay-sound-banner {
+          top: 56px !important;
+        }
+
+        /* TikTok-Style Embed Header */
+        .embed-tiktok-header {
+          position: absolute;
+          top: 12px;
+          left: 12px;
+          right: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          z-index: 40;
+          pointer-events: auto;
+        }
+
+        .embed-author-info {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          text-decoration: none;
+          background: rgba(0, 0, 0, 0.55);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          padding: 4px 12px 4px 5px;
+          border-radius: 9999px;
+          transition: all 0.2s ease;
+          max-width: calc(100% - 145px);
+        }
+
+        .embed-author-info:hover {
+          background: rgba(0, 0, 0, 0.75);
+          border-color: rgba(255, 255, 255, 0.4);
+          transform: translateY(-1px);
+        }
+
+        .embed-author-avatar {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1.5px solid rgba(255, 255, 255, 0.9);
+          flex-shrink: 0;
+        }
+
+        .embed-author-names {
+          display: flex;
+          flex-direction: column;
+          line-height: 1.15;
+          overflow: hidden;
+        }
+
+        .embed-author-display {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 12px;
+          font-weight: 700;
+          color: #ffffff;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .embed-author-display .verified-check {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 13px;
+          height: 13px;
+          border-radius: 50%;
+          background: #20d5ec;
+          color: #000;
+          font-size: 8px;
+          font-weight: 900;
+        }
+
+        .embed-author-handle {
+          font-size: 10px;
+          color: rgba(255, 255, 255, 0.75);
+          font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .embed-wudao-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(15, 23, 42, 0.75);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          color: #ffffff;
+          padding: 6px 13px;
+          border-radius: 9999px;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.2px;
+          text-decoration: none;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+          flex-shrink: 0;
+        }
+
+        .embed-wudao-pill:hover {
+          background: linear-gradient(135deg, #ff4500, #ff6b35);
+          border-color: rgba(255, 255, 255, 0.5);
+          transform: translateY(-1px);
         }
 
         /* Embed Mode Brand Link Badge */
@@ -9346,8 +9508,8 @@ export default function Home({
           .embed-mode .content-stage,
           .embed-mode .player-presentation-layout,
           .embed-mode .reels-stage {
-            height: 100vh !important;
-            min-height: 100vh !important;
+            height: 100% !important;
+            min-height: 100% !important;
             padding: 0 !important;
             padding-bottom: 0 !important;
             margin: 0 !important;
