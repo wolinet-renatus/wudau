@@ -37,6 +37,17 @@ const StreamFeedController = require("../../controllers/client/streamFeed.contro
 route.get("/stream-feed", checkAccessWithSecretKey(), StreamFeedController.getStreamFeed);
 route.post("/stream-feed", checkAccessWithSecretKey(), StreamFeedController.getStreamFeed);
 
+// Safe Mock Data Cleanup
+route.all("/cleanupMockData", checkAccessWithSecretKey(), async (req, res) => {
+  try {
+    const { cleanMockData } = require("../../util/cleanMockData");
+    const result = await cleanMockData();
+    return res.status(200).json({ status: true, message: "Mock data purged successfully", data: result });
+  } catch (err) {
+    return res.status(500).json({ status: false, error: err.message });
+  }
+});
+
 //delete video
 route.delete("/deleteVideoOfUser", checkAccessWithSecretKey(), VideoController.deleteVideoOfUser);
 
