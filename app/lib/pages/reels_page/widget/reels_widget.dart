@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chewie/chewie.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:gallery_saver/gallery_saver.dart';
@@ -9,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:readmore/readmore.dart';
+import 'package:video_player/video_player.dart';
 import 'package:wudau/custom/custom_format_number.dart';
 import 'package:wudau/custom/custom_share.dart';
 import 'package:wudau/pages/bottom_bar_page/controller/bottom_bar_controller.dart';
@@ -34,8 +34,8 @@ import 'package:wudau/utils/database.dart';
 import 'package:wudau/utils/enums.dart';
 import 'package:wudau/utils/font_style.dart';
 import 'package:wudau/utils/utils.dart';
+import 'package:wudau/utils/video_cache_service.dart';
 import 'package:vibration/vibration.dart';
-import 'package:video_player/video_player.dart';
 
 class PreviewReelsView extends StatefulWidget {
   const PreviewReelsView({super.key, required this.index, required this.currentPageIndex});
@@ -50,117 +50,174 @@ class PreviewReelsView extends StatefulWidget {
 class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerProviderStateMixin {
   final controller = Get.find<ReelsController>();
 
-  ChewieController? chewieController;
   VideoPlayerController? videoPlayerController;
 
   RxBool isPlaying = true.obs;
   RxBool isShowIcon = false.obs;
 
   RxBool isBuffering = false.obs;
-  RxBool isVideoLoading = true.obs;
+  RxBool isVideoInitialized = false.obs;
 
   RxBool isShowLikeAnimation = false.obs;
   RxBool isShowLikeIconAnimation = false.obs;
 
-  RxBool isReelsPage = true.obs; // This is Use to Stop Auto Playing..
+  RxBool isReelsPage = true.obs; // Used to stop auto-playing when navigating away
 
   RxBool isLike = false.obs;
 
   RxMap customChanges = {"like": 0, "comment": 0}.obs;
 
-  AnimationController? _controller;
-  late Animation<double> _animation;
+  AnimationController? _cdController;
+  late Animation<double> _cdAnimation;
 
   RxBool isReadMore = false.obs;
 
+  /// True when this widget should have an active decoder (current or adjacent)
+  bool get _isProximity => (widget.index - widget.currentPageIndex).abs() <= 1;
+
+  /// True when this is the currently visible page
+  bool get _isCurrentPage => widget.index == widget.currentPageIndex;
+
   @override
   void initState() {
-    _controller = AnimationController(
+    super.initState();
+    _cdController = AnimationController(
       duration: const Duration(seconds: 4),
       vsync: this,
-    )..repeat();
+    );
+    _cdAnimation = Tween(begin: 0.0, end: 1.0).animate(_cdController!);
 
-    if (_controller != null) {
-      _animation = Tween(begin: 0.0, end: 1.0).animate(_controller!);
-    }
-    initializeVideoPlayer();
     customSetting();
-    super.initState();
+
+    if (_isProximity) {
+      _initializeVideoPlayer();
+    }
+
+    if (_isCurrentPage) {
+      _cdController?.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant PreviewReelsView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.currentPageIndex != widget.currentPageIndex) {
+      if (_isCurrentPage) {
+        // We became the visible page — play and spin the CD
+        _cdController?.repeat();
+        if (isVideoInitialized.value && isReelsPage.value) {
+          onPlayVideo();
+        }
+      } else if ((widget.index - widget.currentPageIndex).abs() == 1) {
+        // Adjacent page: initialize player for instant-next-swipe, keep paused
+        _cdController?.stop();
+        onStopVideo();
+        if (videoPlayerController == null) {
+          _initializeVideoPlayer();
+        }
+      } else {
+        // Far off-screen: release hardware decoder immediately
+        _cdController?.stop();
+        onStopVideo();
+        _disposeVideoPlayer();
+      }
+    }
   }
 
   @override
   void dispose() {
-    _controller?.dispose();
-    onDisposeVideoPlayer();
+    _cdController?.dispose();
+    _disposeVideoPlayer();
     Utils.showLog("Dispose Method Called Success");
     super.dispose();
   }
 
-  Future<void> initializeVideoPlayer() async {
+  // ─────────────────────────────────────────────────
+  // Video Player Lifecycle
+  // ─────────────────────────────────────────────────
+
+  Future<void> _initializeVideoPlayer() async {
+    if (!mounted) return;
     try {
-      String videoPath = controller.mainReels[widget.index].videoUrl!;
+      final data = controller.mainReels[widget.index];
+      final videoPath = data.videoUrl ?? "";
+      if (videoPath.isEmpty) return;
 
-      videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(Api.baseUrl + videoPath));
+      final fullUrl = Api.baseUrl + videoPath;
 
+      // Check local disk cache first for zero-latency start
+      final cachedFile = await VideoCacheService.getCachedVideoFile(fullUrl);
+
+      if (!mounted) return;
+
+      if (cachedFile != null) {
+        videoPlayerController = VideoPlayerController.file(cachedFile);
+      } else {
+        videoPlayerController = VideoPlayerController.networkUrl(
+          Uri.parse(fullUrl),
+          videoPlayerOptions: VideoPlayerOptions(mixWithOthers: false),
+        );
+        // Kick off background cache download
+        VideoCacheService.preloadVideo(fullUrl);
+      }
+
+      await videoPlayerController?.setLooping(true);
       await videoPlayerController?.initialize();
       await videoPlayerController?.setVolume(1.0);
 
-      if (videoPlayerController != null && (videoPlayerController?.value.isInitialized ?? false)) {
-        chewieController = ChewieController(
-          videoPlayerController: videoPlayerController!,
-          looping: true,
-          allowedScreenSleep: false,
-          allowMuting: false,
-          showControlsOnInitialize: false,
-          showControls: false,
-          maxScale: 1,
-        );
+      if (!mounted) {
+        videoPlayerController?.dispose();
+        videoPlayerController = null;
+        return;
+      }
 
-        if (chewieController != null) {
-          isVideoLoading.value = false;
-          (widget.index == widget.currentPageIndex && isReelsPage.value) ? onPlayVideo() : null; // Use => First Time Video Playing...
-        } else {
-          isVideoLoading.value = true;
+      if (videoPlayerController?.value.isInitialized ?? false) {
+        isVideoInitialized.value = true;
+
+        // Auto-play if this is the current visible page
+        if (_isCurrentPage && isReelsPage.value) {
+          onPlayVideo();
         }
 
-        videoPlayerController?.addListener(
-          () {
-            // Use => If Video Buffering then show loading....
-            (videoPlayerController?.value.isBuffering ?? false) ? isBuffering.value = true : isBuffering.value = false;
-
-            if (isReelsPage.value == false) {
-              onStopVideo(); // Use => On Change Routes...
-            }
-          },
-        );
+        videoPlayerController?.addListener(() {
+          if (!mounted) return;
+          final isNowBuffering = videoPlayerController?.value.isBuffering ?? false;
+          if (isBuffering.value != isNowBuffering) {
+            isBuffering.value = isNowBuffering;
+          }
+          if (isReelsPage.value == false) {
+            onStopVideo(); // Stop when navigating away
+          }
+        });
       }
     } catch (e) {
-      onDisposeVideoPlayer();
+      _disposeVideoPlayer();
       Utils.showLog("Reels Video Initialization Failed !!! ${widget.index} => $e");
     }
   }
 
   void onStopVideo() {
+    if (!mounted) return;
     isPlaying.value = false;
     videoPlayerController?.pause();
   }
 
   void onPlayVideo() {
+    if (!mounted) return;
     isPlaying.value = true;
     videoPlayerController?.setVolume(1.0);
     videoPlayerController?.play();
   }
 
-  void onDisposeVideoPlayer() {
+  void _disposeVideoPlayer() {
     try {
-      onStopVideo();
+      videoPlayerController?.pause();
       videoPlayerController?.dispose();
-      chewieController?.dispose();
-      chewieController = null;
       videoPlayerController = null;
-      isVideoLoading.value = true;
+      isVideoInitialized.value = false;
     } catch (e) {
-      Utils.showLog(">>>> On Dispose VideoPlayer Error => $e");
+      Utils.showLog(">>>> _disposeVideoPlayer Error => $e");
     }
   }
 
@@ -170,29 +227,33 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
     customChanges["comment"] = int.parse(controller.mainReels[widget.index].totalComments.toString());
   }
 
+  // ─────────────────────────────────────────────────
+  // User Interactions
+  // ─────────────────────────────────────────────────
+
   void onClickVideo() async {
-    if (isVideoLoading.value == false) {
-      videoPlayerController!.value.isPlaying ? onStopVideo() : onPlayVideo();
-      isShowIcon.value = true;
-      await 2.seconds.delay();
-      isShowIcon.value = false;
-    }
+    if (isVideoInitialized.value == false) return;
+    videoPlayerController!.value.isPlaying ? onStopVideo() : onPlayVideo();
+    isShowIcon.value = true;
+    await 2.seconds.delay();
+    isShowIcon.value = false;
     if (isReelsPage.value == false) {
-      isReelsPage.value = true; // Use => On Back Reels Page...
+      isReelsPage.value = true;
     }
   }
 
   void onClickPlayPause() async {
+    if (isVideoInitialized.value == false) return;
     videoPlayerController!.value.isPlaying ? onStopVideo() : onPlayVideo();
     if (isReelsPage.value == false) {
-      isReelsPage.value = true; // Use => On Back Reels Page...
+      isReelsPage.value = true;
     }
   }
 
   Future<void> onClickShare() async {
     isReelsPage.value = false;
 
-    Get.dialog(const LoadingUi(), barrierDismissible: false); // Start Loading...
+    Get.dialog(const LoadingUi(), barrierDismissible: false);
 
     await BranchIoServices.onCreateBranchIoLink(
       id: controller.mainReels[widget.index].id ?? "",
@@ -204,7 +265,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
 
     final link = await BranchIoServices.onGenerateLink();
 
-    Get.back(); // Stop Loading...
+    Get.back();
 
     if (link != null) {
       CustomShare.onShareLink(link: link);
@@ -226,7 +287,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
       await dio.download(downloadUrl, filePath);
 
       final success = await GallerySaver.saveVideo(filePath);
-      Get.back(); // Stop Loading...
+      Get.back();
 
       if (success == true) {
         Utils.showToast(EnumLocal.txtDownloadSuccess.name.tr);
@@ -234,7 +295,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
         Utils.showToast(EnumLocal.txtSomeThingWentWrong.name.tr);
       }
     } catch (e) {
-      Get.back(); // Stop Loading...
+      Get.back();
       Utils.showLog("Download video failed => $e");
       Utils.showToast(EnumLocal.txtSomeThingWentWrong.name.tr);
     }
@@ -248,11 +309,11 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
     } else {
       isLike.value = true;
       customChanges["like"]++;
-    }
 
-    isShowLikeIconAnimation.value = true;
-    await 500.milliseconds.delay();
-    isShowLikeIconAnimation.value = false;
+      isShowLikeIconAnimation.value = true;
+      await 500.milliseconds.delay();
+      isShowLikeIconAnimation.value = false;
+    }
 
     await ReelsLikeDislikeApi.callApi(
       loginUserId: Database.loginUserId,
@@ -290,23 +351,19 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
     );
   }
 
+  // ─────────────────────────────────────────────────
+  // Build
+  // ─────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
-    if (widget.index == widget.currentPageIndex) {
-      // Use => Play Current Video On Scrolling...
-      isReadMore.value = false;
-      (isVideoLoading.value == false && isReelsPage.value) ? onPlayVideo() : null;
-    } else {
-      // Restart Previous Video On Scrolling...
-      isVideoLoading.value == false ? videoPlayerController?.seekTo(Duration.zero) : null;
-      onStopVideo(); // Stop Previous Video On Scrolling...
-    }
     return Scaffold(
       body: SizedBox(
         height: Get.height,
         width: Get.width,
         child: Stack(
           children: [
+            // ── Video Layer (with instant thumbnail backdrop) ──
             GestureDetector(
               onTap: onClickVideo,
               onDoubleTap: onDoubleClick,
@@ -315,48 +372,78 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                 height: (Get.height - AppConstant.bottomBarSize),
                 width: Get.width,
                 child: Obx(
-                  () => isVideoLoading.value
-                      ? Align(alignment: Alignment.bottomCenter, child: LinearProgressIndicator(color: AppColor.primary))
-                      : SizedBox.expand(
-                          child: FittedBox(
-                            fit: BoxFit.cover,
-                            child: SizedBox(
-                              width: videoPlayerController?.value.size.width ?? 0,
-                              height: videoPlayerController?.value.size.height ?? 0,
-                              child: Chewie(controller: chewieController!),
+                  () {
+                    final initialized = isVideoInitialized.value;
+                    return Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // ── Instant thumbnail backdrop (always visible) ──
+                        _buildThumbnail(),
+
+                        // ── Actual video on top once ready ──
+                        if (initialized && videoPlayerController != null)
+                          AnimatedOpacity(
+                            opacity: initialized ? 1.0 : 0.0,
+                            duration: const Duration(milliseconds: 250),
+                            child: SizedBox.expand(
+                              child: FittedBox(
+                                fit: BoxFit.cover,
+                                child: SizedBox(
+                                  width: videoPlayerController!.value.size.width,
+                                  height: videoPlayerController!.value.size.height,
+                                  child: VideoPlayer(videoPlayerController!),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+
+                        // ── Buffering indicator (small spinner, not a full blocker) ──
+                        if (!initialized)
+                          const Align(
+                            alignment: Alignment.bottomCenter,
+                            child: LinearProgressIndicator(),
+                          ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
+
+            // ── Brand Watermark ──
             Positioned(
-              // Logo Water Mark Code
               top: MediaQuery.of(context).viewPadding.top + 15,
               left: 20,
               child: Visibility(
-                  visible: Utils.isShowWaterMark,
-                  child: CachedNetworkImage(
-                    imageUrl: Utils.waterMarkIcon,
+                visible: Utils.isShowWaterMark,
+                child: CachedNetworkImage(
+                  imageUrl: Utils.waterMarkIcon,
+                  fit: BoxFit.contain,
+                  imageBuilder: (context, imageProvider) => Image(
+                    image: ResizeImage(imageProvider, width: Utils.waterMarkSize, height: Utils.waterMarkSize),
                     fit: BoxFit.contain,
-                    imageBuilder: (context, imageProvider) => Image(
-                      image: ResizeImage(imageProvider, width: Utils.waterMarkSize, height: Utils.waterMarkSize),
-                      fit: BoxFit.contain,
-                    ),
-                    placeholder: (context, url) => const Offstage(),
-                    errorWidget: (context, url, error) => const Offstage(),
-                  )),
+                  ),
+                  placeholder: (context, url) => const Offstage(),
+                  errorWidget: (context, url, error) => const Offstage(),
+                ),
+              ),
             ),
+
+            // ── Gift overlay ──
             Align(
               alignment: Alignment.center,
               child: SendGiftOnVideoBottomSheetUi.onShowGift(),
             ),
+
+            // ── Double-tap like animation ──
             Obx(
               () => Visibility(
                 visible: isShowLikeAnimation.value,
                 child: Align(alignment: Alignment.center, child: Lottie.asset(AppAsset.lottieLike, fit: BoxFit.cover, height: 300, width: 300)),
               ),
             ),
+
+            // ── Play/Pause icon overlay ──
             Obx(
               () => isShowIcon.value
                   ? Align(
@@ -381,25 +468,24 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                     )
                   : const Offstage(),
             ),
+
+            // ── Bottom gradient overlay ──
             Positioned(
               bottom: 0,
-              child: Obx(
-                () => Visibility(
-                  visible: (!isVideoLoading.value),
-                  child: Container(
-                    height: Get.height / 4,
-                    width: Get.width,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppColor.transparent, AppColor.black.withOpacity(0.7)],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
+              child: Container(
+                height: Get.height / 4,
+                width: Get.width,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColor.transparent, AppColor.black.withOpacity(0.7)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
                 ),
               ),
             ),
+
+            // ── Top-right action bar (create, report) ──
             Positioned(
               right: 0,
               child: Container(
@@ -429,14 +515,8 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                       child: Container(
                         height: 40,
                         width: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.more_vert_rounded,
-                          color: AppColor.white,
-                          size: 30,
-                        ),
+                        decoration: const BoxDecoration(shape: BoxShape.circle),
+                        child: const Icon(Icons.more_vert_rounded, color: AppColor.white, size: 30),
                       ),
                     ),
                     8.width,
@@ -444,6 +524,8 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                 ),
               ),
             ),
+
+            // ── Right-side action buttons (gift, like, comment, share, download, music) ──
             Positioned(
               right: 0,
               child: Container(
@@ -476,7 +558,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                       () => SizedBox(
                         height: 40,
                         child: AnimatedContainer(
-                          duration: Duration(milliseconds: 300),
+                          duration: const Duration(milliseconds: 300),
                           height: isShowLikeIconAnimation.value ? 15 : 50,
                           width: isShowLikeIconAnimation.value ? 15 : 50,
                           alignment: Alignment.center,
@@ -506,16 +588,12 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                     12.height,
                     CustomIconButton(
                       circleSize: 40,
-                      // circleColor: Colors.pink,
                       icon: AppAsset.icShare,
                       callback: onClickShare,
                       iconSize: 32,
                       iconColor: AppColor.white,
                     ),
-                    Text(
-                      "",
-                      style: AppFontStyle.styleW700(AppColor.white, 14),
-                    ),
+                    Text("", style: AppFontStyle.styleW700(AppColor.white, 14)),
                     12.height,
                     CustomIconButton(
                       circleSize: 40,
@@ -524,10 +602,7 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                       iconSize: 28,
                       iconColor: AppColor.white,
                     ),
-                    Text(
-                      "",
-                      style: AppFontStyle.styleW700(AppColor.white, 14),
-                    ),
+                    Text("", style: AppFontStyle.styleW700(AppColor.white, 14)),
                     12.height,
                     GestureDetector(
                       onTap: () {
@@ -543,8 +618,8 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                           );
                         } else {
                           isReelsPage.value = false;
-                          final controller = Get.find<BottomBarController>();
-                          controller.onChangeBottomBar(4);
+                          final bottomBarCtrl = Get.find<BottomBarController>();
+                          bottomBarCtrl.onChangeBottomBar(4);
                         }
                       },
                       child: SizedBox(
@@ -553,13 +628,13 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                           alignment: Alignment.center,
                           clipBehavior: Clip.none,
                           children: [
-                            RotationTransition(turns: _animation, child: Image.asset(AppAsset.icMusicCd)),
+                            RotationTransition(turns: _cdAnimation, child: Image.asset(AppAsset.icMusicCd)),
                             RotationTransition(
-                              turns: _animation,
+                              turns: _cdAnimation,
                               child: Container(
                                 width: 30,
                                 clipBehavior: Clip.antiAlias,
-                                decoration: BoxDecoration(shape: BoxShape.circle),
+                                decoration: const BoxDecoration(shape: BoxShape.circle),
                                 child: Stack(
                                   children: [
                                     Image.asset(AppAsset.icProfilePlaceHolder),
@@ -581,6 +656,8 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                 ),
               ),
             ),
+
+            // ── Bottom-left user info & caption ──
             Positioned(
               left: 15,
               bottom: 20,
@@ -604,8 +681,8 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                               );
                             } else {
                               isReelsPage.value = false;
-                              final controller = Get.find<BottomBarController>();
-                              controller.onChangeBottomBar(4);
+                              final bottomBarCtrl = Get.find<BottomBarController>();
+                              bottomBarCtrl.onChangeBottomBar(4);
                             }
                           },
                           child: Row(
@@ -686,64 +763,18 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
       ),
     );
   }
+
+  /// Instant thumbnail backdrop using server-provided poster image
+  Widget _buildThumbnail() {
+    final imageUrl = controller.mainReels[widget.index].videoImage ?? "";
+    if (imageUrl.isEmpty) return const SizedBox.shrink();
+    return SizedBox.expand(
+      child: CachedNetworkImage(
+        imageUrl: Api.baseUrl + imageUrl,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => Container(color: AppColor.black),
+        errorWidget: (_, __, ___) => Container(color: AppColor.black),
+      ),
+    );
+  }
 }
-
-// TODO => Use Loading Time Show Image...
-// Container(
-//                           color: AppColor.black,
-//                           height: Get.height,
-//                           width: Get.width,
-//                           child: Stack(
-//                             alignment: Alignment.center,
-//                             children: [
-//                               SizedBox(
-//                                 height: Get.height,
-//                                 width: Get.width,
-//                                 child: PreviewNetworkImageUi(
-//                                   image: controller.mainReels[widget.index].videoImage,
-//                                 ),
-//                               ),
-//                               LoadingUi(color: AppColor.white),
-//                             ],
-//                           ),
-//                         )
-
-// TODO => Old Caption
-
-// Visibility(
-//   visible: controller.mainReels[widget.index].hashTag?.isNotEmpty ?? false,
-//   child: Column(
-//     children: [
-//       SizedBox(
-//         width: Get.width / 2,
-//         child: Text(
-//           maxLines: 2,
-//           controller.mainReels[widget.index].hashTag?.map((e) => " #$e").join('').toString() ?? "",
-//           style: AppFontStyle.styleW500(AppColor.white, 13),
-//         ),
-//       ),
-//       10.height,
-//     ],
-//   ),
-// ),
-// Visibility(
-//   visible: controller.mainReels[widget.index].caption?.trim().isNotEmpty ?? false,
-//   child: Obx(
-//     () => GestureDetector(
-//       onTap: () => isReadMore.value = !isReadMore.value,
-//       child: AnimatedContainer(
-//         duration: Duration(milliseconds: 300),
-//         curve: Curves.linear,
-//         height: isReadMore.value ? 130 : 52,
-//         alignment: Alignment.topLeft,
-//         width: Get.width / 2,
-//         child: SingleChildScrollView(
-//           child: Text(
-//             (controller.mainReels[widget.index].caption ?? ""),
-//             style: AppFontStyle.styleW600(AppColor.white, 13),
-//           ),
-//         ),
-//       ),
-//     ),
-//   ),
-// ),

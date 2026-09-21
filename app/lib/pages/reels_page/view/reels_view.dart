@@ -5,7 +5,6 @@ import 'package:wudau/main.dart';
 import 'package:wudau/ui/no_data_found_ui.dart';
 import 'package:wudau/pages/reels_page/controller/reels_controller.dart';
 import 'package:wudau/pages/reels_page/widget/reels_widget.dart';
-import 'package:wudau/routes/app_routes.dart';
 import 'package:wudau/shimmer/reels_shimmer_ui.dart';
 import 'package:wudau/ui/video_picker_bottom_sheet_ui.dart';
 import 'package:wudau/utils/color.dart';
@@ -20,9 +19,7 @@ class ReelsView extends GetView<ReelsController> {
 
   @override
   Widget build(BuildContext context) {
-    if (Get.currentRoute == AppRoutes.bottomBarPage) {
-      controller.init();
-    }
+    // ← REMOVED: controller.init() from build() to prevent re-init on every route change
 
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -39,7 +36,7 @@ class ReelsView extends GetView<ReelsController> {
             : controller.mainReels.isEmpty
                 ? RefreshIndicator(
                     color: AppColor.primary,
-                    onRefresh: () async => await controller.init(),
+                    onRefresh: () async => await controller.forceRefresh(),
                     child: SingleChildScrollView(
                       child: SizedBox(
                         height: (Get.height + 1) - AppConstant.bottomBarSize,
@@ -103,12 +100,12 @@ class ReelsView extends GetView<ReelsController> {
                     color: AppColor.primary,
                     onRefresh: () async {
                       await 400.milliseconds.delay();
-                      await controller.init();
+                      await controller.forceRefresh();
                     },
                     child: PreloadPageView.builder(
                       controller: controller.preloadPageController,
                       itemCount: controller.mainReels.length,
-                      preloadPagesCount: 4,
+                      preloadPagesCount: 1, // ← Reduced from 4 → 1 (max 2 total decoders active)
                       scrollDirection: Axis.vertical,
                       onPageChanged: (value) async {
                         controller.onPagination(value);
