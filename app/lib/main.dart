@@ -24,31 +24,54 @@ import 'package:wudau/utils/utils.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await GetStorage.init();
+  try {
+    await GetStorage.init();
+  } catch (e) {
+    Utils.showLog("GetStorage init error: $e");
+  }
 
-  InternetConnection.init();
+  try {
+    InternetConnection.init();
+  } catch (e) {
+    Utils.showLog("InternetConnection init error: $e");
+  }
 
-  await Firebase.initializeApp();
-  await onInitializeCrashlytics();
+  try {
+    await Firebase.initializeApp().timeout(const Duration(seconds: 3));
+    await onInitializeCrashlytics();
+  } catch (e) {
+    Utils.showLog("Firebase init error: $e");
+  }
 
-  await onInitializeBranchIo();
+  try {
+    await onInitializeBranchIo().timeout(const Duration(seconds: 2));
+  } catch (e) {
+    Utils.showLog("Branch.io init error: $e");
+  }
 
-  final identity = await PlatformDeviceId.getDeviceId;
+  String? identity;
+  try {
+    identity = await PlatformDeviceId.getDeviceId.timeout(const Duration(seconds: 2));
+  } catch (e) {
+    Utils.showLog("PlatformDeviceId error: $e");
+    identity = "device_${DateTime.now().millisecondsSinceEpoch}";
+  }
+
   String? fcmToken;
   try {
-    fcmToken = await FirebaseMessaging.instance.getToken();
+    fcmToken = await FirebaseMessaging.instance.getToken().timeout(const Duration(seconds: 3));
   } catch (e) {
-    Utils.showLog("FCM Token error (e.g. simulator without APNs): $e");
+    Utils.showLog("FCM Token error: $e");
     fcmToken = "sim_fcm_token_${identity ?? 'default'}";
   }
 
   Utils.showLog("Device Id => $identity");
   Utils.showLog("FCM Token => $fcmToken");
-  print("FCM Token => $fcmToken");
-  print("identity => $identity");
 
-  if (identity != null && fcmToken != null) {
-    await Database.init(identity, fcmToken);
+  try {
+    await Database.init(identity ?? "default_device", fcmToken ?? "default_token");
+  } catch (e) {
+    Utils.showLog("Database init error: $e");
   }
 
   try {

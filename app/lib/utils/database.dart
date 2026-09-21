@@ -22,7 +22,11 @@ class Database {
     Utils.showLog("Is New User => $isNewUser");
 
     if (isNewUser == false) {
-      fetchLoginUserProfileModel = await FetchLoginUserProfileApi.callApi(loginUserId: loginUserId);
+      try {
+        fetchLoginUserProfileModel = await FetchLoginUserProfileApi.callApi(loginUserId: loginUserId).timeout(const Duration(seconds: 3));
+      } catch (e) {
+        Utils.showLog("FetchLoginUserProfileApi error in Database.init: $e");
+      }
     }
   }
 
