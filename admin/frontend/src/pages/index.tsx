@@ -1760,7 +1760,6 @@ export default function Home({
           width,
           height,
           aspectRatio: ratio,
-          isLandscape: ratio > 1.15,
         },
         "*"
       );
@@ -2600,7 +2599,7 @@ export default function Home({
                   <div className="player-presentation-layout">
                     {/* Centered Video Player Card */}
                     <div
-                      className={`video-player-card ${videoAspectRatio > 1.15 ? "is-landscape" : videoAspectRatio > 0.85 ? "is-square" : "is-portrait"} ${isEmbedMode ? "is-embed" : ""}`}
+                      className={`video-player-card ${isEmbedMode ? "is-embed" : ""}`}
                       style={{
                         transform: dragOffsetY !== 0 ? `translateY(${dragOffsetY}px)` : undefined,
                         transition: isDragging ? "none" : "transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1)",
@@ -5764,12 +5763,13 @@ export default function Home({
           box-sizing: border-box;
         }
 
-        /* Fluid Video Card — Auto-responsive fitness for 9:16, 16:9, 1:1 and iframes */
+        /* Fluid Video Card — Auto-responsive fitness for 9:16 vertical TikTok format */
         .video-player-card {
           position: relative;
           width: 100%;
           max-width: 440px;
           height: min(calc(100vh - 84px), 740px);
+          aspect-ratio: 9 / 16;
           background: #000000;
           border-radius: 16px;
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
@@ -5782,20 +5782,9 @@ export default function Home({
           touch-action: pan-y;
           user-select: none;
           -webkit-user-select: none;
-          transition: max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* Landscape Cinema Adaptation for 16:9 widescreen videos on desktop */
-        @media (min-width: 768px) {
-          .video-player-card.is-landscape {
-            max-width: min(840px, 66vw);
-            height: min(calc(100vh - 84px), 520px);
-            aspect-ratio: 16 / 9;
-            border-radius: 16px;
-          }
-        }
-
-        /* Ambient blurred background layer that fills non-9:16 aspect ratios with glowing colors */
+        /* Ambient blurred background layer that fills backdrop with glowing colors */
         .ambient-blur-backdrop {
           position: absolute;
           inset: -30px;
@@ -5809,18 +5798,15 @@ export default function Home({
         }
 
         .main-reel-video {
-          position: relative;
+          position: absolute;
+          inset: 0;
           z-index: 2;
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: cover !important;
           object-position: center;
           display: block;
-          background: transparent;
-        }
-
-        .video-player-card.is-landscape .main-reel-video {
-          object-fit: contain;
+          background: #000000;
         }
 
         /* Embed / Iframe Mode: Clean full-viewport auto-fit player (TikTok-style) */
@@ -5852,10 +5838,7 @@ export default function Home({
           gap: 0 !important;
         }
 
-        .embed-mode .video-player-card,
-        .embed-mode .video-player-card.is-landscape,
-        .embed-mode .video-player-card.is-square,
-        .embed-mode .video-player-card.is-portrait {
+        .embed-mode .video-player-card {
           position: absolute !important;
           inset: 0 !important;
           width: 100% !important;

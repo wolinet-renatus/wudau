@@ -383,23 +383,15 @@ class _PreviewReelsViewState extends State<PreviewReelsView> with SingleTickerPr
                         // ── Actual video on top once ready ──
                         if (initialized && videoPlayerController != null)
                           AnimatedOpacity(
-                            opacity: 1.0,
-                            duration: const Duration(milliseconds: 200),
+                            opacity: initialized ? 1.0 : 0.0,
+                            duration: const Duration(milliseconds: 250),
                             child: SizedBox.expand(
-                              child: ClipRect(
-                                child: FittedBox(
-                                  fit: BoxFit.cover,
-                                  // Use aspectRatio (rotation-corrected) not value.size
-                                  // (which is pre-rotation storage dimensions and causes
-                                  //  portrait video to render as landscape letterbox).
-                                  child: SizedBox(
-                                    width: (videoPlayerController!.value.aspectRatio > 0
-                                            ? videoPlayerController!.value.aspectRatio
-                                            : 9.0 / 16.0) *
-                                        1000,
-                                    height: 1000,
-                                    child: VideoPlayer(videoPlayerController!),
-                                  ),
+                              child: FittedBox(
+                                fit: BoxFit.cover,
+                                child: SizedBox(
+                                  width: videoPlayerController!.value.size.width,
+                                  height: videoPlayerController!.value.size.height,
+                                  child: VideoPlayer(videoPlayerController!),
                                 ),
                               ),
                             ),
